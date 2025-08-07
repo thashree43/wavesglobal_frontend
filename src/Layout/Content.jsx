@@ -155,7 +155,7 @@ const ContentSections = () => {
   ];
 
   return (
-    <div style={{ paddingTop: '2rem' }}>
+    <div style={{ paddingTop: '2rem', position: 'relative', zIndex: 1 }}>
       <section className="py-20 px-6 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
