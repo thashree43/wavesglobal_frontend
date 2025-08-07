@@ -5,6 +5,7 @@ const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) =>
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(value ? new Date(value) : null);
   const dropdownRef = useRef(null);
+  const ab = 0
   
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
