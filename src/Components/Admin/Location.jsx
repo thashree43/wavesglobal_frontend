@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios'
 import {baseurl} from '../../Base/Base.js'
 import {User, Shield, ShieldOff, Home, Users, Settings, BarChart3,  FileText,  Bell,  DollarSign, Menu, X, Search, Filter, MapPin, Plus,Edit, Trash2, Camera,Save,XCircle,Upload, ImageIcon} from 'lucide-react';
-
+import { useNavigate } from "react-router-dom";
 
 const LocationManagement = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -17,13 +17,13 @@ const LocationManagement = () => {
     image: null,
     status: 'active'
   });
-  
+  const navigate = useNavigate()
   const [locations, setLocations] = useState([]);
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
     { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
-    { id: 'locations', name: 'Locations', icon: MapPin, route: '/locations' },
+    { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
     { id: 'revenue', name: 'Revenue', icon: DollarSign, route: '/revenue' },
     { id: 'users', name: 'Users', icon: Users, route: '/users' },
     { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
@@ -35,8 +35,8 @@ const LocationManagement = () => {
     setActiveTab(itemId);
     setSidebarOpen(false);
     
-    if (route && typeof window !== 'undefined') {
-      window.history.pushState({}, '', route);
+    if (route) {
+      navigate(route);
     }
   };
 
@@ -74,7 +74,6 @@ const LocationManagement = () => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Remove old preview URL if exists
     if (formData.image && formData.image.preview && formData.image.preview.startsWith('blob:')) {
       URL.revokeObjectURL(formData.image.preview);
     }
@@ -166,13 +165,10 @@ const LocationManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-
   const getlocation = async()=>{
     try {
       const response = await axios.get(`${baseurl}admin/getlocation`)
-      console.log(response.data.location)
       if(response.data.success){
-        console.log("first")
         setLocations(response.data.location)
       }
     } catch (error) {

@@ -1,61 +1,21 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Eye, MapPin, Home, X, Search, Filter, Menu, BarChart3, DollarSign, Settings, Users, FileText, Bell, Upload, Image } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plus, Edit, Trash2, Eye, MapPin, Home, X, Search, Filter, Menu, BarChart3, DollarSign, Settings, Users, FileText, Bell, Upload, Image, ChevronLeft, ChevronRight } from 'lucide-react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import {baseurl} from '../../Base/Base.js';
 
 const PropertyPage = () => {
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      title: "Luxury Penthouse Marina View",
-      type: "Penthouse",
-      location: "Dubai Marina, Dubai",
-      neighborhood: "Dubai Marina",
-      price: "AED 15,000,000",
-      status: "Available",
-      bedrooms: 4,
-      bathrooms: 5,
-      area: "3500 sqft",
-      addedDate: "2024-01-15",
-      images: [],
-      mapLocation: { lat: 25.0772, lng: 55.1369 }
-    },
-    {
-      id: 2,
-      title: "Modern Villa with Pool",
-      type: "Villa",
-      location: "Palm Jumeirah, Dubai",
-      neighborhood: "Palm Jumeirah",
-      price: "AED 25,000,000",
-      status: "Not Available",
-      bedrooms: 6,
-      bathrooms: 7,
-      area: "5000 sqft",
-      addedDate: "2024-01-10",
-      images: [],
-      mapLocation: { lat: 25.1124, lng: 55.1390 }
-    },
-    {
-      id: 3,
-      title: "Cozy Studio Apartment",
-      type: "Studio",
-      location: "Downtown Dubai, Dubai",
-      neighborhood: "Downtown Dubai",
-      price: "AED 1,200,000",
-      status: "Available",
-      bedrooms: 0,
-      bathrooms: 1,
-      area: "600 sqft",
-      addedDate: "2024-01-20",
-      images: [],
-      mapLocation: { lat: 25.1972, lng: 55.2744 }
-    }
-  ]);
-
+  const navigate = useNavigate();
+  const [properties, setProperties] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterType, setFilterType] = useState('All');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('properties');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [neighborhoods,setneighborhoods] = useState([]);
+  const propertiesPerPage = 10;
 
   const [formData, setFormData] = useState({
     title: '',
@@ -72,18 +32,49 @@ const PropertyPage = () => {
     mapLocation: { lat: '', lng: '' }
   });
 
+  const getProperty = async(req,res)=>{
+    try {
+      const response = await axios.get(`${baseurl}admin/getproperty`)
+      if(response.data.success){
+        setProperties(response.data.property)
+      }
+    } catch (error) {
+      
+    }
+  }
+
   const propertyTypes = ['Apartment', 'Villa', 'Studio', 'Penthouse', 'Townhouse', 'Office'];
-  const neighborhoods = ['Dubai Marina', 'Palm Jumeirah', 'Downtown Dubai', 'JBR', 'Business Bay', 'DIFC'];
+
+  const getArea = async()=>{
+    try {
+      const response = await axios.get(`${baseurl}admin/getlocation`)
+      if(response.data.success){
+        setneighborhoods(response.data.location)
+      }
+    } catch (error) {
+      
+    }
+  }
 
   const sidebarItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
-    { id: 'properties', name: 'Properties', icon: Home },
-    { id: 'revenue', name: 'Revenue', icon: DollarSign },
-    { id: 'clients', name: 'Clients', icon: Users },
-    { id: 'reports', name: 'Reports', icon: FileText },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'settings', name: 'Settings', icon: Settings },
+    { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
+    { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
+    { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
+    { id: 'revenue', name: 'Revenue', icon: DollarSign, route: '/revenue' },
+    { id: 'users', name: 'Users', icon: Users, route: '/users' },
+    { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
+    { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
+    { id: 'settings', name: 'Settings', icon: Settings, route: '/settings' },
   ];
+
+  const handleSidebarClick = (itemId, route) => {
+    setActiveTab(itemId);
+    setSidebarOpen(false);
+    
+    if (route) {
+      navigate(route);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -105,7 +96,15 @@ const PropertyPage = () => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const imagePromises = files.map(file => {
+    const currentImageCount = formData.images.length;
+    const remainingSlots = 10 - currentImageCount;
+    const filesToProcess = files.slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+      alert(`You can only upload ${remainingSlots} more images. Maximum 10 images allowed.`);
+    }
+    
+    const imagePromises = filesToProcess.map(file => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -134,38 +133,78 @@ const PropertyPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.images.length < 4) {
-      alert('Please upload at least 4 images');
+  
+    if (formData.images.length < 5) {
+      alert('Please upload at least 5 images (minimum required)');
       return;
     }
-
-    const newProperty = {
-      id: properties.length + 1,
-      ...formData,
-      price: `AED ${formData.price}`,
-      area: `${formData.area} sqft`,
-      status: formData.status ? 'Available' : 'Not Available',
-      addedDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setProperties([newProperty, ...properties]);
-    setShowModal(false);
-    setFormData({
-      title: '',
-      description: '',
-      type: 'Apartment',
-      location: '',
-      neighborhood: '',
-      price: '',
-      bedrooms: '',
-      bathrooms: '',
-      area: '',
-      status: true,
-      images: [],
-      mapLocation: { lat: '', lng: '' }
+  
+    const formDataToSend = new FormData();
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('type', formData.type);
+    formDataToSend.append('location', formData.location);
+    formDataToSend.append('neighborhood', formData.neighborhood);
+    formDataToSend.append('price', formData.price);
+    formDataToSend.append('bedrooms', formData.bedrooms);
+    formDataToSend.append('bathrooms', formData.bathrooms);
+    formDataToSend.append('area', formData.area);
+    formDataToSend.append('status', formData.status);
+    formDataToSend.append('mapLocation[lat]', formData.mapLocation.lat);
+    formDataToSend.append('mapLocation[lng]', formData.mapLocation.lng);
+  
+    formData.images.forEach((img) => {
+      const byteString = atob(img.url.split(',')[1]);
+      const mimeString = img.url.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const file = new File([ab], img.name, { type: mimeString });
+      formDataToSend.append('images', file);
     });
+  
+    try {
+      const response = await axios.post(
+        `${baseurl}admin/addproperty`,
+        formDataToSend,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+  
+      setProperties([
+        {
+          id: Date.now(),
+          ...formData,
+          price: `AED ${formData.price}`,
+          area: `${formData.area} sqft`,
+          status: formData.status ? 'Available' : 'Not Available',
+          addedDate: new Date().toISOString().split('T')[0],
+        },
+        ...properties,
+      ]);
+  
+      setShowModal(false);
+      setFormData({
+        title: '',
+        description: '',
+        type: 'Apartment',
+        location: '',
+        neighborhood: '',
+        price: '',
+        bedrooms: '',
+        bathrooms: '',
+        area: '',
+        status: true,
+        images: [],
+        mapLocation: { lat: '', lng: '' },
+      });
+      setCurrentPage(1);
+    } catch (error) {
+      console.error('Error adding property:', error);
+    }
   };
 
   const handleDelete = (id) => {
@@ -182,6 +221,21 @@ const PropertyPage = () => {
     
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const totalPages = Math.ceil(filteredProperties.length / propertiesPerPage);
+  const currentProperties = filteredProperties.slice(
+    (currentPage - 1) * propertiesPerPage,
+    currentPage * propertiesPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  useEffect(()=>{
+    getArea(),
+    getProperty()
+  },[])
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -205,10 +259,7 @@ const PropertyPage = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
-                }}
+                onClick={() => handleSidebarClick(item.id, item.route)}
                 className={`w-full flex items-center gap-3 px-3 py-3 mb-1 rounded-lg text-left transition-colors ${
                   activeTab === item.id
                     ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
@@ -222,7 +273,7 @@ const PropertyPage = () => {
           })}
         </nav>
 
-        <div className="absolute bottom-4 left-0 right-0 px-6">
+        <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="bg-blue-50 rounded-lg p-4">
             <h3 className="text-sm font-medium text-blue-900">Need Help?</h3>
             <p className="text-xs text-blue-700 mt-1">Contact support for assistance</p>
@@ -240,7 +291,7 @@ const PropertyPage = () => {
         />
       )}
 
-      <div className="flex-1 lg:ml-0">
+      <div className="flex-1 lg:ml-0 flex flex-col h-screen">
         <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
             <button
@@ -254,7 +305,7 @@ const PropertyPage = () => {
           </div>
         </div>
 
-        <div className="p-4 lg:p-8">
+        <div className="flex-1 p-4 lg:p-8 overflow-auto">
           {activeTab === 'properties' ? (
             <>
               <div className="mb-8">
@@ -330,7 +381,7 @@ const PropertyPage = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {filteredProperties.map((property) => (
+                      {currentProperties.map((property) => (
                         <tr key={property.id} className="hover:bg-gray-50">
                           <td className="py-4 px-6">
                             <div>
@@ -398,11 +449,48 @@ const PropertyPage = () => {
                   </table>
                 </div>
                 
-                {filteredProperties.length === 0 && (
+                {currentProperties.length === 0 && (
                   <div className="text-center py-12">
                     <Home className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No properties found</h3>
                     <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+                  </div>
+                )}
+
+                {totalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing {(currentPage - 1) * propertiesPerPage + 1} to {Math.min(currentPage * propertiesPerPage, filteredProperties.length)} of {filteredProperties.length} results
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 rounded-lg border ${
+                            currentPage === page
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -433,19 +521,19 @@ const PropertyPage = () => {
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Add New Property</h2>
+              <h2 className="text-xl font-bold text-gray-900">Add New Property</h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Property Title *
@@ -456,7 +544,7 @@ const PropertyPage = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     placeholder="e.g., Luxury Penthouse Marina View"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -469,9 +557,9 @@ const PropertyPage = () => {
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    rows="4"
+                    rows="3"
                     placeholder="Full details, amenities, surrounding areas..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -483,7 +571,7 @@ const PropertyPage = () => {
                     name="type"
                     value={formData.type}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
                     {propertyTypes.map(type => (
@@ -500,12 +588,15 @@ const PropertyPage = () => {
                     name="neighborhood"
                     value={formData.neighborhood}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select Neighborhood</option>
                     {neighborhoods.map(area => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
+                    <option key={area._id} value={area._id}>
+                      {area.name}
+                    </option>
+                  ))}
+
                   </select>
                 </div>
 
@@ -519,7 +610,7 @@ const PropertyPage = () => {
                     value={formData.location}
                     onChange={handleInputChange}
                     placeholder="Full address with map integration"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -535,7 +626,7 @@ const PropertyPage = () => {
                     value={formData.mapLocation.lat}
                     onChange={handleInputChange}
                     placeholder="e.g., 25.0772"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -551,7 +642,7 @@ const PropertyPage = () => {
                     value={formData.mapLocation.lng}
                     onChange={handleInputChange}
                     placeholder="e.g., 55.1369"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -566,7 +657,7 @@ const PropertyPage = () => {
                     value={formData.price}
                     onChange={handleInputChange}
                     placeholder="e.g., 15000000"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -581,7 +672,7 @@ const PropertyPage = () => {
                     value={formData.area}
                     onChange={handleInputChange}
                     placeholder="e.g., 3500"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -596,7 +687,7 @@ const PropertyPage = () => {
                     onChange={handleInputChange}
                     placeholder="e.g., 4"
                     min="0"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -611,15 +702,15 @@ const PropertyPage = () => {
                     onChange={handleInputChange}
                     placeholder="e.g., 5"
                     min="0"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Property Images * (Minimum 4 images required)
+                    Property Images * (5-10 images required)
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
                     <input
                       type="file"
                       multiple
@@ -629,12 +720,12 @@ const PropertyPage = () => {
                       id="image-upload"
                     />
                     <label htmlFor="image-upload" className="cursor-pointer">
-                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                      <p className="text-sm text-gray-600 mb-2">
+                      <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 mb-1">
                         Click to upload images or drag and drop
                       </p>
                       <p className="text-xs text-gray-500">
-                        PNG, JPG, GIF up to 10MB each
+                        PNG, JPG, GIF up to 10MB each (Max 10 images)
                       </p>
                     </label>
                   </div>
@@ -642,22 +733,22 @@ const PropertyPage = () => {
                   {formData.images.length > 0 && (
                     <div className="mt-4">
                       <p className="text-sm font-medium text-gray-700 mb-3">
-                        Uploaded Images ({formData.images.length}/4+ required)
+                        Uploaded Images ({formData.images.length}/10 - Min 5 required)
                       </p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                         {formData.images.map((image) => (
                           <div key={image.id} className="relative group">
                             <img
                               src={image.url}
                               alt={image.name}
-                              className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                              className="w-full h-20 object-cover rounded-lg border border-gray-200"
                             />
                             <button
                               type="button"
                               onClick={() => removeImage(image.id)}
                               className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              <X size={14} />
+                              <X size={12} />
                             </button>
                           </div>
                         ))}
@@ -673,7 +764,7 @@ const PropertyPage = () => {
                       name="status"
                       checked={formData.status}
                       onChange={handleInputChange}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm font-medium text-gray-700">
                       Available for Sale/Rent
@@ -682,17 +773,17 @@ const PropertyPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
                 >
                   Add Property
                 </button>
