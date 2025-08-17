@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Calendar, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Calendar, Users, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 
 const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(value ? new Date(value) : null);
   const dropdownRef = useRef(null);
-  const ab = 0
   
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -70,21 +69,21 @@ const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) =>
   return (
     <div className="relative">
       <div className="relative group">
-        <Calendar className="absolute left-3 top-3 h-5 w-5 text-slate-500 group-hover:text-amber-500 transition-colors z-10 pointer-events-none" />
+        <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors z-10 pointer-events-none" />
         <input
           type="text"
           value={formatDate(selectedDate)}
           onClick={onToggle}
           readOnly
           placeholder={placeholder}
-          className="w-full pl-12 pr-4 py-3 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-amber-400 transition-all duration-300 hover:border-amber-300 focus:ring-2 focus:ring-amber-100 bg-white/90 backdrop-blur-sm text-slate-700 font-medium cursor-pointer"
+          className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-lg bg-white text-black font-medium cursor-pointer placeholder:text-gray-400"
         />
       </div>
       
       {isOpen && (
         <div 
           ref={dropdownRef}
-          className="fixed bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 min-w-[350px]"
+          className="fixed bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 p-8 min-w-[380px]"
           style={{
             zIndex: 10000,
             top: '50%',
@@ -92,33 +91,33 @@ const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) =>
             transform: 'translate(-50%, -50%)'
           }}
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-8">
             <button
               onClick={prevMonth}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-3 hover:bg-orange-50 rounded-2xl transition-all duration-300 hover:scale-110"
             >
-              <ChevronLeft className="h-5 w-5 text-gray-600" />
+              <ChevronLeft className="h-5 w-5 text-black" />
             </button>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-xl font-bold text-black">
               {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </h3>
             <button
               onClick={nextMonth}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-3 hover:bg-orange-50 rounded-2xl transition-all duration-300 hover:scale-110"
             >
-              <ChevronRight className="h-5 w-5 text-gray-600" />
+              <ChevronRight className="h-5 w-5 text-black" />
             </button>
           </div>
           
-          <div className="grid grid-cols-7 gap-1 mb-4">
+          <div className="grid grid-cols-7 gap-2 mb-6">
             {weekdays.map(day => (
-              <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+              <div key={day} className="text-center text-sm font-semibold text-gray-500 py-3">
                 {day}
               </div>
             ))}
           </div>
           
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-2">
             {days.map((day, index) => {
               const isSelected = selectedDate && 
                 day.date.getDate() === selectedDate.getDate() &&
@@ -132,12 +131,12 @@ const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) =>
                   key={index}
                   onClick={() => handleDateClick(day.date)}
                   className={`
-                    h-10 w-10 rounded-full text-sm font-medium transition-all duration-200
-                    ${!day.isCurrentMonth ? 'text-gray-300 hover:text-gray-400' : 'text-gray-900'}
-                    ${isSelected ? 'bg-amber-400 text-white shadow-lg scale-110' : ''}
-                    ${isToday && !isSelected ? 'border-2 border-amber-400 text-amber-600' : ''}
-                    ${!isSelected && day.isCurrentMonth ? 'hover:bg-gray-100' : ''}
-                    ${!isSelected && !day.isCurrentMonth ? 'hover:bg-gray-50' : ''}
+                    h-12 w-12 rounded-2xl text-sm font-semibold transition-all duration-300
+                    ${!day.isCurrentMonth ? 'text-gray-300 hover:text-gray-400 hover:bg-gray-50' : 'text-black'}
+                    ${isSelected ? 'bg-orange-500 text-white shadow-lg scale-110 hover:shadow-xl' : ''}
+                    ${isToday && !isSelected ? 'border-2 border-orange-500 text-orange-500 bg-orange-50' : ''}
+                    ${!isSelected && day.isCurrentMonth ? 'hover:bg-gray-50 hover:scale-105' : ''}
+                    ${!isSelected && !day.isCurrentMonth ? 'hover:bg-gray-25' : ''}
                   `}
                 >
                   {day.date.getDate()}
@@ -148,7 +147,7 @@ const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) =>
           
           <button
             onClick={onToggle}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"
+            className="absolute top-6 right-6 text-gray-400 hover:text-black text-2xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-300"
           >
             ×
           </button>
@@ -157,7 +156,7 @@ const CustomDatePicker = ({ value, onChange, placeholder, isOpen, onToggle }) =>
       
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm"
           style={{ zIndex: 9999 }}
           onClick={onToggle}
         />
@@ -177,6 +176,7 @@ const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [guestsOpen, setGuestsOpen] = useState(false);
 
   const typewriterTexts = [
     'Dubai Marina Luxury',
@@ -269,24 +269,24 @@ const Hero = () => {
 
         <button
           onClick={prevSlide}
-          className="absolute left-6 top-1/2 transform -translate-y-1/2 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 z-10 hover:scale-110"
+          className="absolute left-6 top-1/2 transform -translate-y-1/2 p-4 rounded-2xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-300 z-10 hover:scale-110 hover:shadow-xl"
         >
           <ChevronLeft className="h-6 w-6 text-white" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-6 top-1/2 transform -translate-y-1/2 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 z-10 hover:scale-110"
+          className="absolute right-6 top-1/2 transform -translate-y-1/2 p-4 rounded-2xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-300 z-10 hover:scale-110 hover:shadow-xl"
         >
           <ChevronRight className="h-6 w-6 text-white" />
         </button>
 
-        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
           {carouselImages.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide ? 'bg-amber-400 scale-125' : 'bg-white/50'
+              className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                index === currentSlide ? 'bg-orange-500 scale-125 shadow-lg' : 'bg-white/50 hover:bg-white/70'
               }`}
             />
           ))}
@@ -296,25 +296,25 @@ const Hero = () => {
           className="relative z-10 h-full flex items-center justify-center text-center"
           style={{ transform: `translateY(${scrollY * 0.05}px)` }}
         >
-          <div className="max-w-4xl mx-auto px-6">
+          <div className="max-w-5xl mx-auto px-6">
             <div className={`transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white leading-tight">
+              <h1 className="text-6xl md:text-8xl font-bold mb-8 text-white leading-tight">
                 Experience
-                <span className="block bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent min-h-[1.2em]">
+                <span className="block text-orange-500 min-h-[1.2em]">
                   {typewriterText}
                   <span className="animate-pulse">|</span>
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl text-gray-200 mb-16 max-w-4xl mx-auto leading-relaxed">
                 Discover handpicked luxury properties for unforgettable experiences in Dubai's most prestigious destinations
               </p>
             </div>
 
             <div className={`transition-all duration-1000 delay-500 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'} relative`}>
-              <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-8 shadow-2xl max-w-4xl mx-auto border border-white/20 relative z-20">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="space-y-2 relative">
-                    <label className="block text-sm font-semibold text-slate-700">Check In</label>
+              <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-10 shadow-2xl max-w-5xl mx-auto border border-gray-100 relative z-20">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                  <div className="space-y-3 relative">
+                    <label className="block text-sm font-bold text-black mb-2">Check In</label>
                     <CustomDatePicker
                       value={checkIn}
                       onChange={setCheckIn}
@@ -323,12 +323,13 @@ const Hero = () => {
                       onToggle={() => {
                         setCheckInOpen(!checkInOpen);
                         setCheckOutOpen(false);
+                        setGuestsOpen(false);
                       }}
                     />
                   </div>
 
-                  <div className="space-y-2 relative">
-                    <label className="block text-sm font-semibold text-slate-700">Check Out</label>
+                  <div className="space-y-3 relative">
+                    <label className="block text-sm font-bold text-black mb-2">Check Out</label>
                     <CustomDatePicker
                       value={checkOut}
                       onChange={setCheckOut}
@@ -337,31 +338,51 @@ const Hero = () => {
                       onToggle={() => {
                         setCheckOutOpen(!checkOutOpen);
                         setCheckInOpen(false);
+                        setGuestsOpen(false);
                       }}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-slate-700">Guests</label>
+                  <div className="space-y-3 relative">
+                    <label className="block text-sm font-bold text-black mb-2">Guests</label>
                     <div className="relative group">
-                      <Users className="absolute left-3 top-3 h-5 w-5 text-slate-500 group-hover:text-amber-500 transition-colors" />
-                      <select
-                        value={guests}
-                        onChange={(e) => setGuests(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 border-2 border-amber-200 rounded-lg focus:outline-none focus:border-amber-400 appearance-none transition-all duration-300 hover:border-amber-300 focus:ring-2 focus:ring-amber-100 bg-white/90 backdrop-blur-sm cursor-pointer text-slate-700 font-medium"
+                      <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+                      <button
+                        onClick={() => {
+                          setGuestsOpen(!guestsOpen);
+                          setCheckInOpen(false);
+                          setCheckOutOpen(false);
+                        }}
+                        className="w-full pl-12 pr-12 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-lg bg-white cursor-pointer text-black font-medium text-left"
                       >
-                        {[...Array(10)].map((_, i) => (
-                          <option key={i + 1} value={i + 1}>{i + 1} Guest{i > 0 ? 's' : ''}</option>
-                        ))}
-                      </select>
+                        {guests} Guest{guests > 1 ? 's' : ''}
+                      </button>
+                      
+                      {guestsOpen && (
+                        <div className="absolute top-full mt-2 w-full bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 py-4 z-50">
+                          {[...Array(10)].map((_, i) => (
+                            <button
+                              key={i + 1}
+                              onClick={() => {
+                                setGuests(i + 1);
+                                setGuestsOpen(false);
+                              }}
+                              className="w-full px-6 py-3 text-left hover:bg-orange-50 transition-all duration-200 font-medium text-black hover:text-orange-500"
+                            >
+                              {i + 1} Guest{i > 0 ? 's' : ''}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold invisible">Search</label>
-                    <button className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-800 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
-                      <Search className="h-5 w-5" />
-                      Search Properties
+                  <div className="space-y-3">
+                    <label className="block text-sm font-bold invisible">Search</label>
+                    <button className="w-full py-4 rounded-2xl font-bold text-white bg-black hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl group">
+                      <Search className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span className="tracking-wide">Search Properties</span>
                     </button>
                   </div>
                 </div>
@@ -370,6 +391,17 @@ const Hero = () => {
           </div>
         </div>
       </section>
+      
+      {(guestsOpen || checkInOpen || checkOutOpen) && (
+        <div 
+          className="fixed inset-0 bg-transparent z-40"
+          onClick={() => {
+            setGuestsOpen(false);
+            setCheckInOpen(false);
+            setCheckOutOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
