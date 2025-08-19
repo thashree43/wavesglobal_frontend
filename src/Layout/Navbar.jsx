@@ -164,11 +164,11 @@ const Navbar = () => {
             Waves Global
           </div>
           <nav className="hidden md:flex space-x-8 text-black">
-            <a href="#" className="relative group">
+            <a href="/" className="relative group">
               <span className="hover:text-orange-500 transition-colors duration-300">Home</span>
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300"></span>
             </a>
-            <a href="#" className="relative group">
+            <a href="property" className="relative group">
               <span className="hover:text-orange-500 transition-colors duration-300">Properties</span>
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 group-hover:w-full transition-all duration-300"></span>
             </a>
