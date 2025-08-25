@@ -278,24 +278,28 @@ const ContentSections = () => {
             </div>
           </AnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            {locations.slice(0, 8).map((location, index) => (
-              <FloatingCard key={index} delay={index * 100}>
-                <div className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105">
-                  <div
-                    className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                    style={{ backgroundImage: `url(${location.image})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/60 transition-all duration-300"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-lg font-bold mb-1">{location.name}</h3>
-                    <p className="text-sm text-gray-200">{location.properties} Properties</p>
-                  </div>
-                  <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                    Popular
-                  </div>
-                </div>
-              </FloatingCard>
-            ))}
+          {locations.slice(0, 8).map((location, index) => (
+  <FloatingCard key={index} delay={index * 100}>
+    <div
+      onClick={() => navigate(`/property?locationId=${location._id}`)}
+      className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105"
+    >
+      <div
+        className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+        style={{ backgroundImage: `url(${location.image})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/60 transition-all duration-300"></div>
+      <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+        <h3 className="text-lg font-bold mb-1">{location.name}</h3>
+        <p className="text-sm text-gray-200">{location.properties} Properties</p>
+      </div>
+      <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300">
+        Popular
+      </div>
+    </div>
+  </FloatingCard>
+))}
+
           </div>
           <AnimatedSection delay={600}>
             <div className="text-center">
