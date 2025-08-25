@@ -3,7 +3,6 @@ import axios from 'axios'
 import {baseurl} from '../../Base/Base.js'
 import {User, Shield, ShieldOff, Home, Users, Settings, BarChart3,  FileText,  Bell,  DollarSign, Menu, X, Search, Filter, MapPin, Plus,Edit, Trash2, Camera,Save,XCircle,Upload, ImageIcon} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import Sidebar from './Sidebar'; // Import your Sidebar component
 
 const LocationManagement = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,6 +19,17 @@ const LocationManagement = () => {
   });
   const navigate = useNavigate()
   const [locations, setLocations] = useState([]);
+
+  const sidebarItems = [
+    { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
+    { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
+    { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
+    { id: 'revenue', name: 'Revenue', icon: DollarSign, route: '/revenue' },
+    { id: 'users', name: 'Users', icon: Users, route: '/users' },
+    { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
+    { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
+    { id: 'settings', name: 'Settings', icon: Settings, route: '/settings' },
+  ];
 
   const handleSidebarClick = (itemId, route) => {
     setActiveTab(itemId);
@@ -46,25 +56,10 @@ const LocationManagement = () => {
   };
 
   const handleEditLocation = (location) => {
-    console.log('Editing location:', location);
-    let imageData = null;
-    
-    if (location.image) {
-      const imageUrl = location.image.startsWith('http') 
-        ? location.image 
-        : `${baseurl}${location.image}`;
-      
-      imageData = {
-        preview: imageUrl,
-        name: location.image.split('/').pop() || 'image',
-        isExisting: true
-      };
-    }
-    
     setFormData({
       name: location.name,
       description: location.description,
-      image: imageData,
+      image: location.image ? { ...location.image } : null,
       status: location.status
     });
     setEditingLocation(location);
@@ -87,8 +82,7 @@ const LocationManagement = () => {
       id: Date.now(),
       file: file,
       preview: URL.createObjectURL(file),
-      name: file.name,
-      isExisting: false
+      name: file.name
     };
     
     setFormData(prev => ({
@@ -113,6 +107,22 @@ const LocationManagement = () => {
       return;
     }
     
+    if (editingLocation) {
+      setLocations(locations.map(location => 
+        location.id === editingLocation.id 
+          ? { ...location, ...formData }
+          : location
+      ));
+    } else {
+      const newLocation = {
+        ...formData,
+        id: Math.max(...locations.map(l => l.id), 0) + 1,
+        createdDate: new Date().toISOString().split('T')[0],
+        propertyCount: 0
+      };
+      setLocations([...locations, newLocation]);
+    }
+
     const formDataToSend = new FormData();
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
@@ -125,25 +135,12 @@ const LocationManagement = () => {
     try {
       console.log("Submitting location data");
       console.log(formData)
-      
-      let response;
-      if (editingLocation) {
-        formDataToSend.append('id', editingLocation.id);
-        response = await axios.put(`${baseurl}admin/updatelocation`, formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      } else {
-        response = await axios.post(`${baseurl}admin/addlocation`, formDataToSend, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      }
-      
+      const response = await axios.post(`${baseurl}admin/addlocation`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       console.log(response);
-      getlocation();
     } catch (error) {
       console.error('Error submitting location:', error);
     }
@@ -171,7 +168,6 @@ const LocationManagement = () => {
   const getlocation = async()=>{
     try {
       const response = await axios.get(`${baseurl}admin/getlocation`)
-      console.log('Get location response:', response.data);
       if(response.data.success){
         setLocations(response.data.location)
       }
@@ -184,25 +180,52 @@ const LocationManagement = () => {
     getlocation()
   },[])
 
-  const sidebarItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
-    { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
-    { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
-    { id: 'revenue', name: 'Revenue', icon: DollarSign, route: '/revenue' },
-    { id: 'users', name: 'Users', icon: Users, route: '/users' },
-    { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
-    { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
-    { id: 'settings', name: 'Settings', icon: Settings, route: '/settings' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        activeTab={activeTab}
-        handleSidebarClick={handleSidebarClick}
-      />
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <Home className="h-8 w-8 text-blue-600" />
+            <span className="text-xl font-bold text-gray-900">PropManage</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="mt-6 px-3">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleSidebarClick(item.id, item.route)}
+                className={`w-full flex items-center gap-3 px-3 py-3 mb-1 rounded-lg text-left transition-colors ${
+                  activeTab === item.id
+                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Icon size={20} />
+                <span className="font-medium">{item.name}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="absolute bottom-4 left-0 right-0 px-6">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-blue-900">Need Help?</h3>
+            <p className="text-xs text-blue-700 mt-1">Contact support for assistance</p>
+            <button className="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors">
+              Get Support
+            </button>
+          </div>
+        </div>
+      </div>
 
       {sidebarOpen && (
         <div 
@@ -320,13 +343,9 @@ const LocationManagement = () => {
                               {location.image ? (
                                 <div className="flex items-center gap-2">
                                   <img 
-                                    src={location.image.startsWith('http') ? location.image : `${baseurl}${location.image}`} 
+                                    src={location.image.preview} 
                                     alt="Location" 
                                     className="h-8 w-8 rounded object-cover"
-                                    onError={(e) => {
-                                      console.error('Image load error:', location.image);
-                                      e.target.style.display = 'none';
-                                    }}
                                   />
                                   <span className="text-sm text-gray-600">Image</span>
                                 </div>
@@ -341,7 +360,7 @@ const LocationManagement = () => {
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {location.propertyCount || 0} Properties
+                                {location.propertyCount} Properties
                               </span>
                             </div>
                           </td>
@@ -356,7 +375,7 @@ const LocationManagement = () => {
                           </td>
                           <td className="py-4 px-6">
                             <span className="text-sm text-gray-600">
-                              {new Date(location.createdAt || location.createdDate).toLocaleDateString('en-US', {
+                              {new Date(location.createdDate).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric'
