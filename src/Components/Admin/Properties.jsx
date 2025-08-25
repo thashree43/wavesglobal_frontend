@@ -143,6 +143,8 @@ const PropertyPage = () => {
         );
       }
 
+      console.log(response,"ll;l;l;l;")
+
       if (response.data.success) {
         if (isEdit) {
           setProperties(properties.map(prop => 
