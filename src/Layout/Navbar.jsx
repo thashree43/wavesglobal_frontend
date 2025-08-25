@@ -28,6 +28,8 @@ const Navbar = () => {
         withCredentials: true  
       })
 
+      console.log("first")
+
       if(response.data.user) {
         setisLogged(true);
         setUser(response.data.user);

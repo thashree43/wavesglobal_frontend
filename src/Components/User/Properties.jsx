@@ -487,17 +487,21 @@ const Properties = () => {
 
   const fetchProperties = async () => {
     try {
+
       setIsLoading(true);
       const urlParams = getUrlParams();
       let endpoint = `${baseurl}user/properties`;
-      
+
       if (Object.keys(urlParams).length > 0) {
         const queryString = new URLSearchParams(urlParams).toString();
         endpoint += `?${queryString}`;
       }
+
       
       const response = await axios.get(endpoint);
-      
+      console.log("nporpor",response)
+
+      console.log(response,endpoint,"heee")
       if (response.data.success) {
         setProperties(response.data.data);
       } else {
@@ -513,6 +517,8 @@ const Properties = () => {
 
   const fetchNeighborhoods = async () => {
     try {
+
+      console.log("neigh")
       const response = await axios.get(`${baseurl}user/location`);
       if (response.data && response.data.location) {
         setNeighborhoods(response.data.location);
