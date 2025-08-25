@@ -1078,7 +1078,7 @@ const Properties = () => {
                       <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                         <div>
                           <span className="text-2xl font-bold text-gray-900">
-                            ${property.price?.toLocaleString() || "N/A"}
+                            AED {property.price?.toLocaleString() || "N/A"}
                           </span>
                           <span className="text-gray-500 text-sm ml-1">/night</span>
                         </div>

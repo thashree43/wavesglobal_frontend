@@ -844,7 +844,7 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                         {isSelected && <Check size={16} className="text-blue-600" />}
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{service.description}</p>
-                      <p className="text-sm font-medium text-orange-600">${service.price}</p>
+                      <p className="text-sm font-medium text-orange-600">AED {service.price}</p>
                     </div>
                   );
                 })}
