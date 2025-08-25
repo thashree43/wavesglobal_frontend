@@ -90,9 +90,8 @@ const PropertyPage = () => {
     
     try {
       setLoading(true);
-      const propertyId = deletingProperty._id || deletingProperty.id;
-      await axios.delete(`${baseurl}admin/deleteproperty/${propertyId}`);
-      setProperties(properties.filter(prop => (prop._id || prop.id) !== propertyId));
+      await axios.delete(`${baseurl}admin/deleteproperty/${deletingProperty.id}`);
+      setProperties(properties.filter(prop => prop.id !== deletingProperty.id));
       setShowDeleteModal(false);
       setDeletingProperty(null);
     } catch (error) {
@@ -131,9 +130,8 @@ const PropertyPage = () => {
 
       let response;
       if (isEdit) {
-        const propertyId = editingProperty._id || editingProperty.id;
         response = await axios.put(
-          `${baseurl}admin/updateproperty/${propertyId}`,
+          `${baseurl}admin/updateproperty/${editingProperty.id}`,
           formDataToSend,
           { headers: { 'Content-Type': 'multipart/form-data' } }
         );
@@ -147,28 +145,28 @@ const PropertyPage = () => {
 
       if (response.data.success) {
         if (isEdit) {
-          const propertyId = editingProperty._id || editingProperty.id;
           setProperties(properties.map(prop => 
-            (prop._id || prop.id) === propertyId 
+            prop.id === editingProperty.id 
               ? { ...prop, ...formData, price: `AED ${formData.price}`, area: `${formData.area} sqft` }
               : prop
           ));
         } else {
-          const newProperty = response.data.property || {
-            _id: response.data._id || response.data.id,
-            ...formData,
-            price: `AED ${formData.price}`,
-            area: `${formData.area} sqft`,
-            status: formData.status ? 'Available' : 'Not Available',
-            addedDate: new Date().toISOString().split('T')[0],
-          };
-          setProperties([newProperty, ...properties]);
+          setProperties([
+            {
+              id: Date.now(),
+              ...formData,
+              price: `AED ${formData.price}`,
+              area: `${formData.area} sqft`,
+              status: formData.status ? 'Available' : 'Not Available',
+              addedDate: new Date().toISOString().split('T')[0],
+            },
+            ...properties,
+          ]);
         }
       }
 
       setShowModal(false);
       setEditingProperty(null);
-      getProperty();
     } catch (error) {
       console.error('Error saving property:', error);
     } finally {
@@ -201,7 +199,7 @@ const PropertyPage = () => {
   }, []);
 
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+    <div className="min-h-screen bg-gray-50 flex">
       <Sidebar 
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -216,8 +214,8 @@ const PropertyPage = () => {
         />
       )}
 
-      <div className="flex-1 lg:ml-0 flex flex-col overflow-hidden">
-        <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
+      <div className="flex-1 lg:ml-0 flex flex-col h-screen">
+        <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -230,210 +228,137 @@ const PropertyPage = () => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 p-4 lg:p-8 overflow-auto">
           {activeTab === 'properties' ? (
-            <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 p-4 sm:p-6 lg:p-8 bg-white border-b border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Home className="text-blue-600 flex-shrink-0" size={32} />
-                    <div>
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                        Property Management
-                      </h1>
-                      <p className="text-gray-600 text-sm sm:text-base">Manage your property listings</p>
-                    </div>
+            <>
+              <div className="mb-8">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                      <Home className="text-blue-600" />
+                      Property Management
+                    </h1>
+                    <p className="text-gray-600 mt-1">Manage your property listings</p>
                   </div>
-                  
                   <button
                     onClick={handleAddProperty}
                     disabled={loading}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors"
                   >
-                    <Plus size={16} />
+                    <Plus size={20} />
                     Add Property
                   </button>
                 </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                      <input
+                        type="text"
+                        placeholder="Search properties..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="All">All Status</option>
+                      <option value="Available">Available</option>
+                      <option value="Not Available">Not Available</option>
+                    </select>
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="All">All Types</option>
+                      {propertyTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                {loading && (
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
                 
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center bg-green-50 px-3 py-2 rounded-lg">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    <span className="text-sm text-green-700">
-                      Available: {properties.filter(p => p.status === 'Available').length}
-                    </span>
-                  </div>
-                  <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
-                    <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
-                    <span className="text-sm text-red-700">
-                      Not Available: {properties.filter(p => p.status === 'Not Available').length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 px-4 sm:px-6 lg:px-8 py-4">
-                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                        <input
-                          type="text"
-                          placeholder="Search properties..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                      >
-                        <option value="All">All Status</option>
-                        <option value="Available">Available</option>
-                        <option value="Not Available">Not Available</option>
-                      </select>
-                      <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                      >
-                        <option value="All">All Types</option>
-                        {propertyTypes.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-hidden px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
-                <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                  {loading && (
-                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                  )}
-                  
-                  <div className="hidden sm:block flex-shrink-0 overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Property</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Type</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Location</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Price</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Status</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Details</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Images</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Actions</th>
-                        </tr>
-                      </thead>
-                    </table>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto">
-                    <table className="hidden sm:table w-full">
-                      <tbody className="divide-y divide-gray-200">
-                        {currentProperties.map((property) => (
-                          <tr key={property._id || property.id} className="hover:bg-gray-50">
-                            <td className="py-4 px-3 sm:px-6">
-                              <div>
-                                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{property.title}</h3>
-                                <p className="text-xs sm:text-sm text-gray-500">Added: {property.addedDate}</p>
-                              </div>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800">
-                                {property.type}
-                              </span>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <div className="flex items-center gap-2">
-                                <MapPin size={12} className="text-gray-400 sm:w-4 sm:h-4" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{property.neighborhood}</p>
-                                  <p className="text-xs text-gray-500 truncate">{property.location}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <span className="font-semibold text-gray-900 text-sm sm:text-base">{property.price}</span>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                                property.status === 'Available' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {property.status}
-                              </span>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <div className="text-xs sm:text-sm text-gray-600">
-                                <p>{property.bedrooms} bed • {property.bathrooms} bath</p>
-                                <p>{property.area}</p>
-                              </div>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <div className="flex items-center gap-1">
-                                <Image size={12} className="text-gray-400 sm:w-4 sm:h-4" />
-                                <span className="text-xs sm:text-sm text-gray-600">{property.images?.length || 0}</span>
-                              </div>
-                            </td>
-                            <td className="py-4 px-3 sm:px-6">
-                              <div className="flex items-center gap-1 sm:gap-2">
-                                <button className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                  <Eye size={12} className="sm:w-4 sm:h-4" />
-                                </button>
-                                <button 
-                                  onClick={() => handleEditProperty(property)}
-                                  className="p-1 sm:p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-                                >
-                                  <Edit size={12} className="sm:w-4 sm:h-4" />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteClick(property)}
-                                  className="p-1 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                >
-                                  <Trash2 size={12} className="sm:w-4 sm:h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-
-                    <div className="sm:hidden space-y-4 p-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Property</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Type</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Location</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Price</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Status</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Details</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Images</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-900">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
                       {currentProperties.map((property) => (
-                        <div key={property._id || property.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <Home className="h-5 w-5 text-blue-600" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="font-medium text-gray-900 truncate">{property.title}</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {property.type}
-                                  </span>
-                                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                    property.status === 'Available' 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {property.status}
-                                  </span>
-                                </div>
+                        <tr key={property.id} className="hover:bg-gray-50">
+                          <td className="py-4 px-6">
+                            <div>
+                              <h3 className="font-medium text-gray-900">{property.title}</h3>
+                              <p className="text-sm text-gray-500">Added: {property.addedDate}</p>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                              {property.type}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-gray-400" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{property.neighborhood}</p>
+                                <p className="text-xs text-gray-500">{property.location}</p>
                               </div>
                             </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className="font-semibold text-gray-900">{property.price}</span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                              property.status === 'Available' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {property.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="text-sm text-gray-600">
+                              <p>{property.bedrooms} bed • {property.bathrooms} bath</p>
+                              <p>{property.area}</p>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
                             <div className="flex items-center gap-1">
+                              <Image size={16} className="text-gray-400" />
+                              <span className="text-sm text-gray-600">{property.images?.length || 0}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-2">
                               <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                 <Eye size={16} />
                               </button>
@@ -450,125 +375,78 @@ const PropertyPage = () => {
                                 <Trash2 size={16} />
                               </button>
                             </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 mb-3">
-                            <MapPin size={14} className="text-gray-400" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{property.neighborhood}</p>
-                              <p className="text-xs text-gray-500">{property.location}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-4">
-                              <span className="font-semibold text-gray-900">{property.price}</span>
-                              <div className="text-gray-600">
-                                <span>{property.bedrooms} bed • {property.bathrooms} bath</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Image size={14} className="text-gray-400" />
-                              <span className="text-sm text-gray-600">{property.images?.length || 0}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
-                            <span>{property.area}</span>
-                            <span>Added: {property.addedDate}</span>
-                          </div>
-                        </div>
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                    
-                    {currentProperties.length === 0 && !loading && (
-                      <div className="text-center py-12">
-                        <Home className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No properties found</h3>
-                        <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
-                      </div>
-                    )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {currentProperties.length === 0 && !loading && (
+                  <div className="text-center py-12">
+                    <Home className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No properties found</h3>
+                    <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
                   </div>
+                )}
 
-                  {totalPages > 1 && (
-                    <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-t border-gray-200">
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="text-sm text-gray-700 order-2 sm:order-1">
-                          Showing {(currentPage - 1) * propertiesPerPage + 1} to {Math.min(currentPage * propertiesPerPage, filteredProperties.length)} of {filteredProperties.length} results
-                        </div>
-                        <div className="flex items-center gap-2 order-1 sm:order-2">
-                          <button
-                            onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                          >
-                            <ChevronLeft size={16} />
-                          </button>
-                          
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                              let pageNumber;
-                              if (totalPages <= 5) {
-                                pageNumber = i + 1;
-                              } else if (currentPage <= 3) {
-                                pageNumber = i + 1;
-                              } else if (currentPage >= totalPages - 2) {
-                                pageNumber = totalPages - 4 + i;
-                              } else {
-                                pageNumber = currentPage - 2 + i;
-                              }
-                              
-                              return (
-                                <button
-                                  key={pageNumber}
-                                  onClick={() => handlePageChange(pageNumber)}
-                                  className={`px-3 py-2 rounded-lg border text-sm ${
-                                    currentPage === pageNumber
-                                      ? 'bg-blue-600 text-white border-blue-600'
-                                      : 'border-gray-300 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  {pageNumber}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          
-                          <button
-                            onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                          >
-                            <ChevronRight size={16} />
-                          </button>
-                        </div>
-                      </div>
+                {totalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing {(currentPage - 1) * propertiesPerPage + 1} to {Math.min(currentPage * propertiesPerPage, filteredProperties.length)} of {filteredProperties.length} results
                     </div>
-                  )}
-                </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 rounded-lg border ${
+                            currentPage === page
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            </>
           ) : (
-            <div className="h-full flex items-center justify-center p-4 sm:p-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 sm:p-12 text-center max-w-md w-full">
-                <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                  {React.createElement(sidebarItems.find(item => item.id === activeTab)?.icon || Home, { 
-                    size: window.innerWidth < 640 ? 32 : 48, 
-                    className: "text-blue-600" 
-                  })}
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                  {sidebarItems.find(item => item.id === activeTab)?.name} Page
-                </h3>
-                <p className="text-gray-500 mb-6 text-sm sm:text-base">This page is under development</p>
-                <button
-                  onClick={() => setActiveTab('properties')}
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
-                >
-                  <Home size={16} />
-                  Go to Properties
-                </button>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <div className="mx-auto w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                {React.createElement(sidebarItems.find(item => item.id === activeTab)?.icon || Home, { 
+                  size: 48, 
+                  className: "text-blue-600" 
+                })}
               </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {sidebarItems.find(item => item.id === activeTab)?.name} Page
+              </h3>
+              <p className="text-gray-500 mb-6">This page is under development</p>
+              <button
+                onClick={() => setActiveTab('properties')}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <Home size={16} />
+                Go to Properties
+              </button>
             </div>
           )}
         </div>

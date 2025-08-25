@@ -878,9 +878,9 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                   <p className="text-sm font-medium text-gray-700 mb-3">
                     Uploaded Images ({formData.images.length}/10 - Min 5 required)
                   </p>
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                     {formData.images.map((image) => (
-                      <div key={image.id} className="relative group">
+                      <div key={image.id} className="relative">
                         <img
                           src={image.url}
                           alt={image.name}
@@ -888,8 +888,13 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                         />
                         <button
                           type="button"
-                          onClick={() => removeImage(image.id)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeImage(image.id);
+                          }}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors touch-manipulation"
+                          style={{ minWidth: '24px', minHeight: '24px' }}
                         >
                           <X size={12} />
                         </button>
