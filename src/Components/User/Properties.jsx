@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Heart,
@@ -15,23 +15,13 @@ import {
   Square,
   Star,
   Loader2,
-  AlertCircle,
-  Home,
-  Hotel,
-  Castle,
-  Mountain,
-  Waves,
-  Globe
+  AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import HotelBooking from "../ReusableComponent/HotelBooking";
 import Navbar from "../../Layout/Navbar";
 import Footer from "../../Layout/Footer";
 import axios from "axios";
-
-// Lazy load the HotelBooking component
-const HotelBooking = React.lazy(() => import("../ReusableComponent/HotelBooking"));
 
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,28 +38,8 @@ const Properties = () => {
     propertyType: "",
     bedrooms: "",
     bathrooms: "",
-    guests: "",
-    amenities: []
+    guests: ""
   });
-
-  // Property types with icons
-  const propertyTypes = [
-    { value: "Apartment", label: "Apartment", icon: <Home size={16} /> },
-    { value: "Villa", label: "Villa", icon: <Hotel size={16} /> },
-    { value: "Penthouse", label: "Penthouse", icon: <Castle size={16} /> },
-    { value: "Beach House", label: "Beach House", icon: <Waves size={16} /> },
-    { value: "Mountain Cabin", label: "Mountain Cabin", icon: <Mountain size={16} /> }
-  ];
-
-  // Amenities options
-  const amenitiesOptions = [
-    { value: "wifi", label: "WiFi" },
-    { value: "pool", label: "Swimming Pool" },
-    { value: "gym", label: "Gym" },
-    { value: "parking", label: "Parking" },
-    { value: "ac", label: "Air Conditioning" },
-    { value: "kitchen", label: "Kitchen" }
-  ];
 
   // Popular locations data
   const popularLocations = [
@@ -92,8 +62,6 @@ const Properties = () => {
         console.log('Fetched properties:', response.data);
         
         if (response.data.success && Array.isArray(response.data.data)) {
-          // Simulate loading delay for demo purposes
-          await new Promise(resolve => setTimeout(resolve, 1500));
           setProperties(response.data.data);
         } else {
           throw new Error('Invalid data format received from API');
@@ -140,23 +108,13 @@ const Properties = () => {
     }));
   };
 
-  const toggleAmenity = (amenity) => {
-    setFilters(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity]
-    }));
-  };
-
   const resetFilters = () => {
     setFilters({
       priceRange: [0, 10000],
       propertyType: "",
       bedrooms: "",
       bathrooms: "",
-      guests: "",
-      amenities: []
+      guests: ""
     });
   };
 
@@ -170,13 +128,8 @@ const Properties = () => {
       const matchesBedrooms = !filters.bedrooms || property.bedrooms >= parseInt(filters.bedrooms);
       const matchesBathrooms = !filters.bathrooms || property.bathrooms >= parseInt(filters.bathrooms);
       const matchesGuests = !filters.guests || property.guests >= parseInt(filters.guests);
-      const matchesAmenities = filters.amenities.length === 0 || 
-                            filters.amenities.every(amenity => 
-                              property.amenities?.includes(amenity));
 
-      return matchesSearch && matchesPrice && matchesType && 
-             matchesBedrooms && matchesBathrooms && matchesGuests &&
-             matchesAmenities;
+      return matchesSearch && matchesPrice && matchesType && matchesBedrooms && matchesBathrooms && matchesGuests;
     });
 
     // Sort properties
@@ -187,28 +140,21 @@ const Properties = () => {
         return filtered.sort((a, b) => b.price - a.price);
       case "newest":
         return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      case "rating":
-        return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       default:
         return filtered;
     }
   };
 
-  // Loading skeleton component with shimmer effect
+  // Loading skeleton component
   const PropertySkeleton = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-3xl shadow-sm overflow-hidden relative overflow-hidden"
+      className="bg-white rounded-3xl shadow-sm overflow-hidden"
     >
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-100 to-transparent animate-shimmer" />
-      
-      <div className="h-64 bg-gradient-to-r from-gray-100 to-gray-200 relative z-10">
-        <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
-      </div>
-      <div className="p-6 space-y-4 relative z-10">
+      <div className="h-56 bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse"></div>
+      <div className="p-6 space-y-4">
         <div className="h-6 bg-gray-100 rounded-lg animate-pulse"></div>
         <div className="h-4 bg-gray-100 rounded w-2/3 animate-pulse"></div>
         <div className="flex gap-4">
@@ -266,7 +212,7 @@ const Properties = () => {
             className="mb-12 text-center"
           >
             <motion.h1 
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600"
+              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -290,10 +236,7 @@ const Properties = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Globe className="text-blue-500" />
-              Popular Areas
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Popular Areas</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {popularLocations.map((location, index) => (
                 <motion.div
@@ -374,7 +317,6 @@ const Properties = () => {
                   <option value="priceLow">Price: Low to High</option>
                   <option value="priceHigh">Price: High to Low</option>
                   <option value="newest">Newest First</option>
-                  <option value="rating">Top Rated</option>
                 </motion.select>
               </div>
             </div>
@@ -425,24 +367,16 @@ const Properties = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Property Type
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {propertyTypes.map((type) => (
-                            <motion.button
-                              key={type.value}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => handleFilterChange('propertyType', type.value)}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                                filters.propertyType === type.value
-                                  ? 'bg-black text-white'
-                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                              }`}
-                            >
-                              {type.icon}
-                              {type.label}
-                            </motion.button>
-                          ))}
-                        </div>
+                        <select
+                          value={filters.propertyType}
+                          onChange={(e) => handleFilterChange('propertyType', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        >
+                          <option value="">All Types</option>
+                          <option value="Apartment">Apartment</option>
+                          <option value="Villa">Villa</option>
+                          <option value="Penthouse">Penthouse</option>
+                        </select>
                       </div>
 
                       {/* Bedrooms */}
@@ -450,47 +384,32 @@ const Properties = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Bedrooms
                         </label>
-                        <div className="flex gap-2">
-                          {[1, 2, 3, 4].map(num => (
-                            <motion.button
-                              key={num}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleFilterChange('bedrooms', num)}
-                              className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                                filters.bedrooms === num.toString()
-                                  ? 'bg-black text-white'
-                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                              }`}
-                            >
-                              {num}+
-                            </motion.button>
-                          ))}
-                        </div>
+                        <select
+                          value={filters.bedrooms}
+                          onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        >
+                          <option value="">Any</option>
+                          <option value="1">1+</option>
+                          <option value="2">2+</option>
+                          <option value="3">3+</option>
+                        </select>
                       </div>
 
-                      {/* Amenities */}
+                      {/* Bathrooms */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Amenities
+                          Bathrooms
                         </label>
-                        <div className="flex flex-wrap gap-2">
-                          {amenitiesOptions.map(amenity => (
-                            <motion.button
-                              key={amenity.value}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => toggleAmenity(amenity.value)}
-                              className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                                filters.amenities.includes(amenity.value)
-                                  ? 'bg-black text-white'
-                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                              }`}
-                            >
-                              {amenity.label}
-                            </motion.button>
-                          ))}
-                        </div>
+                        <select
+                          value={filters.bathrooms}
+                          onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        >
+                          <option value="">Any</option>
+                          <option value="1">1+</option>
+                          <option value="2">2+</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -555,12 +474,14 @@ const Properties = () => {
                   <div className="relative h-64 overflow-hidden">
                     {property.images && property.images.length > 0 ? (
                       <>
-                        <LazyLoadImage
+                        <motion.img
+                          key={currentImageIndex[property._id] || 0}
                           src={property.images[currentImageIndex[property._id] || 0]}
                           alt={property.title}
-                          effect="blur"
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          wrapperClassName="w-full h-full"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
                         />
                         
                         {property.images.length > 1 && (
@@ -613,14 +534,6 @@ const Properties = () => {
                         fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
                       />
                     </motion.button>
-
-                    {/* Rating Badge */}
-                    {property.rating && (
-                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
-                        <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-medium">{property.rating.toFixed(1)}</span>
-                      </div>
-                    )}
 
                     {/* Image Indicators */}
                     {property.images && property.images.length > 1 && (
@@ -677,7 +590,7 @@ const Properties = () => {
                     <div className="flex justify-between items-center pt-3 border-t border-gray-100">
                       <div>
                         <span className="text-xl font-bold text-gray-900">
-                          ${property.price?.toLocaleString() || "N/A"}
+                          ${property.price || "N/A"}
                         </span>
                         <span className="text-gray-500 text-sm ml-1">/night</span>
                       </div>
@@ -726,20 +639,10 @@ const Properties = () => {
                 >
                   <X size={20} />
                 </motion.button>
-                <Suspense fallback={
-                  <div className="min-h-[400px] flex items-center justify-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                      className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
-                    />
-                  </div>
-                }>
-                  <HotelBooking 
-                    property={selectedProperty} 
-                    onClose={() => setSelectedProperty(null)} 
-                  />
-                </Suspense>
+                <HotelBooking 
+                  property={selectedProperty} 
+                  onClose={() => setSelectedProperty(null)} 
+                />
               </div>
             </motion.div>
           </motion.div>
