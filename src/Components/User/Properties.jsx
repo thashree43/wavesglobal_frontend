@@ -321,9 +321,92 @@ const GuestSelector = ({ isOpen, onClose, guests, onGuestsChange }) => {
   );
 };
 
+const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) => {
+  const scrollContainerRef = useRef(null);
+  const [showLeftButton, setShowLeftButton] = useState(false);
+  const [showRightButton, setShowRightButton] = useState(true);
 
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftButton(scrollLeft > 0);
+      setShowRightButton(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
 
+  useEffect(() => {
+    checkScrollButtons();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollButtons);
+      return () => container.removeEventListener('scroll', checkScrollButtons);
+    }
+  }, [neighborhoods]);
 
+  const scroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 200;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  if (neighborhoods.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
+        
+        <div className="relative">
+          {showLeftButton && (
+            <button
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border border-gray-200 hover:bg-gray-50 p-2 rounded-full transition-all duration-300"
+            >
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
+          
+          {showRightButton && (
+            <button
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border border-gray-200 hover:bg-gray-50 p-2 rounded-full transition-all duration-300"
+            >
+              <ChevronRight className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
+          
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-8"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' }
+            }}
+          >
+            {neighborhoods.map((neighborhood) => (
+              <button
+                key={neighborhood.name || neighborhood._id}
+                onClick={() => onNeighborhoodClick(neighborhood.name)}
+                className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
+                  filters.neighborhood === neighborhood.name
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'bg-gray-100 hover:bg-orange-100 text-gray-700 hover:text-orange-700'
+                }`}
+              >
+                {neighborhood.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -645,30 +728,11 @@ const Properties = () => {
               </div>
             </section>
 
-            {neighborhoods.length > 0 && (
-              <section className="mb-8">
-                <div className="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
-                  <div className="relative">
-                    <div className="flex gap-4 animate-scroll">
-                      {[...neighborhoods, ...neighborhoods].map((neighborhood, index) => (
-                        <button
-                          key={`${neighborhood.name || neighborhood._id}-${index}`}
-                          onClick={() => handleNeighborhoodClick(neighborhood.name)}
-                          className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
-                            filters.neighborhood === neighborhood.name
-                              ? 'bg-orange-500 text-white shadow-lg'
-                              : 'bg-gray-100 hover:bg-orange-100 text-gray-700 hover:text-orange-700'
-                          }`}
-                        >
-                          {neighborhood.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
+            <NeighborhoodScroller 
+              neighborhoods={neighborhoods}
+              filters={filters}
+              onNeighborhoodClick={handleNeighborhoodClick}
+            />
 
             <section className="mb-8">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -1048,21 +1112,13 @@ const Properties = () => {
 
       <style>
         {`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
         
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-        
-        .animate-scroll:hover {
-          animation-play-state: paused;
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
         `}
       </style>
