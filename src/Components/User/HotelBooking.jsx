@@ -33,7 +33,6 @@ const HotelCheckout = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-   
     const fetchBookingData = async () => {
       try {
         setLoading(true);
@@ -49,10 +48,8 @@ const HotelCheckout = () => {
           const checkOutDate = new Date(latestBooking.checkOut);
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
           
-          // Calculate taxes (assuming 13% tax rate)
           const taxes = latestBooking.totalPrice * 0.13;
           
-          // Update booking details
           setBookingDetails({
             roomType: property.title,
             checkIn: latestBooking.checkIn.split('T')[0],
@@ -87,8 +84,6 @@ const HotelCheckout = () => {
     e.preventDefault();
     
     try {
-      // Here you would typically send the payment details to your backend
-      // For now, we'll just simulate the booking process
       setTimeout(() => {
         setBookingComplete(true);
       }, 1500);
@@ -106,12 +101,257 @@ const HotelCheckout = () => {
     setCurrentStep(currentStep - 1);
   };
 
-  // Inline styles with white/light gray theme
   const styles = {
-    // ... (keep all your existing styles)
+    container: {
+      minHeight: '100vh',
+      backgroundColor: '#f8f9fa',
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    },
+    innerContainer: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '20px'
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '30px',
+      padding: '20px',
+      backgroundColor: '#fff',
+      borderRadius: '10px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
+    },
+    logo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
+    },
+    logoIcon: {
+      width: '40px',
+      height: '40px',
+      backgroundColor: '#3e92cc',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontSize: '20px'
+    },
+    logoText: {
+      fontSize: '24px',
+      fontWeight: 'bold',
+      color: '#2c3e50'
+    },
+    backLink: {
+      color: '#3e92cc',
+      textDecoration: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '5px',
+      fontWeight: '500'
+    },
+    progressBar: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '40px',
+      position: 'relative',
+      padding: '0 40px'
+    },
+    progressBarBefore: {
+      content: '""',
+      position: 'absolute',
+      top: '20px',
+      left: '0',
+      right: '0',
+      height: '2px',
+      backgroundColor: '#e0e0e0',
+      zIndex: '1'
+    },
+    progressStep: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      position: 'relative',
+      zIndex: '2',
+      color: '#95a5a6'
+    },
+    progressStepActive: {
+      color: '#3e92cc'
+    },
+    mainContent: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 400px',
+      gap: '30px'
+    },
+    checkoutForm: {
+      backgroundColor: '#fff',
+      padding: '30px',
+      borderRadius: '10px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
+    },
+    sectionTitle: {
+      fontSize: '22px',
+      fontWeight: '600',
+      color: '#2c3e50',
+      marginBottom: '25px',
+      position: 'relative',
+      paddingBottom: '10px'
+    },
+    sectionTitleAfter: {
+      content: '""',
+      position: 'absolute',
+      bottom: '0',
+      left: '0',
+      width: '50px',
+      height: '3px',
+      backgroundColor: '#3e92cc',
+      borderRadius: '3px'
+    },
+    formStep: {
+      animation: 'fadeIn 0.5s ease-in-out'
+    },
+    formGroup: {
+      marginBottom: '20px'
+    },
+    formRow: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '15px'
+    },
+    label: {
+      display: 'block',
+      marginBottom: '8px',
+      fontWeight: '500',
+      color: '#34495e'
+    },
+    input: {
+      width: '100%',
+      padding: '12px 15px',
+      border: '1px solid #dcdfe6',
+      borderRadius: '6px',
+      fontSize: '16px',
+      transition: 'all 0.3s ease',
+      backgroundColor: '#f8f9fa'
+    },
+    inputFocus: {
+      borderColor: '#3e92cc',
+      boxShadow: '0 0 0 2px rgba(62, 146, 204, 0.2)',
+      backgroundColor: '#fff',
+      outline: 'none'
+    },
+    buttonGroup: {
+      display: 'flex',
+      gap: '15px',
+      marginTop: '25px'
+    },
+    btn: {
+      padding: '12px 25px',
+      borderRadius: '6px',
+      border: 'none',
+      fontSize: '16px',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    },
+    btnPrimary: {
+      backgroundColor: '#3e92cc',
+      color: 'white'
+    },
+    btnPrimaryHover: {
+      backgroundColor: '#2c7bb6',
+      transform: 'translateY(-2px)'
+    },
+    btnSecondary: {
+      backgroundColor: '#95a5a6',
+      color: 'white'
+    },
+    btnSecondaryHover: {
+      backgroundColor: '#7f8c8d',
+      transform: 'translateY(-2px)'
+    },
+    cartSummary: {
+      backgroundColor: '#fff',
+      padding: '30px',
+      borderRadius: '10px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+      alignSelf: 'start'
+    },
+    bookingDetails: {
+      marginBottom: '20px'
+    },
+    detailItem: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '10px 0',
+      borderBottom: '1px solid #ecf0f1'
+    },
+    total: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '15px 0',
+      borderTop: '2px solid #ecf0f1',
+      fontSize: '18px',
+      fontWeight: 'bold',
+      color: '#2c3e50'
+    },
+    roomPreview: {
+      margin: '20px 0',
+      borderRadius: '8px',
+      overflow: 'hidden'
+    },
+    roomImage: {
+      width: '100%',
+      height: '200px',
+      objectFit: 'cover',
+      transition: 'transform 0.3s ease'
+    },
+    securityNote: {
+      backgroundColor: '#f8f9fa',
+      padding: '15px',
+      borderRadius: '6px',
+      textAlign: 'center',
+      color: '#7f8c8d',
+      fontSize: '14px'
+    },
+    reviewSection: {
+      backgroundColor: '#f8f9fa',
+      padding: '20px',
+      borderRadius: '8px',
+      marginBottom: '20px'
+    },
+    reviewItem: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '8px 0',
+      color: '#34495e'
+    },
+    bookingConfirmation: {
+      textAlign: 'center',
+      padding: '50px 20px'
+    },
+    confirmationIcon: {
+      width: '80px',
+      height: '80px',
+      backgroundColor: '#2ecc71',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontSize: '40px',
+      margin: '0 auto 20px'
+    },
+    keyframes: `@keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }`
   };
 
-  // Function to handle hover effects
   const handleHover = (e, style, hoverStyle) => {
     if (e.type === 'mouseenter') {
       Object.assign(e.target.style, hoverStyle);
