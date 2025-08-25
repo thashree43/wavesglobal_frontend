@@ -101,7 +101,7 @@ const Navbar = () => {
               <Link to="/about" className="text-gray-700 hover:text-orange-600 font-medium transition-colors duration-200">
                 About
               </Link>
-              <Link to="/contack" className="text-gray-700 hover:text-orange-600 font-medium transition-colors duration-200">
+              <Link to="/contact" className="text-gray-700 hover:text-orange-600 font-medium transition-colors duration-200">
                 Contact
               </Link>
             </div>
