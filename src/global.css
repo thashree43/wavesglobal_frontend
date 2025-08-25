@@ -1,0 +1,9 @@
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
+
+/* Custom global styles */
+@layer base {
+  button {
+    @apply rounded-full;
+  }
+}
