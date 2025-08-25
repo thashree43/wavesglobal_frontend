@@ -1,8 +1,8 @@
 import React from "react";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import UserRoutes from "./UserRoutes";
 import AdminRoutes from "./AdminRoutes";
 import ScrollToTop from "../Components/ReusableComponent/Scroll";
+import { Route, HashRouter as Router, Routes } from "react-router-dom";
 
 const AppRoute = () => {
   return (
@@ -15,5 +15,6 @@ const AppRoute = () => {
     </Router>
   );
 };
+
 
 export default AppRoute;
