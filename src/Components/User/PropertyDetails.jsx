@@ -118,7 +118,7 @@ const PropertyDetailsPage = () => {
 
   const formatPrice = (price) => {
     if (!price) return '$0';
-    return `$${parseInt(price).toLocaleString()}`;
+    return `AED ${parseInt(price).toLocaleString()}`;
   };
 
   const getIconComponent = (iconName) => {
@@ -832,11 +832,11 @@ const PropertyDetailsPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Cleaning fee</span>
-                      <span>$25</span>
+                      <span>AED 25</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Service fee</span>
-                      <span>$15</span>
+                      <span>AED 15</span>
                     </div>
                     <hr />
                     <div className="flex justify-between font-semibold">

@@ -392,8 +392,8 @@ const Hero = () => {
 
   return (
     <>
-      <div className="overflow-x-hidden">
-        <section className="relative h-screen overflow-hidden">
+<div className="relative overflow-x-hidden pt-[90px] mb-[120px]">
+  <section className="relative min-h-screen overflow-hidden">
           <div className="absolute inset-0">
             {carouselImages.map((image, index) => (
               <div
