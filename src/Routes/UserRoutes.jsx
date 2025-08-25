@@ -6,6 +6,7 @@ import Propertypage from "../Components/User/Properties"
 import AboutUs from '../Components/User/About';
 import ProfilePage from '../Components/User/Profile';
 import ContactPage from '../Components/User/Contatct';
+import HotelCheckout from '../Components/User/HotelBooking';
 
 function UserRoutes() {
   return (
@@ -17,7 +18,7 @@ function UserRoutes() {
     <Route path='/about' element={<AboutUs/>}/>
     <Route path='/profile' element={<ProfilePage/>}/>
     <Route path='/contact' element={<ContactPage/>}/>
-
+    <Route path='/Hotelbook' element={<HotelCheckout/>}/>
   </Routes>
    </>
   )

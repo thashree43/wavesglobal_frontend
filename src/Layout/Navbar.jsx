@@ -14,7 +14,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate(); 
 
   const handleRegisterSuccess = (email) => {
     setRegisteredEmail(email);
