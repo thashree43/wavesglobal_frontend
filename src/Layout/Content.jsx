@@ -16,8 +16,12 @@ import {
   ChevronRight,
   Menu,
   X,
-  CalendarDays
+  CalendarDays,
+  ArrowRight
 } from 'lucide-react';
+import axios from 'axios';
+import { baseurl } from '../Base/Base';
+import { useNavigate } from 'react-router-dom';
 
 const AnimatedSection = ({ children, className = '', delay = 0 }) => {
   const [inView, setInView] = useState(false);
@@ -97,6 +101,22 @@ const FloatingCard = ({ children, delay = 0 }) => {
 
 const ContentSections = () => {
   const [expandedFaq, setExpandedFaq] = useState(null);
+  const [locations, setLocations] = useState([]);
+  const navigate = useNavigate();
+
+  const getlocation = async () => {
+    try {
+      const response = await axios.get(`${baseurl}user/location`)
+      const location = response.data.location
+      setLocations(location)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useEffect(() => {
+    getlocation()
+  }, [])
 
   const partners = [
     { name: 'Airbnb', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_Bélo.svg' },
@@ -108,58 +128,53 @@ const ContentSections = () => {
   ];
 
   const howItWorks = [
-    { step: '1', title: 'Search', desc: 'Browse our curated collection of luxury properties', icon: Search },
-    { step: '2', title: 'Select', desc: 'Choose your perfect staycation destination', icon: MapPin },
+    { step: '1', title: 'Search', desc: 'Browse our curated collection of premium holiday homes', icon: Search },
+    { step: '2', title: 'Select', desc: 'Choose your perfect Dubai staycation destination', icon: MapPin },
     { step: '3', title: 'Book', desc: 'Secure your booking with instant confirmation', icon: Calendar },
-    { step: '4', title: 'Enjoy', desc: 'Experience unparalleled luxury and comfort', icon: Star }
+    { step: '4', title: 'Enjoy', desc: 'Experience exceptional hospitality and comfort', icon: Star }
   ];
 
   const whyChooseUs = [
-    { title: 'Handpicked Properties', desc: 'Every property is carefully selected for luxury and comfort' },
-    { title: '24/7 Concierge', desc: 'Round-the-clock support for all your needs' },
-    { title: 'Best Price Guarantee', desc: 'We ensure you get the best deals available' },
-    { title: 'Instant Booking', desc: 'Secure your dream stay in just a few clicks' }
-  ];
-
-  const locations = [
-    { name: 'Dubai Marina', properties: 45, image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-    { name: 'Downtown Dubai', properties: 38, image: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-    { name: 'Palm Jumeirah', properties: 62, image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73c6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-    { name: 'Jumeirah Beach', properties: 29, image: 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-    { name: 'Business Bay', properties: 34, image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-    { name: 'DIFC', properties: 41, image: 'https://images.unsplash.com/photo-1605106715994-18d3fecffb98?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }
+    { title: 'Prime Location Focus', desc: 'Specializing in high-demand Dubai tourist zones like Downtown and Palm Jumeirah' },
+    { title: '5-Star Hospitality Standards', desc: 'In-house cleaning and maintenance team ensuring exceptional quality' },
+    { title: 'Transparent Operations', desc: 'No hidden fees with clear reporting and flexible agreements' },
+    { title: 'Guest Satisfaction Guaranteed', desc: 'Exceptional service resulting in repeat bookings and 5-star reviews' }
   ];
 
   const services = [
-    { title: 'Airport Transfers', desc: 'Luxury vehicle transfers to and from airports', icon: '✈️' },
-    { title: 'Personal Chef', desc: 'Gourmet dining experiences in your accommodation', icon: '👨‍🍳' },
-    { title: 'Spa Services', desc: 'In-room spa and wellness treatments', icon: '💆‍♀️' },
-    { title: 'Event Planning', desc: 'Perfect venues for special occasions', icon: '🎉' },
-    { title: 'Tour Guide', desc: 'Local expert guides for cultural experiences', icon: '🗺️' },
-    { title: 'Housekeeping', desc: 'Daily housekeeping and maintenance services', icon: '🧹' }
+    { title: 'Complete Property Management', desc: 'Full handling of operations from listings to guest check-outs', icon: '🏠' },
+    { title: '24/7 Guest Hosting', desc: 'Round-the-clock guest communication and concierge services', icon: '🛎️' },
+    { title: 'Professional Marketing', desc: 'Premium listings on Airbnb, Booking.com, and Expedia', icon: '📸' },
+    { title: 'Dynamic Pricing', desc: 'Market-driven pricing strategies to maximize returns', icon: '💰' },
+    { title: 'In-House Maintenance', desc: 'Regular upkeep by our dedicated cleaning and maintenance team', icon: '🔧' },
+    { title: 'Creative Event Experiences', desc: 'Unique events and curated experiences through WavesGlobal', icon: '🎉' }
   ];
 
   const faqs = [
-    { q: 'How do I make a reservation?', a: 'Simply select your dates, choose your property, and complete the booking process online. You\'ll receive instant confirmation.' },
-    { q: 'What is included in the price?', a: 'Our prices include accommodation, basic amenities, and 24/7 customer support. Additional services can be added during booking.' },
-    { q: 'Can I cancel or modify my booking?', a: 'Yes, cancellation and modification policies vary by property. Details are provided during booking and in your confirmation email.' },
-    { q: 'Are pets allowed?', a: 'Pet policies vary by property. Look for pet-friendly badges on listings or contact our support team for specific requirements.' },
-    { q: 'Is there a minimum stay requirement?', a: 'Minimum stay requirements depend on the property and season. This information is displayed on each property listing.' }
+    { q: 'What makes Wavescation different from other holiday home companies?', a: 'We are DTCM-licensed with in-house cleaning and maintenance teams, ensuring 5-star hospitality standards. As part of WavesGlobal Group, we also offer unique event experiences.' },
+    { q: 'Do you offer guaranteed minimum returns?', a: 'Yes, we offer property owners complete peace of mind with Guaranteed Minimum Annual Rental Income. If your property doesn\'t reach the agreed target, we cover the balance.' },
+    { q: 'Can I use my property for personal stays?', a: 'Absolutely! Owners can block dates and use their property whenever they want for personal stays, offering flexibility unlike long-term leasing.' },
+    { q: 'What locations do you specialize in?', a: 'We focus on prime Dubai locations including Downtown Dubai, Jumeirah Beach Residence (JBR), Palm Jumeirah, and other high-demand tourist areas.' },
+    { q: 'How flexible are your agreements?', a: 'We offer flexible agreements with no long-term lock-ins. You can cancel with just 30 days\' notice, providing complete flexibility.' }
   ];
 
   const reviews = [
-    { name: 'Sarah Johnson', rating: 5, review: 'Absolutely stunning property with impeccable service. Every detail was perfect!', location: 'Dubai Marina' },
-    { name: 'Ahmed Al-Rashid', rating: 5, review: 'The luxury villa exceeded all expectations. Will definitely book again!', location: 'Palm Jumeirah' },
-    { name: 'Emma Thompson', rating: 5, review: 'Outstanding experience from booking to checkout. Highly recommended!', location: 'Downtown Dubai' },
-    { name: 'Omar Hassan', rating: 5, review: 'Perfect for our anniversary celebration. The staff went above and beyond!', location: 'Jumeirah Beach' }
+    { name: 'Sarah Johnson', rating: 5, review: 'Exceptional service and spotless property! The attention to detail was remarkable.', location: 'Downtown Dubai' },
+    { name: 'Ahmed Al-Rashid', rating: 5, review: 'The property exceeded expectations. Professional management from start to finish.', location: 'Palm Jumeirah' },
+    { name: 'Emma Thompson', rating: 5, review: 'Outstanding hospitality standards. Felt like staying in a luxury hotel!', location: 'JBR' },
+    { name: 'Omar Hassan', rating: 5, review: 'Perfect for our family vacation. Will definitely book with Wavescation again!', location: 'Business Bay' }
   ];
+
+  const handleViewAllProperties = () => {
+    navigate('/property');
+  };
 
   return (
     <div style={{ paddingTop: '2rem', position: 'relative', zIndex: 1 }}>
       <section className="py-20 px-6 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-black">Our Trusted Partners</h2>
+            <h2 className="text-4xl font-bold text-center mb-16 text-black">Our Platform Partners</h2>
           </AnimatedSection>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
             {partners.map((partner, index) => (
@@ -186,10 +201,10 @@ const ContentSections = () => {
             <AnimatedSection>
               <div>
                 <h2 className="text-4xl font-bold mb-8 text-orange-500">
-                  Why Choose Waves Global?
+                  Why Choose Wavescation?
                 </h2>
                 <p className="text-xl text-gray-600 mb-12 leading-relaxed">
-                  We curate exceptional luxury experiences that go beyond ordinary stays.
+                  Dubai's most trusted DTCM-licensed holiday home management company, delivering exceptional experiences through world-class hospitality.
                 </p>
                 <div className="space-y-8">
                   {whyChooseUs.map((item, index) => (
@@ -210,9 +225,9 @@ const ContentSections = () => {
               <div className="relative">
                 <div className="bg-orange-500 rounded-3xl p-8 transform rotate-3 shadow-2xl hover:rotate-6 transition-transform duration-300">
                   <div className="bg-white rounded-2xl p-8 transform -rotate-3 hover:-rotate-6 transition-transform duration-300">
-                    <div className="text-6xl text-center mb-4">🏰</div>
-                    <h3 className="text-2xl font-bold text-center mb-4 text-black">Premium Experiences</h3>
-                    <p className="text-center text-gray-600">Luxury redefined for the discerning traveler</p>
+                    <div className="text-6xl text-center mb-4">🏖️</div>
+                    <h3 className="text-2xl font-bold text-center mb-4 text-black">Premium Holiday Homes</h3>
+                    <p className="text-center text-gray-600">Steps from everything, Miles from ordinary</p>
                   </div>
                 </div>
               </div>
@@ -256,26 +271,26 @@ const ContentSections = () => {
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4 text-black">Popular Dubai Destinations</h2>
+              <h2 className="text-4xl font-bold mb-4 text-black">Prime Dubai Locations</h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Explore Dubai's most luxurious neighborhoods and iconic locations
+                Discover our premium holiday homes in Dubai's most sought-after destinations
               </p>
             </div>
           </AnimatedSection>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {locations.map((location, index) => (
-              <FloatingCard key={index} delay={index * 200}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            {locations.slice(0, 8).map((location, index) => (
+              <FloatingCard key={index} delay={index * 100}>
                 <div className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105">
                   <div
-                    className="h-64 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                    className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                     style={{ backgroundImage: `url(${location.image})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/60 transition-all duration-300"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-2xl font-bold mb-2">{location.name}</h3>
-                    <p className="text-gray-200">{location.properties} Properties</p>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <h3 className="text-lg font-bold mb-1">{location.name}</h3>
+                    <p className="text-sm text-gray-200">{location.properties} Properties</p>
                   </div>
-                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold bg-orange-500 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                  <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300">
                     Popular
                   </div>
                 </div>
@@ -284,8 +299,12 @@ const ContentSections = () => {
           </div>
           <AnimatedSection delay={600}>
             <div className="text-center">
-              <button className="px-8 py-3 rounded-lg font-semibold bg-black text-white hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                View More Locations
+              <button 
+                onClick={handleViewAllProperties}
+                className="px-8 py-3 rounded-lg font-semibold bg-black text-white hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
+              >
+                View All Properties
+                <ArrowRight className="h-5 w-5" />
               </button>
             </div>
           </AnimatedSection>
@@ -296,7 +315,7 @@ const ContentSections = () => {
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <h2 className="text-4xl font-bold text-center mb-16 text-black">
-              Premium Services
+              Our Premium Services
             </h2>
           </AnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

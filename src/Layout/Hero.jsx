@@ -370,6 +370,23 @@ const Hero = () => {
     setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
   };
 
+  const handleSearch = () => {
+    if (!checkIn || !checkOut) {
+      alert('Please select both check-in and check-out dates');
+      return;
+    }
+
+    const searchParams = new URLSearchParams({
+      checkin: checkIn,
+      checkout: checkOut,
+      adults: guests.adults.toString(),
+      children: guests.children.toString(),
+      infants: guests.infants.toString()
+    });
+
+    window.location.href = `/property?${searchParams.toString()}`;
+  };
+
   const totalGuests = guests.adults + guests.children + guests.infants;
   const guestDisplayText = totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`;
 
@@ -473,7 +490,10 @@ const Hero = () => {
 
                     <div className="space-y-3 sm:col-span-2 lg:col-span-1">
                       <label className="block text-sm font-bold invisible">Search</label>
-                      <button className="w-full h-14 rounded-2xl font-bold text-white bg-black hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl group">
+                      <button 
+                        onClick={handleSearch}
+                        className="w-full h-14 rounded-2xl font-bold text-white bg-black hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl group"
+                      >
                         <Search className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                         <span className="tracking-wide">Search Properties</span>
                       </button>

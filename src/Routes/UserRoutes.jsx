@@ -3,6 +3,9 @@ import { Route, Routes } from "react-router-dom";
 import Homepage from '../Components/User/Homepage';
 import PropertyDetailsPage from '../Components/User/PropertyDetails';
 import Propertypage from "../Components/User/Properties"
+import AboutUs from '../Components/User/About';
+import ProfilePage from '../Components/User/Profile';
+import ContactPage from '../Components/User/Contatct';
 
 function UserRoutes() {
   return (
@@ -10,7 +13,11 @@ function UserRoutes() {
   <Routes>
     <Route path='/' element={<Homepage/>}/>
     <Route path='/property' element={<Propertypage/>}/>
-    <Route path='/p' element={<PropertyDetailsPage/>}/>
+    <Route path='/property/:id' element={<PropertyDetailsPage/>}/>
+    <Route path='/about' element={<AboutUs/>}/>
+    <Route path='/profile' element={<ProfilePage/>}/>
+    <Route path='/contact' element={<ContactPage/>}/>
+
   </Routes>
    </>
   )

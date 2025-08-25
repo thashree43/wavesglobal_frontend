@@ -1,5 +1,5 @@
-/* eslint-disable no-undef */
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
   Heart,
@@ -17,120 +17,437 @@ import {
   Loader2,
   AlertCircle,
   Home,
+  Building,
+  Building2,
+  Crown,
   Hotel,
-  Castle,
-  Mountain,
-  Waves,
-  Globe
+  Briefcase,
+  Calendar,
+  ChevronDown,
+  Plus,
+  Minus
 } from "lucide-react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import { createPortal } from "react-dom";
+import axios from "axios";
+import { baseurl } from "../../Base/Base";
 import Navbar from "../../Layout/Navbar";
 import Footer from "../../Layout/Footer";
-import axios from "axios";
 
-// Lazy load the HotelBooking component
-const HotelBooking = React.lazy(() => import("../ReusableComponent/HotelBooking"));
+const CustomDatePicker = ({ value, onChange, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dropdownRef = useRef(null);
+
+  const toggleCalendar = () => setIsOpen(!isOpen);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  const generateCalendar = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const days = [];
+    for (let i = 0; i < 42; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      days.push(currentDate);
+    }
+    
+    return days;
+  };
+
+  const isToday = (date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const isSameMonth = (date) => {
+    return date.getMonth() === selectedDate.getMonth();
+  };
+
+  const isSelected = (date) => {
+    return value && date.toDateString() === new Date(value).toDateString();
+  };
+
+  const handleDateSelect = (date) => {
+    onChange(date.toISOString().split('T')[0]);
+    setIsOpen(false);
+  };
+
+  const nextMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(newDate.getMonth() + 1);
+    setSelectedDate(newDate);
+  };
+
+  const prevMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(newDate.getMonth() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  return (
+    <div className="relative w-full">
+      <div className="relative group">
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+        <button
+          onClick={toggleCalendar}
+          className="w-full h-11 pl-10 pr-10 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-md bg-white cursor-pointer text-gray-900 text-sm text-left"
+        >
+          {value ? formatDate(new Date(value)) : placeholder}
+        </button>
+      </div>
+
+      {isOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[99999]">
+            <div
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+              onClick={toggleCalendar}
+            />
+            <div
+              ref={dropdownRef}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                         bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 
+                         p-6 w-80 z-[100000]"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={prevMonth}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <h3 className="text-lg font-semibold">
+                  {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+                </h3>
+                <button
+                  onClick={nextMonth}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {dayNames.map(day => (
+                  <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {generateCalendar().map((date, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleDateSelect(date)}
+                    className={`
+                      h-10 w-full rounded-lg text-sm font-medium transition-all duration-200
+                      ${!isSameMonth(date) ? 'text-gray-300' : 'text-gray-700'}
+                      ${isSelected(date) ? 'bg-orange-500 text-white' : ''}
+                      ${isToday(date) && !isSelected(date) ? 'bg-blue-500 text-white' : ''}
+                      ${!isSelected(date) && !isToday(date) ? 'hover:bg-gray-100' : ''}
+                    `}
+                  >
+                    {date.getDate()}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </div>
+  );
+};
+
+const GuestSelector = ({ isOpen, onClose, guests, onGuestsChange }) => {
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
+
+  const updateGuestCount = (type, operation) => {
+    const newGuests = { ...guests };
+    if (operation === 'increment') {
+      newGuests[type] = Math.min(newGuests[type] + 1, type === 'adults' ? 16 : 5);
+    } else {
+      newGuests[type] = Math.max(newGuests[type] - 1, type === 'adults' ? 1 : 0);
+    }
+    onGuestsChange(newGuests);
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[99999]">
+      <div 
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div 
+        ref={dropdownRef}
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 p-6 min-w-[320px]"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-black">Adults</div>
+              <div className="text-sm text-gray-500">Ages 13 or above</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => updateGuestCount('adults', 'decrement')}
+                disabled={guests.adults <= 1}
+                className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="w-8 text-center font-medium">{guests.adults}</span>
+              <button
+                onClick={() => updateGuestCount('adults', 'increment')}
+                disabled={guests.adults >= 16}
+                className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-black">Children</div>
+              <div className="text-sm text-gray-500">Ages 2-12</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => updateGuestCount('children', 'decrement')}
+                disabled={guests.children <= 0}
+                className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="w-8 text-center font-medium">{guests.children}</span>
+              <button
+                onClick={() => updateGuestCount('children', 'increment')}
+                disabled={guests.children >= 5}
+                className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-black">Infants</div>
+              <div className="text-sm text-gray-500">Under 2</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => updateGuestCount('infants', 'decrement')}
+                disabled={guests.infants <= 0}
+                className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="w-8 text-center font-medium">{guests.infants}</span>
+              <button
+                onClick={() => updateGuestCount('infants', 'increment')}
+                disabled={guests.infants >= 5}
+                className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <button
+              onClick={onClose}
+              className="w-full px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-medium"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+
+
+
 
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [likedProperties, setLikedProperties] = useState([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState({});
+  const [hoveredProperty, setHoveredProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [properties, setProperties] = useState([]);
+  const [neighborhoods, setNeighborhoods] = useState([]);
   const [sortBy, setSortBy] = useState("featured");
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState({ adults: 1, children: 0, infants: 0 });
+  const [guestsOpen, setGuestsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [filters, setFilters] = useState({
-    priceRange: [0, 10000],
+    priceRange: [0, 200000],
     propertyType: "",
     bedrooms: "",
     bathrooms: "",
     guests: "",
-    amenities: []
+    minArea: "",
+    neighborhood: ""
   });
 
-  // Property types with icons
   const propertyTypes = [
-    { value: "Apartment", label: "Apartment", icon: <Home size={16} /> },
-    { value: "Villa", label: "Villa", icon: <Hotel size={16} /> },
-    { value: "Penthouse", label: "Penthouse", icon: <Castle size={16} /> },
-    { value: "Beach House", label: "Beach House", icon: <Waves size={16} /> },
-    { value: "Mountain Cabin", label: "Mountain Cabin", icon: <Mountain size={16} /> }
+    { value: "Apartment", label: "Apartment", icon: <Building size={16} /> },
+    { value: "Villa", label: "Villa", icon: <Home size={16} /> },
+    { value: "Studio", label: "Studio", icon: <Building2 size={16} /> },
+    { value: "Penthouse", label: "Penthouse", icon: <Crown size={16} /> },
+    { value: "Townhouse", label: "Townhouse", icon: <Hotel size={16} /> },
+    { value: "Office", label: "Office", icon: <Briefcase size={16} /> }
   ];
 
-  // Amenities options
-  const amenitiesOptions = [
-    { value: "wifi", label: "WiFi" },
-    { value: "pool", label: "Swimming Pool" },
-    { value: "gym", label: "Gym" },
-    { value: "parking", label: "Parking" },
-    { value: "ac", label: "Air Conditioning" },
-    { value: "kitchen", label: "Kitchen" }
-  ];
+  const getUrlParams = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const params = {};
+    
+    if (searchParams.get('checkin')) {
+      params.checkin = searchParams.get('checkin');
+      setCheckIn(searchParams.get('checkin'));
+    }
+    if (searchParams.get('checkout')) {
+      params.checkout = searchParams.get('checkout');
+      setCheckOut(searchParams.get('checkout'));
+    }
+    if (searchParams.get('adults')) {
+      params.adults = searchParams.get('adults');
+      setGuests(prev => ({ ...prev, adults: parseInt(searchParams.get('adults')) || 1 }));
+    }
+    if (searchParams.get('children')) {
+      params.children = searchParams.get('children');
+      setGuests(prev => ({ ...prev, children: parseInt(searchParams.get('children')) || 0 }));
+    }
+    if (searchParams.get('infants')) {
+      params.infants = searchParams.get('infants');
+      setGuests(prev => ({ ...prev, infants: parseInt(searchParams.get('infants')) || 0 }));
+    }
+    
+    return params;
+  };
 
-  // Popular locations data
-  const popularLocations = [
-    { name: "Dubai Marina", count: 45, popular: true },
-    { name: "Downtown Dubai", count: 38, popular: true },
-    { name: "Palm Jumeirah", count: 62, popular: true },
-    { name: "Jumeirah Beach", count: 29, popular: true },
-    { name: "Business Bay", count: 34, popular: true },
-    { name: "DIFC", count: 27, popular: true }
-  ];
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    
+    if (checkIn) params.set('checkin', checkIn);
+    if (checkOut) params.set('checkout', checkOut);
+    params.set('adults', guests.adults.toString());
+    if (guests.children > 0) params.set('children', guests.children.toString());
+    if (guests.infants > 0) params.set('infants', guests.infants.toString());
+    
+    return params.toString();
+  };
 
-  // Fetch properties from API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await axios.get('http://localhost:3000/api/user/properties');
-        
-        console.log('Fetched properties:', response.data);
-        
-        if (response.data.success && Array.isArray(response.data.data)) {
-          // Simulate loading delay for demo purposes
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          setProperties(response.data.data);
-        } else {
-          throw new Error('Invalid data format received from API');
-        }
-        
-      } catch (err) {
-        let errorMessage = 'Failed to fetch properties';
-        if (err.response) {
-          errorMessage = `Server error: ${err.response.status} - ${err.response.statusText}`;
-          console.error('Response data:', err.response.data);
-        } else if (err.request) {
-          errorMessage = 'No response received from server';
-        } else {
-          errorMessage = err.message || errorMessage;
-        }
-        
-        setError(errorMessage);
-        console.error('Error fetching properties:', err);
-      } finally {
-        setIsLoading(false);
+  const fetchProperties = async () => {
+    try {
+      setIsLoading(true);
+      const urlParams = getUrlParams();
+      let endpoint = `${baseurl}user/properties`;
+      
+      if (Object.keys(urlParams).length > 0) {
+        const queryString = new URLSearchParams(urlParams).toString();
+        endpoint += `?${queryString}`;
       }
-    };
+      
+      const response = await axios.get(endpoint);
+      
+      if (response.data.success) {
+        setProperties(response.data.data);
+      } else {
+        setError("Failed to load properties");
+      }
+    } catch (error) {
+      setError("Failed to load properties. Please try again.");
+      console.error("Error fetching properties:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []);
+  const fetchNeighborhoods = async () => {
+    try {
+      const response = await axios.get(`${baseurl}user/location`);
+      if (response.data && response.data.location) {
+        setNeighborhoods(response.data.location);
+      }
+    } catch (error) {
+      console.error("Error fetching neighborhoods:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
+    fetchNeighborhoods();
+  }, [location.search]);
 
   const toggleLike = (id) => {
     setLikedProperties((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
-  };
-
-  const handleImageChange = (id, dir, imagesLength) => {
-    setCurrentImageIndex((prev) => ({
-      ...prev,
-      [id]: ((prev[id] || 0) + dir + imagesLength) % imagesLength,
-    }));
   };
 
   const handleFilterChange = (key, value) => {
@@ -140,614 +457,616 @@ const Properties = () => {
     }));
   };
 
-  const toggleAmenity = (amenity) => {
-    setFilters(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity]
-    }));
-  };
-
   const resetFilters = () => {
     setFilters({
-      priceRange: [0, 10000],
+      priceRange: [0, 200000],
       propertyType: "",
       bedrooms: "",
       bathrooms: "",
       guests: "",
-      amenities: []
+      minArea: "",
+      neighborhood: ""
     });
   };
 
-  // Filter and sort properties
+  const handlePropertyClick = (propertyId) => {
+    const queryString = buildQueryString();
+    const url = queryString ? `/property/${propertyId}?${queryString}` : `/property/${propertyId}`;
+    navigate(url);
+  };
+
+  const handleNeighborhoodClick = (neighborhood) => {
+    handleFilterChange('neighborhood', filters.neighborhood === neighborhood ? "" : neighborhood);
+  };
+
+  const handleNewSearch = () => {
+    const searchParams = new URLSearchParams();
+    
+    if (checkIn) searchParams.set('checkin', checkIn);
+    if (checkOut) searchParams.set('checkout', checkOut);
+    searchParams.set('adults', guests.adults.toString());
+    if (guests.children > 0) searchParams.set('children', guests.children.toString());
+    if (guests.infants > 0) searchParams.set('infants', guests.infants.toString());
+    
+    navigate(`/property?${searchParams.toString()}`);
+  };
+
   const filteredAndSortedProperties = () => {
+    if (!properties || properties.length === 0) return [];
+
     let filtered = properties.filter((property) => {
-      const matchesSearch = property.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesPrice = property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1];
+      if (!property || !property.status) return false;
+
+      const matchesSearch = !searchTerm || 
+        (property.title && property.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (property.location && property.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (property.neighborhood?.name && property.neighborhood.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesPrice = !filters.priceRange || 
+        (property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1]);
+
       const matchesType = !filters.propertyType || property.type === filters.propertyType;
-      const matchesBedrooms = !filters.bedrooms || property.bedrooms >= parseInt(filters.bedrooms);
-      const matchesBathrooms = !filters.bathrooms || property.bathrooms >= parseInt(filters.bathrooms);
-      const matchesGuests = !filters.guests || property.guests >= parseInt(filters.guests);
-      const matchesAmenities = filters.amenities.length === 0 || 
-                            filters.amenities.every(amenity => 
-                              property.amenities?.includes(amenity));
+
+      const matchesBedrooms = !filters.bedrooms || 
+        (property.bedrooms && property.bedrooms >= Number(filters.bedrooms));
+
+      const matchesBathrooms = !filters.bathrooms || 
+        (property.bathrooms && property.bathrooms >= Number(filters.bathrooms));
+
+      const matchesGuests = !filters.guests || 
+        (property.guests && property.guests >= Number(filters.guests));
+
+      const matchesArea = !filters.minArea || 
+        (property.area && property.area >= Number(filters.minArea));
+
+      const matchesNeighborhood = !filters.neighborhood || 
+        (property.neighborhood?.name && property.neighborhood.name === filters.neighborhood);
 
       return matchesSearch && matchesPrice && matchesType && 
-             matchesBedrooms && matchesBathrooms && matchesGuests &&
-             matchesAmenities;
+             matchesBedrooms && matchesBathrooms && matchesGuests && 
+             matchesArea && matchesNeighborhood;
     });
 
-    // Sort properties
     switch (sortBy) {
       case "priceLow":
-        return filtered.sort((a, b) => a.price - b.price);
+        return filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
       case "priceHigh":
-        return filtered.sort((a, b) => b.price - a.price);
+        return filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
       case "newest":
-        return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      case "rating":
-        return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        return filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      case "area":
+        return filtered.sort((a, b) => (b.area || 0) - (a.area || 0));
       default:
         return filtered;
     }
   };
 
-  // Loading skeleton component with shimmer effect
   const PropertySkeleton = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white rounded-3xl shadow-sm overflow-hidden relative overflow-hidden"
-    >
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-100 to-transparent animate-shimmer" />
-      
-      <div className="h-64 bg-gradient-to-r from-gray-100 to-gray-200 relative z-10">
-        <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
-      </div>
-      <div className="p-6 space-y-4 relative z-10">
-        <div className="h-6 bg-gray-100 rounded-lg animate-pulse"></div>
-        <div className="h-4 bg-gray-100 rounded w-2/3 animate-pulse"></div>
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
+      <div className="h-64 bg-gradient-to-r from-gray-100 to-gray-200"></div>
+      <div className="p-6 space-y-4">
+        <div className="h-6 bg-gray-200 rounded-lg"></div>
+        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
         <div className="flex gap-4">
-          <div className="h-4 bg-gray-100 rounded w-16 animate-pulse"></div>
-          <div className="h-4 bg-gray-100 rounded w-16 animate-pulse"></div>
-          <div className="h-4 bg-gray-100 rounded w-16 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-16"></div>
+          <div className="h-4 bg-gray-200 rounded w-16"></div>
+          <div className="h-4 bg-gray-200 rounded w-16"></div>
         </div>
         <div className="flex justify-between items-center">
-          <div className="h-6 bg-gray-100 rounded w-20 animate-pulse"></div>
-          <div className="h-8 bg-gray-100 rounded w-20 animate-pulse"></div>
+          <div className="h-6 bg-gray-200 rounded w-20"></div>
+          <div className="h-8 bg-gray-200 rounded w-20"></div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
+
+  const totalGuests = guests.adults + guests.children + guests.infants;
+  const guestDisplayText = totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`;
 
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-xl p-8 text-center max-w-md"
-        >
+        <div className="bg-white rounded-3xl shadow-xl p-8 text-center max-w-md">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Oops! Something went wrong</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Something went wrong</h3>
           <p className="text-gray-600 mb-6">{error}</p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={() => window.location.reload()}
             className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl transition-all duration-300"
           >
             Try Again
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Navbar />
-      
-      <LayoutGroup>
-        <motion.main 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="container mx-auto px-4 py-8"
-        >
-          {/* Hero Section */}
-          <motion.section 
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="mb-12 text-center"
-          >
-            <motion.h1 
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              Discover Luxury Stays in Dubai
-            </motion.h1>
-            <motion.p 
-              className="text-lg text-gray-600 max-w-2xl mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              Find your perfect accommodation from our curated collection of premium properties
-            </motion.p>
-          </motion.section>
+    <>
+      <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+          <Navbar />
 
-          {/* Popular Locations */}
-          <motion.section 
-            className="mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Globe className="text-blue-500" />
-              Popular Areas
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {popularLocations.map((location, index) => (
-                <motion.div
-                  key={location.name}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                  whileHover={{ 
-                    y: -5,
-                    transition: { duration: 0.2 }
-                  }}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg border border-gray-100 p-4 cursor-pointer transition-all duration-300"
-                >
-                  <h3 className="font-semibold text-gray-800">{location.name}</h3>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-gray-500">{location.count} properties</span>
-                    {location.popular && (
-                      <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                        Popular
-                      </span>
-                    )}
+          <main className="container mx-auto px-4 pt-24 pb-10">
+            <section className="mb-8 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-orange-700 to-orange-600">
+                Discover Premium Properties
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Find your perfect accommodation from our curated collection of luxury properties
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Check In</label>
+                    <CustomDatePicker
+                      value={checkIn}
+                      onChange={setCheckIn}
+                      placeholder="Select date"
+                    />
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
 
-          {/* Search and Filters */}
-          <motion.section 
-            className="mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              {/* Search Bar */}
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                className="relative flex-1 max-w-2xl"
-              >
-                <div className="flex items-center gap-3 bg-white shadow-sm border border-gray-200 px-4 py-3 rounded-xl hover:shadow-md transition-all duration-300">
-                  <Search className="text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Search by property name or location..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 outline-none bg-transparent placeholder-gray-400 text-gray-700"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Check Out</label>
+                    <CustomDatePicker
+                      value={checkOut}
+                      onChange={setCheckOut}
+                      placeholder="Select date"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Guests</label>
+                    <div className="relative group">
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+                      <button
+                        onClick={() => setGuestsOpen(!guestsOpen)}
+                        className="w-full h-11 pl-10 pr-10 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-md bg-white cursor-pointer text-gray-900 text-sm text-left"
+                      >
+                        {guestDisplayText}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end">
+                    <button
+                      onClick={handleNewSearch}
+                      className="w-full h-11 rounded-xl font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                    >
+                      <Search className="h-4 w-4" />
+                      Search
+                    </button>
+                  </div>
                 </div>
-              </motion.div>
-
-              {/* Controls */}
-              <div className="flex items-center gap-3">
-                <motion.button
-                  layout
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setFilterOpen(!filterOpen)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl shadow-sm transition-all duration-300 ${
-                    filterOpen 
-                      ? 'bg-black text-white' 
-                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
-                  }`}
-                >
-                  <SlidersHorizontal size={18} />
-                  <span className="hidden sm:inline">Filters</span>
-                </motion.button>
-
-                <motion.select
-                  whileHover={{ scale: 1.02 }}
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-3 rounded-xl shadow-sm bg-white border border-gray-200 outline-none hover:bg-gray-50 transition-all duration-300 text-gray-700"
-                >
-                  <option value="featured">Featured</option>
-                  <option value="priceLow">Price: Low to High</option>
-                  <option value="priceHigh">Price: High to Low</option>
-                  <option value="newest">Newest First</option>
-                  <option value="rating">Top Rated</option>
-                </motion.select>
               </div>
-            </div>
+            </section>
 
-            {/* Advanced Filters Panel */}
-            <AnimatePresence>
+            {neighborhoods.length > 0 && (
+              <section className="mb-8">
+                <div className="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
+                  <div className="relative">
+                    <div className="flex gap-4 animate-scroll">
+                      {[...neighborhoods, ...neighborhoods].map((neighborhood, index) => (
+                        <button
+                          key={`${neighborhood.name || neighborhood._id}-${index}`}
+                          onClick={() => handleNeighborhoodClick(neighborhood.name)}
+                          className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 ${
+                            filters.neighborhood === neighborhood.name
+                              ? 'bg-orange-500 text-white shadow-lg'
+                              : 'bg-gray-100 hover:bg-orange-100 text-gray-700 hover:text-orange-700'
+                          }`}
+                        >
+                          {neighborhood.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            <section className="mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="relative flex-1 max-w-2xl">
+                  <div className="flex items-center gap-3 bg-white shadow-sm border border-gray-200 px-4 py-3 rounded-xl hover:shadow-md transition-all duration-300">
+                    <Search className="text-gray-400" size={20} />
+                    <input
+                      type="text"
+                      placeholder="Search by property name, location, or neighborhood..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="flex-1 outline-none bg-transparent placeholder-gray-400 text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setFilterOpen(!filterOpen)}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-xl shadow-sm transition-all duration-300 ${
+                      filterOpen 
+                        ? 'bg-black text-white' 
+                        : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                    }`}
+                  >
+                    <SlidersHorizontal size={18} />
+                    <span className="hidden sm:inline">Filters</span>
+                  </button>
+
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-4 py-3 rounded-xl shadow-sm bg-white border border-gray-200 outline-none hover:bg-gray-50 transition-all duration-300 text-gray-700"
+                  >
+                    <option value="featured">Featured</option>
+                    <option value="priceLow">Price: Low to High</option>
+                    <option value="priceHigh">Price: High to Low</option>
+                    <option value="newest">Newest First</option>
+                    <option value="area">Largest Area</option>
+                  </select>
+                </div>
+              </div>
+
               {filterOpen && (
-                <motion.div
-                  layout
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white rounded-xl shadow-lg border border-gray-200 mt-4 overflow-hidden"
-                >
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 mt-4 overflow-hidden">
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg font-semibold text-gray-800">Filter Properties</h3>
                       <button
                         onClick={resetFilters}
-                        className="text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
+                        className="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors"
                       >
                         Reset All
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {/* Price Range */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Price Range (${filters.priceRange[0]} - ${filters.priceRange[1]})
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Price Range (${filters.priceRange[0].toLocaleString()} - ${filters.priceRange[1].toLocaleString()})
                         </label>
-                        <div className="space-y-2">
-                          <input
-                            type="range"
-                            min="0"
-                            max="10000"
-                            step="100"
-                            value={filters.priceRange[1]}
-                            onChange={(e) => handleFilterChange('priceRange', [0, +e.target.value])}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                          />
-                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="200000"
+                          step="5000"
+                          value={filters.priceRange[1]}
+                          onChange={(e) => handleFilterChange('priceRange', [0, +e.target.value])}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
                       </div>
 
-                      {/* Property Type */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           Property Type
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={filters.propertyType}
+                          onChange={(e) => handleFilterChange('propertyType', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none hover:border-gray-300 transition-colors"
+                        >
+                          <option value="">All Types</option>
                           {propertyTypes.map((type) => (
-                            <motion.button
-                              key={type.value}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => handleFilterChange('propertyType', type.value)}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                                filters.propertyType === type.value
-                                  ? 'bg-black text-white'
-                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                              }`}
-                            >
-                              {type.icon}
+                            <option key={type.value} value={type.value}>
                               {type.label}
-                            </motion.button>
+                            </option>
                           ))}
-                        </div>
+                        </select>
                       </div>
 
-                      {/* Bedrooms */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Bedrooms
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Neighborhood
+                        </label>
+                        <select
+                          value={filters.neighborhood}
+                          onChange={(e) => handleFilterChange('neighborhood', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none hover:border-gray-300 transition-colors"
+                        >
+                          <option value="">All Neighborhoods</option>
+                          {neighborhoods.map((neighborhood) => (
+                            <option key={neighborhood._id || neighborhood.name} value={neighborhood.name}>
+                              {neighborhood.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Minimum Area (m²)
+                        </label>
+                        <input
+                          type="number"
+                          value={filters.minArea}
+                          onChange={(e) => handleFilterChange('minArea', e.target.value)}
+                          placeholder="Any size"
+                          className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none hover:border-gray-300 transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Min Bedrooms
                         </label>
                         <div className="flex gap-2">
-                          {[1, 2, 3, 4].map(num => (
-                            <motion.button
+                          {[1, 2, 3, 4, 5].map(num => (
+                            <button
                               key={num}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleFilterChange('bedrooms', num)}
+                              onClick={() => handleFilterChange('bedrooms', 
+                                filters.bedrooms === num.toString() ? "" : num.toString())}
                               className={`px-3 py-2 rounded-lg text-sm transition-all ${
                                 filters.bedrooms === num.toString()
-                                  ? 'bg-black text-white'
+                                  ? 'bg-orange-500 text-white'
                                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                               }`}
                             >
                               {num}+
-                            </motion.button>
+                            </button>
                           ))}
                         </div>
                       </div>
 
-                      {/* Amenities */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Amenities
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Min Bathrooms
                         </label>
-                        <div className="flex flex-wrap gap-2">
-                          {amenitiesOptions.map(amenity => (
-                            <motion.button
-                              key={amenity.value}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => toggleAmenity(amenity.value)}
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => handleFilterChange('bathrooms', 
+                                filters.bathrooms === num.toString() ? "" : num.toString())}
                               className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                                filters.amenities.includes(amenity.value)
-                                  ? 'bg-black text-white'
+                                filters.bathrooms === num.toString()
+                                  ? 'bg-orange-500 text-white'
                                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                               }`}
                             >
-                              {amenity.label}
-                            </motion.button>
+                              {num}+
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Min Guests
+                        </label>
+                        <div className="flex gap-2">
+                          {[1, 2, 4, 6, 8].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => handleFilterChange('guests', 
+                                filters.guests === num.toString() ? "" : num.toString())}
+                              className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                                filters.guests === num.toString()
+                                  ? 'bg-orange-500 text-white'
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              {num}+
+                            </button>
                           ))}
                         </div>
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
-          </motion.section>
+            </section>
 
-          {/* Properties Grid */}
-          {isLoading ? (
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {[...Array(8)].map((_, i) => (
-                <PropertySkeleton key={i} />
-              ))}
-            </motion.div>
-          ) : filteredAndSortedProperties().length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md mx-auto">
-                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">No properties found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your search or filters</p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setSearchTerm("");
-                    resetFilters();
-                  }}
-                  className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl transition-all duration-300"
-                >
-                  Clear Search
-                </motion.button>
+            <div className="mb-6">
+              <p className="text-gray-600">
+                Showing {filteredAndSortedProperties().length} of {properties.length} properties
+              </p>
+            </div>
+
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <PropertySkeleton key={i} />
+                ))}
               </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              layout
-            >
-              {filteredAndSortedProperties().map((property, index) => (
-                <motion.article
-                  key={property._id || index}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  whileHover={{ 
-                    y: -5,
-                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
-                  }}
-                  className="group bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300"
-                >
-                  {/* Image Gallery */}
-                  <div className="relative h-64 overflow-hidden">
-                    {property.images && property.images.length > 0 ? (
-                      <>
-                        <LazyLoadImage
-                          src={property.images[currentImageIndex[property._id] || 0]}
+            ) : filteredAndSortedProperties().length === 0 ? (
+              <div className="text-center py-16">
+                <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md mx-auto">
+                  <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No properties found</h3>
+                  <p className="text-gray-600 mb-4">Try adjusting your search or filters</p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      resetFilters();
+                    }}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition-all duration-300"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredAndSortedProperties().map((property, index) => (
+                  <article
+                    key={property._id || index}
+                    onMouseEnter={() => setHoveredProperty(property._id)}
+                    onMouseLeave={() => setHoveredProperty(null)}
+                    className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+                    onClick={() => handlePropertyClick(property._id)}
+                  >
+                    <div className="relative h-64 overflow-hidden">
+                      {property.images && property.images.length > 0 ? (
+                        <img
+                          src={hoveredProperty === property._id && property.images[1] 
+                            ? property.images[1].url 
+                            : property.images[0].url}
                           alt={property.title}
-                          effect="blur"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          wrapperClassName="w-full h-full"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
-                        
-                        {property.images.length > 1 && (
-                          <>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleImageChange(property._id, -1, property.images.length)}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300"
-                            >
-                              <ChevronLeft size={16} className="text-gray-700" />
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => handleImageChange(property._id, 1, property.images.length)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300"
-                            >
-                              <ChevronRight size={16} className="text-gray-700" />
-                            </motion.button>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">No Image</span>
-                      </div>
-                    )}
-
-                    {/* Property Badge */}
-                    <div className="absolute top-3 left-3">
-                      <span className="bg-black text-white px-3 py-1 rounded-full text-xs font-medium">
-                        {property.type}
-                      </span>
-                    </div>
-
-                    {/* Like Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => toggleLike(property._id)}
-                      className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all duration-300 ${
-                        likedProperties.includes(property._id)
-                          ? "bg-red-500 text-white"
-                          : "bg-white/90 hover:bg-white text-gray-600"
-                      }`}
-                    >
-                      <Heart 
-                        size={18} 
-                        fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
-                      />
-                    </motion.button>
-
-                    {/* Rating Badge */}
-                    {property.rating && (
-                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
-                        <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-medium">{property.rating.toFixed(1)}</span>
-                      </div>
-                    )}
-
-                    {/* Image Indicators */}
-                    {property.images && property.images.length > 1 && (
-                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-                        {property.images.map((_, imgIndex) => (
-                          <div
-                            key={imgIndex}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                              imgIndex === (currentImageIndex[property._id] || 0)
-                                ? 'bg-white'
-                                : 'bg-white/50'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Property Details */}
-                  <div className="p-5">
-                    <div className="mb-3">
-                      <h3 className="font-bold text-lg text-gray-800 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                        {property.title || "Untitled Property"}
-                      </h3>
-                      <div className="flex items-center text-gray-500 text-sm gap-1">
-                        <MapPin size={14} />
-                        <span className="line-clamp-1">{property.location || "Location not specified"}</span>
-                      </div>
-                    </div>
-
-                    {/* Amenities */}
-                    <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-4">
-                      {property.bedrooms && (
-                        <span className="flex items-center gap-1">
-                          <Bed size={14} />
-                          {property.bedrooms} bed{property.bedrooms !== 1 ? 's' : ''}
-                        </span>
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <span className="text-gray-400">No Image</span>
+                        </div>
                       )}
-                      {property.bathrooms && (
-                        <span className="flex items-center gap-1">
-                          <Bath size={14} />
-                          {property.bathrooms} bath{property.bathrooms !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                      {property.area && (
-                        <span className="flex items-center gap-1">
-                          <Square size={14} />
-                          {property.area} m²
-                        </span>
-                      )}
-                    </div>
 
-                    {/* Price and CTA */}
-                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                      <div>
-                        <span className="text-xl font-bold text-gray-900">
-                          ${property.price?.toLocaleString() || "N/A"}
-                        </span>
-                        <span className="text-gray-500 text-sm ml-1">/night</span>
+                      <div className="absolute top-4 left-4">
+                        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium">
+                          {propertyTypes.find(t => t.value === property.type)?.icon}
+                          <span>{property.type}</span>
+                        </div>
                       </div>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setSelectedProperty(property)}
-                        className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(property._id);
+                        }}
+                        className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
+                          likedProperties.includes(property._id)
+                            ? "bg-red-500 text-white scale-110"
+                            : "bg-white/95 hover:bg-white text-gray-700"
+                        }`}
                       >
-                        <Eye size={16} />
-                        <span>View</span>
-                      </motion.button>
+                        <Heart 
+                          size={18} 
+                          fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
+                        />
+                      </button>
+
+                      {property.images && property.images.length > 1 && (
+                        <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
+                          1/{property.images.length}
+                        </div>
+                      )}
+
+                      {property.propertyHighlights && property.propertyHighlights.length > 0 && (
+                        <div className="absolute bottom-4 left-4">
+                          <div className="bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
+                            {property.propertyHighlights[0].name}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.article>
-              ))}
-            </motion.div>
-          )}
-        </motion.main>
-      </LayoutGroup>
 
-      {/* Booking Modal */}
-      <AnimatePresence>
-        {selectedProperty && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedProperty(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setSelectedProperty(null)}
-                  className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
-                >
-                  <X size={20} />
-                </motion.button>
-                <Suspense fallback={
-                  <div className="min-h-[400px] flex items-center justify-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                      className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
-                    />
-                  </div>
-                }>
-                  <HotelBooking 
-                    property={selectedProperty} 
-                    onClose={() => setSelectedProperty(null)} 
-                  />
-                </Suspense>
+                    <div className="p-6">
+                      <div className="mb-4">
+                        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                          {property.title || "Untitled Property"}
+                        </h3>
+                        <div className="flex items-center text-gray-500 text-sm gap-1 mb-1">
+                          <MapPin size={14} />
+                          <span className="line-clamp-1">
+                            {property.neighborhood?.name || property.location || "Location not specified"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
+                        {property.bedrooms && (
+                          <div className="flex items-center gap-2">
+                            <Bed size={16} className="text-gray-400" />
+                            <span>{property.bedrooms} Bed{property.bedrooms !== 1 ? 's' : ''}</span>
+                          </div>
+                        )}
+                        {property.bathrooms && (
+                          <div className="flex items-center gap-2">
+                            <Bath size={16} className="text-gray-400" />
+                            <span>{property.bathrooms} Bath{property.bathrooms !== 1 ? 's' : ''}</span>
+                          </div>
+                        )}
+                        {property.guests && (
+                          <div className="flex items-center gap-2">
+                            <Users size={16} className="text-gray-400" />
+                            <span>{property.guests} Guest{property.guests !== 1 ? 's' : ''}</span>
+                          </div>
+                        )}
+                        {property.area && (
+                          <div className="flex items-center gap-2">
+                            <Square size={16} className="text-gray-400" />
+                            <span>{property.area} m²</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {property.amenities && (
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-1">
+                            {property.amenities.general?.slice(0, 3).map((amenity, idx) => (
+                              <span key={idx} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
+                                {amenity.name}
+                              </span>
+                            ))}
+                            {property.amenities.general?.length > 3 && (
+                              <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
+                                +{property.amenities.general.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <div>
+                          <span className="text-2xl font-bold text-gray-900">
+                            ${property.price?.toLocaleString() || "N/A"}
+                          </span>
+                          <span className="text-gray-500 text-sm ml-1">/night</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePropertyClick(property._id);
+                          }}
+                          className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            )}
+          </main>
+        </div>
+      </div>
+      
+      <GuestSelector 
+        isOpen={guestsOpen}
+        onClose={() => setGuestsOpen(false)}
+        guests={guests}
+        onGuestsChange={setGuests}
+      />
+      
+      <Footer/>
 
-      <Footer />
-    </div>
+      <style>
+        {`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+        
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+        `}
+      </style>
+    </>
   );
 };
 
