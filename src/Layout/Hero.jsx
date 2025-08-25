@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Calendar, Users, ChevronLeft, ChevronRight, ChevronDown, Plus, Minus } from 'lucide-react';
 import { createPortal } from "react-dom";
+import { useNavigate } from 'react-router-dom';
 
 const CustomDatePicker = ({ value, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -173,7 +174,6 @@ const GuestSelector = React.memo(({ isOpen, onClose, guests, onGuestsChange }) =
   );
 });
 
-// Separate typewriter component to isolate re-renders
 const TypewriterText = React.memo(() => {
   const [typewriterText, setTypewriterText] = useState('');
   const [typewriterIndex, setTypewriterIndex] = useState(0);
@@ -211,6 +211,7 @@ const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [guestsOpen, setGuestsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const carouselImages = [
     {url:'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80', title:'Dubai Marina Towers'},
@@ -245,9 +246,8 @@ const Hero = () => {
       children: guests.children.toString(),
       infants: guests.infants.toString()
     });
-    // For demo purposes, just log the search params
-    console.log('Search params:', searchParams.toString());
-  }, [checkIn, checkOut, guests]);
+    navigate(`/property?${searchParams.toString()}`);
+  }, [checkIn, checkOut, guests, navigate]);
 
   const handleGuestsChange = useCallback((newGuests) => {
     setGuests(newGuests);
