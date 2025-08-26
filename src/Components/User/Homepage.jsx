@@ -1,18 +1,47 @@
-import React from 'react'
-import Navbar from '../../Layout/Navbar'
-import Footer from '../../Layout/Footer';
-import Hero from '../../Layout/Hero';
-import ContentSections from '../../Layout/Content';
+import React from "react";
+import Navbar from "../../Layout/Navbar";
+import Footer from "../../Layout/Footer";
+import Hero from "../../Layout/Hero";
+import ContentSections from "../../Layout/Content";
 
 const Homepage = () => {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <Navbar />
-        <Hero />
-        <ContentSections />
-        <Footer />
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
+      <Hero />
+      <ContentSections />
+      <Footer />
+
+      {/* Floating WhatsApp + Mail */}
+      <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
+        {/* WhatsApp */}
+        <a
+          href="https://wa.me/919207904611"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+            alt="WhatsApp"
+            className="h-10 w-10"
+          />
+        </a>
+
+        {/* Mail */}
+        <a
+          href="mailto:nazeehnahaban09@gmail.com"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png"
+            alt="Mail"
+            className="h-10 w-10"
+          />
+        </a>
       </div>
-    );
-  };
-  
-  export default Homepage;
+    </div>
+  );
+};
+
+export default Homepage;
