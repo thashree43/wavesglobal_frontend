@@ -449,29 +449,36 @@ const Properties = () => {
     const searchParams = new URLSearchParams(location.search);
     const params = {};
     
-    if (searchParams.get('checkin')) {
-      params.checkin = searchParams.get('checkin');
-      setCheckIn(searchParams.get('checkin'));
+    if (searchParams.get("checkin")) {
+      params.checkin = searchParams.get("checkin");
+      setCheckIn(searchParams.get("checkin"));
     }
-    if (searchParams.get('checkout')) {
-      params.checkout = searchParams.get('checkout');
-      setCheckOut(searchParams.get('checkout'));
+    if (searchParams.get("checkout")) {
+      params.checkout = searchParams.get("checkout");
+      setCheckOut(searchParams.get("checkout"));
     }
-    if (searchParams.get('adults')) {
-      params.adults = searchParams.get('adults');
-      setGuests(prev => ({ ...prev, adults: parseInt(searchParams.get('adults')) || 1 }));
+    if (searchParams.get("adults")) {
+      params.adults = searchParams.get("adults");
+      setGuests((prev) => ({ ...prev, adults: parseInt(searchParams.get("adults")) || 1 }));
     }
-    if (searchParams.get('children')) {
-      params.children = searchParams.get('children');
-      setGuests(prev => ({ ...prev, children: parseInt(searchParams.get('children')) || 0 }));
+    if (searchParams.get("children")) {
+      params.children = searchParams.get("children");
+      setGuests((prev) => ({ ...prev, children: parseInt(searchParams.get("children")) || 0 }));
     }
-    if (searchParams.get('infants')) {
-      params.infants = searchParams.get('infants');
-      setGuests(prev => ({ ...prev, infants: parseInt(searchParams.get('infants')) || 0 }));
+    if (searchParams.get("infants")) {
+      params.infants = searchParams.get("infants");
+      setGuests((prev) => ({ ...prev, infants: parseInt(searchParams.get("infants")) || 0 }));
     }
-    
+  
+    // ✅ Add this
+    if (searchParams.get("locationId")) {
+      params.locationId = searchParams.get("locationId");
+    }
+  
     return params;
   };
+
+  
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
