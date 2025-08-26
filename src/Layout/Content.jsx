@@ -19,6 +19,12 @@ import {
   CalendarDays,
   ArrowRight
 } from 'lucide-react';
+import Airbnb from "../assets/Airbnb.png";
+import Booking from "../assets/Booking.png";
+import Expedia from "../assets/Expedia.png";
+import Trivago from "../assets/Trivago.png";
+import Hotels from "../assets/Hotels.png";
+import Agoda from "../assets/Agoda.png";
 import axios from 'axios';
 import { baseurl } from '../Base/Base';
 import { useNavigate } from 'react-router-dom';
@@ -119,12 +125,12 @@ const ContentSections = () => {
   }, [])
 
   const partners = [
-    { name: 'Airbnb', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_Bélo.svg' },
-    { name: 'Booking.com', logo: 'https://logos-world.net/wp-content/uploads/2021/08/Booking-Logo.png' },
-    { name: 'Expedia', logo: 'https://logos-world.net/wp-content/uploads/2020/05/Expedia-Logo.png' },
-    { name: 'Trivago', logo: 'https://logos-world.net/wp-content/uploads/2020/05/Trivago-Logo.png' },
-    { name: 'Hotels.com', logo: 'https://logos-world.net/wp-content/uploads/2020/05/Hotels.com-Logo.png' },
-    { name: 'Agoda', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ce/Agoda_transparent_logo.png' }
+    { name: "Airbnb", logo: Airbnb },
+    { name: "Booking.com", logo: Booking },
+    { name: "Expedia", logo: Expedia },
+    { name: "Trivago", logo: Trivago },
+    { name: "Hotels.com", logo: Hotels },
+    { name: "Agoda", logo: Agoda },
   ];
 
   const howItWorks = [
@@ -177,20 +183,21 @@ const ContentSections = () => {
             <h2 className="text-4xl font-bold text-center mb-16 text-black">Our Platform Partners</h2>
           </AnimatedSection>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
-            {partners.map((partner, index) => (
-              <FloatingCard key={index} delay={index * 100}>
-                <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-100 hover:border-orange-300 group">
-                  <div className="h-16 flex items-center justify-center">
-                    <img
-                      src={partner.logo}
-                      alt={partner.name}
-                      className="max-h-12 max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                </div>
-              </FloatingCard>
-            ))}
-          </div>
+  {partners.map((partner, index) => (
+    <FloatingCard key={index} delay={index * 100}>
+      <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-100 hover:border-orange-300 group">
+        <div className="h-16 flex items-center justify-center">
+          <img
+            src={partner.logo}
+            alt={partner.name}
+            className="max-h-12 max-w-full object-contain transition-all duration-300"
+          />
+        </div>
+      </div>
+    </FloatingCard>
+  ))}
+</div>
+
         </div>
       </section>
 
