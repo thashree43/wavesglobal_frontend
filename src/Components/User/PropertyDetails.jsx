@@ -669,7 +669,7 @@ const PropertyDetailsPage = () => {
                     <p className="text-sm text-gray-600"><strong>Nearby Attractions:</strong></p>
                     <ul className="text-sm text-gray-700 space-y-1">
                       {property.nearbyAttractions.map((attraction, index) => (
-                        <li key={index}>• {attraction}</li>
+                        <li key={index}>• {attraction.name} - {attraction.distance}km away</li>
                       ))}
                     </ul>
                   </div>
