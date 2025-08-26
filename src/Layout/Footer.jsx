@@ -34,7 +34,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className={`transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             <h3 className="text-2xl font-bold mb-6 text-orange-500">
-              Waves Global
+              Wavescation
             </h3>
             <p className="text-gray-600 mb-6 leading-relaxed">
               Your gateway to extraordinary luxury staycation experiences across Dubai.
@@ -91,7 +91,7 @@ const Footer = () => {
         
         <div className={`border-t border-gray-200 pt-8 transition-all duration-1000 delay-800 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <p className="text-center text-gray-600 text-lg">
-            © 2025 Waves Global. All rights reserved.
+            © 2025 Wavescation. All rights reserved.
           </p>
         </div>
       </div>
