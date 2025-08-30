@@ -31,7 +31,7 @@ import Navbar from '../../Layout/Navbar';
 import Footer from '../../Layout/Footer';
 import axios from 'axios';
 import { baseurl } from '../../Base/Base';
-import { useParams, useLocation, Link } from "react-router-dom"
+import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
 
 const PropertyDetailsPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -46,8 +46,10 @@ const PropertyDetailsPage = () => {
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
   const [bookedDates, setBookedDates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId,setuserId] = useState()
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const PropertySkeleton = () => (
     <div className="animate-pulse">
@@ -113,7 +115,24 @@ const PropertyDetailsPage = () => {
     </div>
   );
 
-  const getProperty = async () => {
+  const getUser = async() => {
+    try {
+      const response = await axios.get(`${baseurl}User/getuser`, {
+        withCredentials: true  
+      })
+      const user = response.data.user
+      console.log("firstoooooo",user._id)
+      if(user) {
+        setuserId(user._id)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  } 
+
+
+
+   const getProperty = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${baseurl}user/property/${id}`, {
@@ -147,6 +166,10 @@ const PropertyDetailsPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(()=>{
+   getUser()
+  },[])
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -256,7 +279,7 @@ const PropertyDetailsPage = () => {
         const year = selectedDate.getFullYear();
         const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
         const date = String(selectedDate.getDate()).padStart(2, "0");
-        const dateString = `${year}-${month}-${date}`; // YYYY-MM-DD (local, no UTC shift)
+        const dateString = `${year}-${month}-${date}`;
     
         onDateSelect(dateString);
         onClose();
@@ -452,6 +475,11 @@ const PropertyDetailsPage = () => {
   };
 
   const handleBookNow = async() => {
+    if (!selectedDates.checkin || !selectedDates.checkout) {
+      alert('Please select check-in and check-out dates');
+      return;
+    }
+
     const bookingData = {
       propertyId: property._id,
       propertyTitle: property.title,
@@ -468,19 +496,27 @@ const PropertyDetailsPage = () => {
       propertyImage: property.images?.[0]?.url
     };
 
-    if (!selectedDates.checkin || !selectedDates.checkout) {
-      alert('Please select check-in and check-out dates');
-      return;
-    }
-
     try {
       const response = await axios.post(`${baseurl}user/add-booking`, bookingData, {
         headers: { 'Content-Type': 'application/json' },
         withCredentials: true,
       });
-      console.log(response);
+      
+      if (response.status === 200 || response.status === 201) {
+        const queryParams = new URLSearchParams({
+          userId: userId,
+          propertyId: property._id,
+          checkin: selectedDates.checkin,
+          checkout: selectedDates.checkout,
+          guests: selectedGuests,
+          totalPrice: (property.price * calculateNights()) + 40
+        });
+        
+        navigate(`/checkout?${queryParams.toString()}`);
+      }
     } catch (error) {
       console.error(error);
+      alert('Booking failed. Please try again.');
     }
   };
 
@@ -985,11 +1021,10 @@ const PropertyDetailsPage = () => {
                       Book Now - {formatPrice(property.price)}/night
                     </button>
                     <Link to="/property">
-  <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors bg-white">
-    View More Properties
-  </button>
-</Link>
-
+                      <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors bg-white">
+                        View More Properties
+                      </button>
+                    </Link>
                   </div>
                 </div>
               </div>

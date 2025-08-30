@@ -1,13 +1,14 @@
+import axios from "axios";
 import React, { useState } from "react";
+import { baseurl } from "../../Base/Base";
+import { toast } from 'react-toastify';
 
-const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
+const AuthModal = ({ show, onClose, onRegisterSuccess, onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   
-  // Login form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Registration form state
   const [username, setUsername] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -29,66 +30,50 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3000/api/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-      
-      console.log("Login Success:", data);
+      const res = await axios.post(
+        `${baseurl}User/login`,
+        { email, password },
+        { withCredentials: true }
+      );
+  
+      console.log("Login Success:", res.data);
+  
       resetForm();
-      onClose();
+      if (res.data.user) {
+        onLoginSuccess(res.data.user);
+      }
     } catch (error) {
-      console.error("Login Error:", error.message);
-      alert(error.message || "Login failed");
+      console.error("Login Error:", error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || "Login failed");
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     if (regPassword !== confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     try {
-      const res = await fetch("http://localhost:3000/api/user/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const res = await axios.post(
+        `${baseurl}User/register`,
+        {
           username,
           email: regEmail,
           phone,
           password: regPassword,
-        }),
-      });
+        },
+        { withCredentials: true }
+      );
       
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || "Registration failed");
-      }
-      
-      console.log("Registration Success:", data);
+      console.log("Registration Success:", res.data);
       
       resetForm();
       onClose();
       onRegisterSuccess(regEmail);
     } catch (error) {
-      console.error("Registration Error:", error.message);
-      alert(error.message || "Registration failed");
+      console.error("Registration Error:", error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 
@@ -102,7 +87,6 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-xl border border-gray-100 overflow-hidden">
         
-        {/* Header */}
         <div className="relative px-6 py-6" style={{ backgroundColor: 'rgb(248, 252, 255)' }}>
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1">
@@ -121,7 +105,6 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
             </button>
           </div>
 
-          {/* Toggle Tabs */}
           <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-100">
             <button
               onClick={() => setIsLogin(true)}
@@ -147,10 +130,8 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
           </div>
         </div>
         
-        {/* Form Content */}
         <div className="px-6 py-4">
           {isLogin ? (
-            // Login Form
             <div className="space-y-4">
               <div className="space-y-3">
                 <div>
@@ -223,7 +204,6 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
               </button>
             </div>
           ) : (
-            // Registration Form
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -306,7 +286,6 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-6 pb-4">
           <div className="text-center">
             <div className="text-xs text-gray-500 leading-relaxed">

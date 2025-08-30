@@ -18,7 +18,7 @@ function UserRoutes() {
     <Route path='/about' element={<AboutUs/>}/>
     <Route path='/profile' element={<ProfilePage/>}/>
     <Route path='/contact' element={<ContactPage/>}/>
-    <Route path='/Hotelbook' element={<HotelCheckout/>}/>
+    <Route path='/checkout' element={<HotelCheckout/>}/>
   </Routes>
    </>
   )

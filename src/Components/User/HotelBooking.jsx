@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from "../../Layout/Navbar";
-import { baseurl } from "../../Base/Base";
-import Footer from  "../../Layout/Footer";
-import axios from "axios"
+import { ChevronLeft, Loader2, AlertTriangle } from 'lucide-react';
+import axios from 'axios';
+import { baseurl } from '../../Base/Base';
+import CheckoutPayment from '../../Layout/Payment';
+import CheckoutDetails from '../../Layout/Chekout';
+import CheckoutComplete from "../../Layout/BookingComplete"
 
 const HotelCheckout = () => {
   const [bookingDetails, setBookingDetails] = useState({
@@ -13,7 +15,11 @@ const HotelCheckout = () => {
     nights: 0,
     roomRate: 0,
     taxes: 0,
-    total: 0
+    total: 0,
+    propertyId: '',
+    userId: '',
+    propertyImage: '',
+    property: null
   });
 
   const [formData, setFormData] = useState({
@@ -32,44 +38,87 @@ const HotelCheckout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchBookingData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${baseurl}user/getcheckout`, {
-          withCredentials: true 
-        });
-        
-        if (response.data.bookings && response.data.bookings.length > 0) {
-          const latestBooking = response.data.bookings[0];
-          const property = latestBooking.property;
-         
-          const checkInDate = new Date(latestBooking.checkIn);
-          const checkOutDate = new Date(latestBooking.checkOut);
-          const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-          
-          const taxes = latestBooking.totalPrice * 0.13;
-          
-          setBookingDetails({
-            roomType: property.title,
-            checkIn: latestBooking.checkIn.split('T')[0],
-            checkOut: latestBooking.checkOut.split('T')[0],
-            guests: latestBooking.guests,
-            nights: nights,
-            roomRate: Math.round(latestBooking.totalPrice / nights),
-            taxes: taxes,
-            total: latestBooking.totalPrice + taxes
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching booking data:', err);
-        setError('Failed to load booking details. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+  const getUrlParams = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      userId: urlParams.get('userId'),
+      propertyId: urlParams.get('propertyId'),
+      checkin: urlParams.get('checkin'),
+      checkout: urlParams.get('checkout'),
+      guests: parseInt(urlParams.get('guests')) || 1,
+      totalPrice: parseFloat(urlParams.get('totalPrice')) || 0
     };
+  };
 
-    fetchBookingData();
+  const GetBooking = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const urlParams = getUrlParams();
+      
+      if (!urlParams.userId || !urlParams.propertyId) {
+        throw new Error('Missing required parameters: userId or propertyId');
+      }
+
+      const response = await axios.get(`${baseurl}user/checkout`, {
+        params: { propertyId: urlParams.propertyId },
+        withCredentials: true
+      });
+      
+      const { propertyData, userData } = response.data;
+
+      const checkInDate = new Date(urlParams.checkin);
+      const checkOutDate = new Date(urlParams.checkout);
+      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      const roomRate = Math.round(urlParams.totalPrice / nights);
+      const taxes = urlParams.totalPrice * 0.13; 
+      const total = urlParams.totalPrice + taxes;
+
+      setBookingDetails({
+        roomType: propertyData?.title || propertyData?.name || 'Deluxe Suite',
+        checkIn: urlParams.checkin,
+        checkOut: urlParams.checkout,
+        guests: urlParams.guests,
+        nights: nights,
+        roomRate: roomRate,
+        taxes: taxes,
+        total: total,
+        propertyId: urlParams.propertyId,
+        userId: urlParams.userId,
+        propertyImage: propertyData?.images?.[0]?.url || '',
+        property: propertyData
+      });
+
+      if (userData) {
+        setFormData(prev => ({
+          ...prev,
+          name: userData.name || userData.fullName || '',
+          email: userData.email || '',
+          phone: userData.phone || userData.phoneNumber || ''
+        }));
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching booking data:', err);
+      let errorMessage = 'Failed to load booking details. Please try again.';
+      
+      if (err.response) {
+        errorMessage = `Server error: ${err.response.status}`;
+      } else if (err.request) {
+        errorMessage = 'Unable to connect to server. Please check your connection.';
+      } else if (err.message.includes('Missing required parameters')) {
+        errorMessage = 'Invalid booking URL. Please check the link and try again.';
+      }
+      
+      setError(errorMessage);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    GetBooking();
   }, []);
 
   const handleInputChange = (e) => {
@@ -80,663 +129,335 @@ const HotelCheckout = () => {
     });
   };
 
+  const validateStep = (step) => {
+    if (step === 1) {
+      return formData.name && formData.email && formData.phone;
+    }
+    if (step === 2) {
+      return formData.cardNumber && formData.expiryDate && formData.cvv;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
-      setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      
+      const bookingData = {
+        userId: bookingDetails.userId,
+        propertyId: bookingDetails.propertyId,
+        checkIn: bookingDetails.checkIn,
+        checkOut: bookingDetails.checkOut,
+        guests: bookingDetails.guests,
+        nights: bookingDetails.nights,
+        totalPrice: bookingDetails.total,
+        guestDetails: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          country: formData.country,
+          specialRequests: formData.specialRequests
+        },
+        paymentDetails: {
+          cardNumber: formData.cardNumber.replace(/\s/g, ''), 
+          expiryDate: formData.expiryDate,
+          cvv: formData.cvv
+        }
+      };
+
+      const response = await axios.post(`${baseurl}/add-booking`, bookingData, {
+        withCredentials: true
+      });
+      
+      if (response.data.success) {
         setBookingComplete(true);
-      }, 1500);
+      } else {
+        throw new Error(response.data.message || 'Booking failed');
+      }
+      
     } catch (err) {
       console.error('Booking submission error:', err);
-      setError('Failed to complete booking. Please try again.');
+      let errorMessage = 'Failed to complete booking. Please try again.';
+      
+      if (err.response) {
+        errorMessage = err.response.data.message || `Booking failed: ${err.response.status}`;
+      } else if (err.request) {
+        errorMessage = 'Unable to connect to server. Please check your connection.';
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   const nextStep = () => {
-    setCurrentStep(currentStep + 1);
-  };
-
-  const prevStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
-
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      backgroundColor: '#f8f9fa',
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    },
-    innerContainer: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '20px'
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '30px',
-      padding: '20px',
-      backgroundColor: '#fff',
-      borderRadius: '10px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
-    },
-    logo: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-    },
-    logoIcon: {
-      width: '40px',
-      height: '40px',
-      backgroundColor: '#3e92cc',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      fontSize: '20px'
-    },
-    logoText: {
-      fontSize: '24px',
-      fontWeight: 'bold',
-      color: '#2c3e50'
-    },
-    backLink: {
-      color: '#3e92cc',
-      textDecoration: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '5px',
-      fontWeight: '500'
-    },
-    progressBar: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '40px',
-      position: 'relative',
-      padding: '0 40px'
-    },
-    progressBarBefore: {
-      content: '""',
-      position: 'absolute',
-      top: '20px',
-      left: '0',
-      right: '0',
-      height: '2px',
-      backgroundColor: '#e0e0e0',
-      zIndex: '1'
-    },
-    progressStep: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      position: 'relative',
-      zIndex: '2',
-      color: '#95a5a6'
-    },
-    progressStepActive: {
-      color: '#3e92cc'
-    },
-    mainContent: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 400px',
-      gap: '30px'
-    },
-    checkoutForm: {
-      backgroundColor: '#fff',
-      padding: '30px',
-      borderRadius: '10px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
-    },
-    sectionTitle: {
-      fontSize: '22px',
-      fontWeight: '600',
-      color: '#2c3e50',
-      marginBottom: '25px',
-      position: 'relative',
-      paddingBottom: '10px'
-    },
-    sectionTitleAfter: {
-      content: '""',
-      position: 'absolute',
-      bottom: '0',
-      left: '0',
-      width: '50px',
-      height: '3px',
-      backgroundColor: '#3e92cc',
-      borderRadius: '3px'
-    },
-    formStep: {
-      animation: 'fadeIn 0.5s ease-in-out'
-    },
-    formGroup: {
-      marginBottom: '20px'
-    },
-    formRow: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '15px'
-    },
-    label: {
-      display: 'block',
-      marginBottom: '8px',
-      fontWeight: '500',
-      color: '#34495e'
-    },
-    input: {
-      width: '100%',
-      padding: '12px 15px',
-      border: '1px solid #dcdfe6',
-      borderRadius: '6px',
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-      backgroundColor: '#f8f9fa'
-    },
-    inputFocus: {
-      borderColor: '#3e92cc',
-      boxShadow: '0 0 0 2px rgba(62, 146, 204, 0.2)',
-      backgroundColor: '#fff',
-      outline: 'none'
-    },
-    buttonGroup: {
-      display: 'flex',
-      gap: '15px',
-      marginTop: '25px'
-    },
-    btn: {
-      padding: '12px 25px',
-      borderRadius: '6px',
-      border: 'none',
-      fontSize: '16px',
-      fontWeight: '500',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    btnPrimary: {
-      backgroundColor: '#3e92cc',
-      color: 'white'
-    },
-    btnPrimaryHover: {
-      backgroundColor: '#2c7bb6',
-      transform: 'translateY(-2px)'
-    },
-    btnSecondary: {
-      backgroundColor: '#95a5a6',
-      color: 'white'
-    },
-    btnSecondaryHover: {
-      backgroundColor: '#7f8c8d',
-      transform: 'translateY(-2px)'
-    },
-    cartSummary: {
-      backgroundColor: '#fff',
-      padding: '30px',
-      borderRadius: '10px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-      alignSelf: 'start'
-    },
-    bookingDetails: {
-      marginBottom: '20px'
-    },
-    detailItem: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '10px 0',
-      borderBottom: '1px solid #ecf0f1'
-    },
-    total: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '15px 0',
-      borderTop: '2px solid #ecf0f1',
-      fontSize: '18px',
-      fontWeight: 'bold',
-      color: '#2c3e50'
-    },
-    roomPreview: {
-      margin: '20px 0',
-      borderRadius: '8px',
-      overflow: 'hidden'
-    },
-    roomImage: {
-      width: '100%',
-      height: '200px',
-      objectFit: 'cover',
-      transition: 'transform 0.3s ease'
-    },
-    securityNote: {
-      backgroundColor: '#f8f9fa',
-      padding: '15px',
-      borderRadius: '6px',
-      textAlign: 'center',
-      color: '#7f8c8d',
-      fontSize: '14px'
-    },
-    reviewSection: {
-      backgroundColor: '#f8f9fa',
-      padding: '20px',
-      borderRadius: '8px',
-      marginBottom: '20px'
-    },
-    reviewItem: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: '8px 0',
-      color: '#34495e'
-    },
-    bookingConfirmation: {
-      textAlign: 'center',
-      padding: '50px 20px'
-    },
-    confirmationIcon: {
-      width: '80px',
-      height: '80px',
-      backgroundColor: '#2ecc71',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      fontSize: '40px',
-      margin: '0 auto 20px'
-    },
-    keyframes: `@keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }`
-  };
-
-  const handleHover = (e, style, hoverStyle) => {
-    if (e.type === 'mouseenter') {
-      Object.assign(e.target.style, hoverStyle);
+    if (validateStep(currentStep)) {
+      setCurrentStep(currentStep + 1);
+      setError(null);
     } else {
-      Object.assign(e.target.style, style);
+      setError('Please fill in all required fields before continuing.');
     }
   };
 
-  if (loading) {
+  const prevStep = () => {
+    setError(null);
+    setCurrentStep(currentStep - 1);
+  };
+
+  const handleImageClick = () => {
+    const urlParams = getUrlParams();
+    window.location.href = `http://localhost:5173/property/${bookingDetails.propertyId}?adults=${urlParams.guests}`;
+  };
+
+  if (loading && currentStep < 3) {
     return (
-      <>
-        <Navbar />
-        <div style={styles.container}>
-          <div style={styles.innerContainer}>
-            <div style={{textAlign: 'center', padding: '50px'}}>
-              <i className="fas fa-spinner fa-spin" style={{fontSize: '48px', color: '#3e92cc'}}></i>
-              <p style={{marginTop: '20px'}}>Loading booking details...</p>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-center py-20">
+            <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">Loading booking details...</p>
           </div>
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
-  if (error) {
+  if (error && currentStep < 3) {
     return (
-      <>
-        <Navbar />
-        <div style={styles.container}>
-          <div style={styles.innerContainer}>
-            <div style={{textAlign: 'center', padding: '50px', color: '#e74c3c'}}>
-              <i className="fas fa-exclamation-triangle" style={{fontSize: '48px'}}></i>
-              <p style={{marginTop: '20px'}}>{error}</p>
-              <button 
-                style={{...styles.btn, ...styles.btnPrimary, marginTop: '20px'}}
-                onClick={() => window.location.reload()}
-              >
-                Try Again
-              </button>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-center py-20">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg mb-6">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-all duration-300 font-medium"
+            >
+              Try Again
+            </button>
           </div>
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
   if (bookingComplete) {
     return (
-      <>
-        <Navbar />
-        <div style={styles.container}>
-          <style>{styles.keyframes}</style>
-          <div style={styles.innerContainer}>
-            <div style={styles.bookingConfirmation}>
-              <div style={styles.confirmationIcon}>
-                <i className="fas fa-check"></i>
-              </div>
-              <h2 style={{ fontSize: '28px', color: '#2c3e50', marginBottom: '15px' }}>
-                Booking Confirmed!
-              </h2>
-              <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
-                Thank you for choosing Wavestation. Your booking details have been sent to your email.
-              </p>
-              <button 
-                style={{...styles.btn, ...styles.btnPrimary}}
-                onMouseEnter={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary, ...styles.btnPrimaryHover})}
-                onMouseLeave={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary})}
-              >
-                View Booking Details
-              </button>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </>
+      <CheckoutComplete
+        formData={formData}
+        bookingDetails={bookingDetails}
+      />
     );
   }
 
   return (
-    <>
-      <Navbar />
-      <div style={styles.container}>
-        <style>{styles.keyframes}</style>
-        <div style={styles.innerContainer}>
-          <header style={styles.header}>
-            <div style={styles.logo}>
-              <div style={styles.logoIcon}>
-                <i className="fas fa-water"></i>
-              </div>
-              <div style={styles.logoText}>Wavescation</div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="container mx-auto px-4 pt-24 pb-10">
+        
+        <header className="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-white rounded-full"></div>
             </div>
-            <nav>
-              <a href="#" style={styles.backLink}>
-                <i className="fas fa-arrow-left"></i> Back to Hotel
-              </a>
-            </nav>
-          </header>
-
-          <div style={styles.progressBar}>
-            <div style={{...styles.progressBarBefore}}></div>
-            <div style={{...styles.progressStep, ...(currentStep >= 1 ? styles.progressStepActive : {})}}>
-              <i className="fas fa-user"></i>
-              <span>Details</span>
-            </div>
-            <div style={{...styles.progressStep, ...(currentStep >= 2 ? styles.progressStepActive : {})}}>
-              <i className="fas fa-credit-card"></i>
-              <span>Payment</span>
-            </div>
-            <div style={{...styles.progressStep, ...(currentStep >= 3 ? styles.progressStepActive : {})}}>
-              <i className="fas fa-check"></i>
-              <span>Confirm</span>
+            <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-700 to-orange-600">
+              Wavescation
             </div>
           </div>
+          <button className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+            Back to Hotel
+          </button>
+        </header>
 
-          <div style={styles.mainContent}>
-            <div style={styles.checkoutForm}>
-              <h2 style={styles.sectionTitle}>
-                Complete Your Booking
-                <span style={styles.sectionTitleAfter}></span>
-              </h2>
-              
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              <p className="text-red-700">{error}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
               {currentStep === 1 && (
-                <div style={styles.formStep}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label} htmlFor="name">Full Name</label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Enter your full name"
-                      style={styles.input}
-                      onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                    />
-                  </div>
-                  
-                  <div style={styles.formGroup}>
-                    <label style={styles.label} htmlFor="email">Email Address</label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Enter your email"
-                      style={styles.input}
-                      onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                    />
-                  </div>
-                  
-                  <div style={styles.formGroup}>
-                    <label style={styles.label} htmlFor="phone">Phone Number</label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="Enter your phone number"
-                      style={styles.input}
-                      onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                    />
-                  </div>
-                  
-                  <button 
-                    style={{...styles.btn, ...styles.btnPrimary}}
-                    onClick={nextStep}
-                    onMouseEnter={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary, ...styles.btnPrimaryHover})}
-                    onMouseLeave={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary})}
-                  >
-                    Continue to Payment <i className="fas fa-arrow-right"></i>
-                  </button>
-                </div>
+                <CheckoutDetails
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  nextStep={nextStep}
+                  validateStep={validateStep}
+                />
               )}
               
               {currentStep === 2 && (
-                <div style={styles.formStep}>
-                  <div style={styles.formRow}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.label} htmlFor="cardNumber">Credit Card Number</label>
-                      <input
-                        type="text"
-                        id="cardNumber"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleInputChange}
-                        placeholder="1234 5678 9012 3456"
-                        style={styles.input}
-                        onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                        onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                      />
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label style={styles.label} htmlFor="cvv">CVV</label>
-                      <input
-                        type="text"
-                        id="cvv"
-                        name="cvv"
-                        value={formData.cvv}
-                        onChange={handleInputChange}
-                        placeholder="123"
-                        style={styles.input}
-                        onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                        onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div style={styles.formRow}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.label} htmlFor="expiryDate">Expiry Date</label>
-                      <input
-                        type="text"
-                        id="expiryDate"
-                        name="expiryDate"
-                        value={formData.expiryDate}
-                        onChange={handleInputChange}
-                        placeholder="MM/YY"
-                        style={styles.input}
-                        onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                        onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                      />
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label style={styles.label} htmlFor="country">Country</label>
-                      <select
-                        id="country"
-                        name="country"
-                        value={formData.country}
-                        onChange={handleInputChange}
-                        style={styles.input}
-                        onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                        onBlur={(e) => Object.assign(e.target.style, styles.input)}
-                      >
-                        <option>United States</option>
-                        <option>United Kingdom</option>
-                        <option>Canada</option>
-                        <option>Australia</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div style={styles.buttonGroup}>
-                    <button 
-                      style={{...styles.btn, ...styles.btnSecondary}}
-                      onClick={prevStep}
-                      onMouseEnter={(e) => handleHover(e, {...styles.btn, ...styles.btnSecondary}, {...styles.btn, ...styles.btnSecondary, ...styles.btnSecondaryHover})}
-                      onMouseLeave={(e) => handleHover(e, {...styles.btn, ...styles.btnSecondary}, {...styles.btn, ...styles.btnSecondary})}
-                    >
-                      <i className="fas fa-arrow-left"></i> Back
-                    </button>
-                    <button 
-                      style={{...styles.btn, ...styles.btnPrimary}}
-                      onClick={nextStep}
-                      onMouseEnter={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary, ...styles.btnPrimaryHover})}
-                      onMouseLeave={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary})}
-                    >
-                      Continue to Confirm <i className="fas fa-arrow-right"></i>
-                    </button>
-                  </div>
-                </div>
+                <CheckoutPayment
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  nextStep={nextStep}
+                  prevStep={prevStep}
+                  validateStep={validateStep}
+                />
               )}
               
               {currentStep === 3 && (
-                <div style={styles.formStep}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label} htmlFor="specialRequests">Special Requests</label>
-                    <input
-                      type="text"
-                      id="specialRequests"
+                <div className="space-y-6 animate-fadeIn">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-8 relative">
+                    Confirm Your Booking
+                    <div className="absolute bottom-0 left-0 w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
+                  </h2>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Special Requests (Optional)</label>
+                    <textarea
                       name="specialRequests"
                       value={formData.specialRequests}
                       onChange={handleInputChange}
-                      placeholder="Any special requests?"
-                      style={styles.input}
-                      onFocus={(e) => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={(e) => Object.assign(e.target.style, styles.input)}
+                      placeholder="Any special requests or preferences?"
+                      rows="3"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-md bg-gray-50 focus:bg-white text-gray-900 resize-none"
                     />
                   </div>
                   
-                  <div style={styles.reviewSection}>
-                    <h3 style={{ marginBottom: '15px', color: '#2c3e50' }}>Review Your Details</h3>
-                    <div style={styles.reviewItem}>
-                      <span>Name:</span>
-                      <span>{formData.name || 'Not provided'}</span>
-                    </div>
-                    <div style={styles.reviewItem}>
-                      <span>Email:</span>
-                      <span>{formData.email || 'Not provided'}</span>
-                    </div>
-                    <div style={styles.reviewItem}>
-                      <span>Phone:</span>
-                      <span>{formData.phone || 'Not provided'}</span>
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Review Your Details</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Name:</span>
+                        <span className="font-medium text-gray-900">{formData.name || 'Not provided'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Email:</span>
+                        <span className="font-medium text-gray-900">{formData.email || 'Not provided'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Phone:</span>
+                        <span className="font-medium text-gray-900">{formData.phone || 'Not provided'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Payment:</span>
+                        <span className="font-medium text-gray-900">****{formData.cardNumber.slice(-4)}</span>
+                      </div>
                     </div>
                   </div>
                   
-                  <div style={styles.buttonGroup}>
+                  <div className="flex gap-4">
                     <button 
-                      style={{...styles.btn, ...styles.btnSecondary}}
                       onClick={prevStep}
-                      onMouseEnter={(e) => handleHover(e, {...styles.btn, ...styles.btnSecondary}, {...styles.btn, ...styles.btnSecondary, ...styles.btnSecondaryHover})}
-                      onMouseLeave={(e) => handleHover(e, {...styles.btn, ...styles.btnSecondary}, {...styles.btn, ...styles.btnSecondary})}
+                      disabled={loading}
+                      className="flex items-center justify-center gap-2 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
                     >
-                      <i className="fas fa-arrow-left"></i> Back
+                      <ChevronLeft className="w-5 h-5" />
+                      Back
                     </button>
                     <button 
-                      style={{...styles.btn, ...styles.btnPrimary}}
                       onClick={handleSubmit}
-                      onMouseEnter={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary, ...styles.btnPrimaryHover})}
-                      onMouseLeave={(e) => handleHover(e, {...styles.btn, ...styles.btnPrimary}, {...styles.btn, ...styles.btnPrimary})}
+                      disabled={loading}
+                      className="flex items-center justify-center gap-2 flex-1 py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                      Confirm Booking <i className="fas fa-check"></i>
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Confirm Booking'
+                      )}
                     </button>
                   </div>
                 </div>
               )}
             </div>
-            
-            <div style={styles.cartSummary}>
-              <h2 style={styles.sectionTitle}>
+          </div>
+          
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 sticky top-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 relative">
                 Booking Summary
-                <span style={styles.sectionTitleAfter}></span>
+                <div className="absolute bottom-0 left-0 w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
               </h2>
               
-              <div style={styles.bookingDetails}>
-                <div style={styles.detailItem}>
-                  <div>Room Type:</div>
-                  <div><strong>{bookingDetails.roomType}</strong></div>
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Room Type:</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.roomType}</span>
                 </div>
-                <div style={styles.detailItem}>
-                  <div>Check-in:</div>
-                  <div><strong>{bookingDetails.checkIn}</strong></div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Check-in:</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.checkIn}</span>
                 </div>
-                <div style={styles.detailItem}>
-                  <div>Check-out:</div>
-                  <div><strong>{bookingDetails.checkOut}</strong></div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Check-out:</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.checkOut}</span>
                 </div>
-                <div style={styles.detailItem}>
-                  <div>Guests:</div>
-                  <div><strong>{bookingDetails.guests} Adults</strong></div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Guests:</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.guests} Adults</span>
                 </div>
-                <div style={styles.detailItem}>
-                  <div>Nights:</div>
-                  <div><strong>{bookingDetails.nights} Nights</strong></div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Nights:</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.nights} Nights</span>
                 </div>
-                <div style={styles.detailItem}>
-                  <div>Room Rate:</div>
-                  <div><strong>${bookingDetails.roomRate}/night</strong></div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Room Rate:</span>
+                  <span className="font-semibold text-gray-900">AED {bookingDetails.roomRate}/night</span>
                 </div>
-                <div style={styles.detailItem}>
-                  <div>Taxes & Fees:</div>
-                  <div><strong>${bookingDetails.taxes.toFixed(2)}</strong></div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Taxes & Fees:</span>
+                  <span className="font-semibold text-gray-900">AED {bookingDetails.taxes.toFixed(2)}</span>
                 </div>
               </div>
               
-              <div style={styles.total}>
-                <div>Total:</div>
-                <div>${bookingDetails.total.toFixed(2)}</div>
+              <div className="flex justify-between items-center py-4 border-t-2 border-gray-200 bg-gradient-to-r from-orange-50 to-amber-50 -mx-6 px-6 rounded-xl">
+                <span className="text-lg font-bold text-gray-900">Total:</span>
+                <span className="text-2xl font-bold text-orange-600">AED {bookingDetails.total.toFixed(2)}</span>
               </div>
               
-              <div style={styles.roomPreview}>
-                <img 
-                  src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                  alt="Ocean View Suite" 
-                  style={styles.roomImage}
-                  onMouseEnter={(e) => Object.assign(e.target.style, { transform: 'scale(1.05)' })}
-                  onMouseLeave={(e) => Object.assign(e.target.style, { transform: 'scale(1)' })}
-                />
+              <div className="mt-6 rounded-xl overflow-hidden shadow-md">
+                {bookingDetails.propertyImage ? (
+                  <img 
+                    src={bookingDetails.propertyImage}
+                    alt={bookingDetails.roomType}
+                    onClick={handleImageClick}
+                    className="w-full h-48 object-cover transition-transform duration-500 hover:scale-110 cursor-pointer"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 animate-pulse rounded-xl"></div>
+                )}
               </div>
               
-              <div style={styles.securityNote}>
-                <p><i className="fas fa-shield-alt"></i> Your booking is secured with SSL encryption</p>
+              <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                <div className="flex items-center justify-center gap-2 text-blue-700">
+                  <div className="w-5 h-5 text-blue-600">🛡️</div>
+                  <span className="text-sm font-medium">Your booking is secured with SSL encryption</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <Footer />
-    </>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { 
+            opacity: 0; 
+            transform: translateY(20px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out;
+        }
+      `}</style>
+    </div>
   );
 };
 
