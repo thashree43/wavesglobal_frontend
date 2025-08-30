@@ -16,7 +16,7 @@ const Homepage = () => {
       <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
         {/* WhatsApp */}
         <a
-          href="https://wa.me/919207904611"
+          href="https://wa.me/971522596860"
           target="_blank"
           rel="noopener noreferrer"
           className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
@@ -30,7 +30,7 @@ const Homepage = () => {
 
         {/* Mail */}
         <a
-          href="mailto:nazeehnahaban09@gmail.com"
+          href="mailto:Info@wavescation.com"
           className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
         >
           <img
