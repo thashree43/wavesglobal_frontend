@@ -49,9 +49,14 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
   const isSelected = useCallback((date) => value && date.toDateString() === new Date(value).toDateString(), [value]);
   
   const handleDateSelect = useCallback((date) => { 
-    onChange(date.toISOString().split('T')[0]); 
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`; 
+    onChange(formattedDate); 
     setIsOpen(false); 
   }, [onChange]);
+  
   
   const nextMonth = useCallback(() => { 
     const newDate = new Date(selectedDate); 
@@ -71,11 +76,29 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
   return (
     <div className="relative w-full">
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
-        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors z-10" />
+        <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors z-10" style={{color: 'rgb(4, 80, 115)'}} />
+        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors z-10" style={{color: 'rgb(4, 80, 115)'}} />
         <button
           onClick={toggleCalendar}
-          className="w-full h-14 pl-12 pr-12 border border-gray-200 rounded-2xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-lg bg-white cursor-pointer text-black font-medium text-left"
+          className="w-full h-14 pl-12 pr-12 rounded-2xl focus:outline-none transition-all duration-300 hover:shadow-lg bg-white cursor-pointer font-medium text-left"
+          style={{
+            border: '2px solid rgb(247, 219, 190)',
+            color: 'rgb(0, 31, 60)'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = 'rgb(231, 121, 0)';
+            e.target.style.boxShadow = '0 0 0 4px rgba(231, 121, 0, 0.1)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = 'rgb(247, 219, 190)';
+            e.target.style.boxShadow = 'none';
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.borderColor = 'rgb(231, 121, 0)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.borderColor = 'rgb(247, 219, 190)';
+          }}
         >
           {value ? formatDate(new Date(value)) : placeholder}
         </button>
@@ -87,16 +110,17 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={toggleCalendar} />
             <div
               ref={dropdownRef}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 p-6 w-80 z-[100000]"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 w-80 z-[100000]"
+              style={{border: '1px solid rgb(247, 219, 190)'}}
             >
               <div className="flex items-center justify-between mb-4">
-                <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="h-5 w-5" /></button>
-                <h3 className="text-lg font-semibold">{monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}</h3>
-                <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ChevronRight className="h-5 w-5" /></button>
+                <button onClick={prevMonth} className="p-2 rounded-full transition-colors" style={{color: 'rgb(4, 80, 115)'}} onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(247, 219, 190)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}><ChevronLeft className="h-5 w-5" /></button>
+                <h3 className="text-lg font-semibold" style={{color: 'rgb(0, 31, 60)'}}>{monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}</h3>
+                <button onClick={nextMonth} className="p-2 rounded-full transition-colors" style={{color: 'rgb(4, 80, 115)'}} onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(247, 219, 190)'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}><ChevronRight className="h-5 w-5" /></button>
               </div>
 
               <div className="grid grid-cols-7 gap-1 mb-2">
-                {dayNames.map(day => (<div key={day} className="text-center text-sm font-medium text-gray-500 py-2">{day}</div>))}
+                {dayNames.map(day => (<div key={day} className="text-center text-sm font-medium py-2" style={{color: 'rgb(4, 80, 115)'}}>{day}</div>))}
               </div>
 
               <div className="grid grid-cols-7 gap-1">
@@ -104,11 +128,24 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
                   <button
                     key={index}
                     onClick={() => handleDateSelect(date)}
-                    className={`h-10 w-full rounded-lg text-sm font-medium transition-all duration-200
-                      ${!isSameMonth(date) ? 'text-gray-300' : 'text-gray-700'}
-                      ${isSelected(date) ? 'bg-orange-500 text-white' : ''}
-                      ${isToday(date) && !isSelected(date) ? 'bg-blue-500 text-white' : ''}
-                      ${!isSelected(date) && !isToday(date) ? 'hover:bg-gray-100' : ''}`}
+                    className="h-10 w-full rounded-lg text-sm font-medium transition-all duration-200"
+                    style={{
+                      color: !isSameMonth(date) ? 'rgb(247, 219, 190)' : 
+                             isSelected(date) ? 'white' :
+                             isToday(date) ? 'white' : 'rgb(0, 31, 60)',
+                      backgroundColor: isSelected(date) ? 'rgb(231, 121, 0)' :
+                                     isToday(date) ? 'rgb(4, 80, 115)' : 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected(date) && !isToday(date)) {
+                        e.target.style.backgroundColor = 'rgb(247, 219, 190)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected(date) && !isToday(date)) {
+                        e.target.style.backgroundColor = 'transparent';
+                      }
+                    }}
                   >
                     {date.getDate()}
                   </button>
@@ -149,23 +186,69 @@ const GuestSelector = React.memo(({ isOpen, onClose, guests, onGuestsChange }) =
   return createPortal(
     <div className="fixed inset-0 z-[99999]">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div ref={dropdownRef} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 p-6 min-w-[320px]">
+      <div ref={dropdownRef} className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 min-w-[320px]" style={{border: '1px solid rgb(247, 219, 190)'}}>
         <div className="space-y-6">
           {['adults','children','infants'].map((type) => (
             <div key={type} className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-black">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                <div className="text-sm text-gray-500">{type==='adults'?'Ages 13 or above':type==='children'?'Ages 2-12':'Under 2'}</div>
+                <div className="font-medium" style={{color: 'rgb(0, 31, 60)'}}>{type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                <div className="text-sm" style={{color: 'rgb(4, 80, 115)'}}>{type==='adults'?'Ages 13 or above':type==='children'?'Ages 2-12':'Under 2'}</div>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => updateGuestCount(type,'decrement')} disabled={guests[type]<= (type==='adults'?1:0)} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><Minus className="h-4 w-4" /></button>
-                <span className="w-8 text-center font-medium">{guests[type]}</span>
-                <button onClick={() => updateGuestCount(type,'increment')} disabled={guests[type]>= (type==='adults'?16:5)} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"><Plus className="h-4 w-4" /></button>
+                <button 
+                  onClick={() => updateGuestCount(type,'decrement')} 
+                  disabled={guests[type]<= (type==='adults'?1:0)} 
+                  className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  style={{border: '1px solid rgb(247, 219, 190)', color: 'rgb(4, 80, 115)'}}
+                  onMouseEnter={(e) => {
+                    if (!e.target.disabled) {
+                      e.target.style.borderColor = 'rgb(231, 121, 0)';
+                      e.target.style.color = 'rgb(231, 121, 0)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!e.target.disabled) {
+                      e.target.style.borderColor = 'rgb(247, 219, 190)';
+                      e.target.style.color = 'rgb(4, 80, 115)';
+                    }
+                  }}
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center font-medium" style={{color: 'rgb(0, 31, 60)'}}>{guests[type]}</span>
+                <button 
+                  onClick={() => updateGuestCount(type,'increment')} 
+                  disabled={guests[type]>= (type==='adults'?16:5)} 
+                  className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  style={{border: '1px solid rgb(247, 219, 190)', color: 'rgb(4, 80, 115)'}}
+                  onMouseEnter={(e) => {
+                    if (!e.target.disabled) {
+                      e.target.style.borderColor = 'rgb(231, 121, 0)';
+                      e.target.style.color = 'rgb(231, 121, 0)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!e.target.disabled) {
+                      e.target.style.borderColor = 'rgb(247, 219, 190)';
+                      e.target.style.color = 'rgb(4, 80, 115)';
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
             </div>
           ))}
-          <div className="pt-4 border-t">
-            <button onClick={onClose} className="w-full px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-medium">Done</button>
+          <div className="pt-4" style={{borderTop: '1px solid rgb(247, 219, 190)'}}>
+            <button 
+              onClick={onClose} 
+              className="w-full px-4 py-2 text-white rounded-xl transition-colors font-medium"
+              style={{backgroundColor: 'rgb(231, 121, 0)'}}
+              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}
+            >
+              Done
+            </button>
           </div>
         </div>
       </div>
@@ -262,7 +345,10 @@ const Hero = () => {
 
   return (
     <>
-      <div className="relative overflow-x-hidden pt-[90px] mb-[120px]">
+        <div 
+          className="relative overflow-x-hidden pt-[90px] mb-[120px]" 
+          style={{ backgroundColor: 'rgb(247, 219, 190)' }}
+        >
         <section className="relative min-h-screen overflow-hidden">
           <div className="absolute inset-0">
             {carouselImages.map((image, index) => (
@@ -279,7 +365,15 @@ const Hero = () => {
             ))}
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30 flex flex-col justify-center items-center px-4 text-center">
+          <div 
+            className="absolute inset-0 flex flex-col justify-center items-center px-4 text-center"
+            style={{
+              background: `linear-gradient(to right, 
+                rgba(0, 31, 60, 0.8) 0%, 
+                rgba(4, 80, 115, 0.6) 50%, 
+                rgba(0, 31, 60, 0.4) 100%)`
+            }}
+          >
             <TypewriterText />
             <p className="text-lg md:text-2xl text-white/90 mb-6">Find your dream stay in Dubai</p>
 
@@ -289,14 +383,35 @@ const Hero = () => {
               <div className="relative w-full">
                 <button 
                   onClick={() => setGuestsOpen(true)} 
-                  className="w-full h-14 pl-4 pr-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-lg bg-white cursor-pointer text-black font-medium text-left"
+                  className="w-full h-14 pl-4 pr-4 rounded-2xl focus:outline-none transition-all duration-300 hover:shadow-lg bg-white cursor-pointer font-medium text-left"
+                  style={{
+                    border: '2px solid rgb(247, 219, 190)',
+                    color: 'rgb(0, 31, 60)'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgb(231, 121, 0)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(231, 121, 0, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgb(247, 219, 190)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.borderColor = 'rgb(231, 121, 0)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.borderColor = 'rgb(247, 219, 190)';
+                  }}
                 >
                   {guestDisplayText}
                 </button>
               </div>
               <button 
                 onClick={handleSearch} 
-                className="h-14 px-6 rounded-2xl bg-orange-500 hover:bg-orange-600 transition-colors text-white font-semibold flex items-center justify-center gap-2"
+                className="h-14 px-6 rounded-2xl transition-colors text-white font-semibold flex items-center justify-center gap-2"
+                style={{backgroundColor: 'rgb(231, 121, 0)'}}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}
               >
                 <Search className="w-5 h-5"/>Search
               </button>

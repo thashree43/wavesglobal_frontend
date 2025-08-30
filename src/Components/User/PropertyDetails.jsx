@@ -31,7 +31,7 @@ import Navbar from '../../Layout/Navbar';
 import Footer from '../../Layout/Footer';
 import axios from 'axios';
 import { baseurl } from '../../Base/Base';
-import { useParams, useLocation } from "react-router-dom"
+import { useParams, useLocation, Link } from "react-router-dom"
 
 const PropertyDetailsPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -247,13 +247,22 @@ const PropertyDetailsPage = () => {
     };
     
     const handleDateClick = (day) => {
-      const selectedDate = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
+      const selectedDate = new Date(
+        currentCalendarMonth.getFullYear(),
+        currentCalendarMonth.getMonth(),
+        day
+      );
       if (!isDateDisabled(selectedDate)) {
-        const dateString = selectedDate.toISOString().split('T')[0];
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+        const date = String(selectedDate.getDate()).padStart(2, "0");
+        const dateString = `${year}-${month}-${date}`; // YYYY-MM-DD (local, no UTC shift)
+    
         onDateSelect(dateString);
         onClose();
       }
     };
+    
 
     if (!isOpen) return null;
 
@@ -765,7 +774,7 @@ const PropertyDetailsPage = () => {
                   </div>
 
                   {property.houseRules && (
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" >
                       <h2 className="text-xl font-bold mb-6">House Rules</h2>
                       <div className="grid sm:grid-cols-2 gap-6">
                         <div>
@@ -843,7 +852,7 @@ const PropertyDetailsPage = () => {
 
                 <div className="lg:col-span-1">
                   <div className="sticky top-6 space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <p className="text-2xl font-bold">{formatPrice(property.price)} <span className="text-base font-normal text-gray-600">/ night</span></p>
@@ -877,8 +886,9 @@ const PropertyDetailsPage = () => {
                       <button 
                         onClick={handleBookNow}
                         className="w-full py-3 rounded-lg font-semibold text-white transition-colors mb-4"
-                        style={{ backgroundColor: 'rgb(230, 116, 19)' }}
-                      >
+                        style={{ 
+                          background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                        }}                      >
                         Book Now
                       </button>
 
@@ -903,11 +913,9 @@ const PropertyDetailsPage = () => {
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                          <span className="text-xl font-bold text-white">W</span>
-                        </div>
+                        
                         <div>
                           <h3 className="font-semibold text-lg">Wavescation Team</h3>
                           <p className="text-gray-600 text-sm">Professional Property Management</p>
@@ -924,18 +932,18 @@ const PropertyDetailsPage = () => {
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                        <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
                           <Phone className="w-4 h-4" />
                           <span className="text-sm">Call</span>
                         </button>
-                        <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                        <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
                           <Mail className="w-4 h-4" />
                           <span className="text-sm">Message</span>
                         </button>
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
                       <h3 className="font-semibold text-lg mb-4">Quick Info</h3>
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
@@ -960,7 +968,7 @@ const PropertyDetailsPage = () => {
                 </div>
               </div>
 
-              <div className="mt-12 bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+              <div className="mt-12 bg-white rounded-xl p-8 shadow-sm border border-gray-100"  style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
                 <div className="text-center max-w-2xl mx-auto">
                   <h2 className="text-2xl font-bold mb-4">Ready to Book Your Stay?</h2>
                   <p className="text-gray-600 mb-6">
@@ -970,13 +978,18 @@ const PropertyDetailsPage = () => {
                     <button 
                       onClick={handleBookNow}
                       className="px-8 py-3 rounded-lg font-semibold text-white transition-colors"
-                      style={{ backgroundColor: 'rgb(230, 116, 19)' }}
+                      style={{ 
+                        background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                      }}  
                     >
                       Book Now - {formatPrice(property.price)}/night
                     </button>
-                    <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
-                      View More Properties
-                    </button>
+                    <Link to="/property">
+  <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors bg-white">
+    View More Properties
+  </button>
+</Link>
+
                   </div>
                 </div>
               </div>

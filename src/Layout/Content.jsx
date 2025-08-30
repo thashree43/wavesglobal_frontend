@@ -180,47 +180,50 @@ const ContentSections = () => {
       <section className="py-20 px-6 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-black">Our Platform Partners</h2>
+            <h2 className="text-4xl font-bold text-center mb-16" style={{ color: 'rgb(0, 31, 60)' }}>Our Platform Partners</h2>
           </AnimatedSection>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
-  {partners.map((partner, index) => (
-    <FloatingCard key={index} delay={index * 100}>
-      <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-100 hover:border-orange-300 group">
-        <div className="h-16 flex items-center justify-center">
-          <img
-            src={partner.logo}
-            alt={partner.name}
-            className="max-h-12 max-w-full object-contain transition-all duration-300"
-          />
-        </div>
-      </div>
-    </FloatingCard>
-  ))}
-</div>
-
+            {partners.map((partner, index) => (
+              <FloatingCard key={index} delay={index * 100}>
+                <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group" 
+                     style={{ border: '1px solid rgb(247, 219, 190)' }}
+                     onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
+                     onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
+                  <div className="h-16 flex items-center justify-center">
+                    <img
+                      src={partner.logo}
+                      alt={partner.name}
+                      className="max-h-12 max-w-full object-contain transition-all duration-300"
+                    />
+                  </div>
+                </div>
+              </FloatingCard>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-gradient-to-br from-gray-100 via-gray-50 to-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-100/30 via-transparent to-orange-50/20"></div>
+      <section className="py-20 px-6 relative overflow-hidden" style={{ backgroundColor: 'rgb(247, 219, 190)' }}>
         <div className="max-w-7xl mx-auto relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <AnimatedSection>
               <div>
-                <h2 className="text-4xl font-bold mb-8 text-orange-500">
+                <h2 className="text-4xl font-bold mb-8" style={{ color: 'rgb(0, 31, 60)' }}>
                   Why Choose Wavescation?
                 </h2>
-                <p className="text-xl text-gray-600 mb-12 leading-relaxed">
+                <p className="text-xl mb-12 leading-relaxed" style={{ color: 'rgb(4, 80, 115)' }}>
                   Dubai's most trusted DTCM-licensed holiday home management company, delivering exceptional experiences through world-class hospitality.
                 </p>
                 <div className="space-y-8">
                   {whyChooseUs.map((item, index) => (
                     <AnimatedSection key={index} delay={index * 150}>
                       <div className="flex items-start gap-4 group">
-                        <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0 bg-orange-500 group-hover:scale-150 transition-transform duration-300"></div>
+                        <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0 group-hover:scale-150 transition-transform duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></div>
                         <div>
-                          <h3 className="text-xl font-semibold text-black mb-2 group-hover:text-orange-500 transition-colors duration-300">{item.title}</h3>
-                          <p className="text-gray-600">{item.desc}</p>
+                          <h3 className="text-xl font-semibold mb-2" style={{ color: 'rgb(0, 31, 60)' }}>
+                            {item.title}
+                          </h3>
+                          <p style={{ color: 'rgb(4, 80, 115)' }}>{item.desc}</p>
                         </div>
                       </div>
                     </AnimatedSection>
@@ -230,11 +233,11 @@ const ContentSections = () => {
             </AnimatedSection>
             <AnimatedSection delay={300}>
               <div className="relative">
-                <div className="bg-orange-500 rounded-3xl p-8 transform rotate-3 shadow-2xl hover:rotate-6 transition-transform duration-300">
+                <div className="rounded-3xl p-8 transform rotate-3 shadow-2xl hover:rotate-6 transition-transform duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
                   <div className="bg-white rounded-2xl p-8 transform -rotate-3 hover:-rotate-6 transition-transform duration-300">
                     <div className="text-6xl text-center mb-4">🏖️</div>
-                    <h3 className="text-2xl font-bold text-center mb-4 text-black">Premium Holiday Homes</h3>
-                    <p className="text-center text-gray-600">Steps from everything, Miles from ordinary</p>
+                    <h3 className="text-2xl font-bold text-center mb-4" style={{ color: 'rgb(0, 31, 60)' }}>Premium Holiday Homes</h3>
+                    <p className="text-center" style={{ color: 'rgb(4, 80, 115)' }}>Steps from everything, Miles from ordinary</p>
                   </div>
                 </div>
               </div>
@@ -243,10 +246,10 @@ const ContentSections = () => {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-gray-50">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-black">
+            <h2 className="text-4xl font-bold text-center mb-16" style={{ color: 'rgb(0, 31, 60)' }}>
               How It Works
             </h2>
           </AnimatedSection>
@@ -255,17 +258,22 @@ const ContentSections = () => {
               const IconComponent = step.icon;
               return (
                 <FloatingCard key={index} delay={index * 200}>
-                  <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 text-center group border border-gray-100 hover:border-orange-300 transform hover:-translate-y-2">
+                  <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 text-center group transform hover:-translate-y-2" 
+                       style={{ border: '1px solid rgb(247, 219, 190)' }}
+                       onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
+                       onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
                     <div className="relative mb-6">
-                      <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white font-bold text-2xl transition-all duration-300 group-hover:scale-110 bg-orange-500">
+                      <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white font-bold text-2xl transition-all duration-300 group-hover:scale-110" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
                         {step.step}
                       </div>
-                      <div className="absolute -top-2 -right-2 p-2 rounded-full bg-black group-hover:bg-orange-600 transition-colors duration-300">
+                      <div className="absolute -top-2 -right-2 p-2 rounded-full" style={{ backgroundColor: 'rgb(0, 31, 60)' }}>
                         <IconComponent className="h-6 w-6 text-white" />
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold mb-4 text-black group-hover:text-orange-500 transition-colors duration-300">{step.title}</h3>
-                    <p className="text-gray-600">{step.desc}</p>
+                    <h3 className="text-xl font-bold mb-4" style={{ color: 'rgb(0, 31, 60)' }}>
+                      {step.title}
+                    </h3>
+                    <p style={{ color: 'rgb(4, 80, 115)' }}>{step.desc}</p>
                   </div>
                 </FloatingCard>
               );
@@ -274,45 +282,47 @@ const ContentSections = () => {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6" style={{ backgroundColor: 'rgb(247, 219, 190)' }}>
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4 text-black">Prime Dubai Locations</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <h2 className="text-4xl font-bold mb-4" style={{ color: 'rgb(0, 31, 60)' }}>Prime Dubai Locations</h2>
+              <p className="text-xl max-w-3xl mx-auto" style={{ color: 'rgb(4, 80, 115)' }}>
                 Discover our premium holiday homes in Dubai's most sought-after destinations
               </p>
             </div>
           </AnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          {locations.slice(0, 8).map((location, index) => (
-  <FloatingCard key={index} delay={index * 100}>
-    <div
-      onClick={() => navigate(`/property?locationId=${location._id}`)}
-      className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105"
-    >
-      <div
-        className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-        style={{ backgroundImage: `url(${location.image})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/60 transition-all duration-300"></div>
-      <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-        <h3 className="text-lg font-bold mb-1">{location.name}</h3>
-        <p className="text-sm text-gray-200">{location.properties} Properties</p>
-      </div>
-      <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300">
-        Popular
-      </div>
-    </div>
-  </FloatingCard>
-))}
-
+            {locations.slice(0, 8).map((location, index) => (
+              <FloatingCard key={index} delay={index * 100}>
+                <div
+                  onClick={() => navigate(`/property?locationId=${location._id}`)}
+                  className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105"
+                >
+                  <div
+                    className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                    style={{ backgroundImage: `url(${location.image})` }}
+                  />
+                  <div className="absolute inset-0 group-hover:from-black/60 transition-all duration-300" style={{ background: 'linear-gradient(to top, rgba(0, 31, 60, 0.7), rgba(0, 31, 60, 0.2), transparent)' }}></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <h3 className="text-lg font-bold mb-1">{location.name}</h3>
+                    <p className="text-sm" style={{ color: 'rgb(247, 219, 190)' }}>{location.properties} Properties</p>
+                  </div>
+                  <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white transform scale-90 group-hover:scale-100 transition-transform duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
+                    Popular
+                  </div>
+                </div>
+              </FloatingCard>
+            ))}
           </div>
           <AnimatedSection delay={600}>
             <div className="text-center">
               <button 
                 onClick={handleViewAllProperties}
-                className="px-8 py-3 rounded-lg font-semibold bg-black text-white hover:bg-gray-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
+                className="px-8 py-3 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
+                style={{ backgroundColor: 'rgb(0, 31, 60)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(4, 80, 115)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(0, 31, 60)'}
               >
                 View All Properties
                 <ArrowRight className="h-5 w-5" />
@@ -322,20 +332,25 @@ const ContentSections = () => {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-gray-50">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-black">
+            <h2 className="text-4xl font-bold text-center mb-16" style={{ color: 'rgb(0, 31, 60)' }}>
               Our Premium Services
             </h2>
           </AnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service, index) => (
               <FloatingCard key={index} delay={index * 150}>
-                <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 border border-gray-100 hover:border-orange-300 group">
+                <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 group" 
+                     style={{ border: '1px solid rgb(247, 219, 190)' }}
+                     onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
+                     onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
                   <div className="text-4xl mb-6 transform group-hover:scale-110 transition-transform duration-300">{service.icon}</div>
-                  <h3 className="text-xl font-bold mb-4 text-black group-hover:text-orange-500 transition-colors duration-300">{service.title}</h3>
-                  <p className="text-gray-600">{service.desc}</p>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'rgb(0, 31, 60)' }}>
+                    {service.title}
+                  </h3>
+                  <p style={{ color: 'rgb(4, 80, 115)' }}>{service.desc}</p>
                 </div>
               </FloatingCard>
             ))}
@@ -343,34 +358,35 @@ const ContentSections = () => {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-gradient-to-br from-gray-100 via-gray-50 to-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-l from-orange-100/20 via-transparent to-orange-50/10"></div>
+      <section className="py-20 px-6" style={{ backgroundColor: 'rgb(247, 219, 190)' }}>
         <div className="max-w-4xl mx-auto relative">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-orange-500">
+            <h2 className="text-4xl font-bold text-center mb-16" style={{ color: 'rgb(0, 31, 60)' }}>
               Frequently Asked Questions
             </h2>
           </AnimatedSection>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
               <AnimatedSection key={index} delay={index * 100}>
-                <div className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition-all duration-300 group">
+                <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group" style={{ border: '1px solid rgb(247, 219, 190)' }}>
                   <button
                     onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                    className="w-full px-8 py-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors duration-300 group-hover:bg-orange-50"
+                    className="w-full px-8 py-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors duration-300"
                   >
-                    <h3 className="text-lg font-semibold text-black group-hover:text-orange-500 transition-colors duration-300">{faq.q}</h3>
-                    <div className="transform transition-transform duration-300 group-hover:scale-110">
+                    <h3 className="text-lg font-semibold" style={{ color: 'rgb(0, 31, 60)' }}>
+                      {faq.q}
+                    </h3>
+                    <div>
                       {expandedFaq === index ? (
-                        <ChevronUp className="h-5 w-5 text-gray-600 group-hover:text-orange-500" />
+                        <ChevronUp className="h-5 w-5" style={{ color: 'rgb(231, 121, 0)' }} />
                       ) : (
-                        <ChevronDown className="h-5 w-5 text-gray-600 group-hover:text-orange-500" />
+                        <ChevronDown className="h-5 w-5" style={{ color: 'rgb(231, 121, 0)' }} />
                       )}
                     </div>
                   </button>
                   <div className={`overflow-hidden transition-all duration-300 ${expandedFaq === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="px-8 pb-6">
-                      <p className="text-gray-600">{faq.a}</p>
+                      <p style={{ color: 'rgb(4, 80, 115)' }}>{faq.a}</p>
                     </div>
                   </div>
                 </div>
@@ -383,26 +399,33 @@ const ContentSections = () => {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <h2 className="text-4xl font-bold text-center mb-16 text-black">
+            <h2 className="text-4xl font-bold text-center mb-16" style={{ color: 'rgb(0, 31, 60)' }}>
               What Our Guests Say
             </h2>
           </AnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {reviews.map((review, index) => (
               <FloatingCard key={index} delay={index * 200}>
-                <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-orange-300 group transform hover:-translate-y-2">
+                <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 group transform hover:-translate-y-2" 
+                     style={{ border: '1px solid rgb(247, 219, 190)' }}
+                     onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
+                     onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
                   <div className="flex items-center mb-4">
                     {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current text-orange-500 transform group-hover:scale-110 transition-transform duration-300" style={{ transitionDelay: `${i * 50}ms` }} />
+                      <Star key={i} className="h-5 w-5 fill-current" style={{ color: 'rgb(231, 121, 0)' }} />
                     ))}
                   </div>
-                  <p className="mb-6 text-lg italic text-gray-700 group-hover:text-black transition-colors duration-300">"{review.review}"</p>
+                  <p className="mb-6 text-lg italic" style={{ color: 'rgb(4, 80, 115)' }}>
+                    "{review.review}"
+                  </p>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-semibold text-black group-hover:text-orange-500 transition-colors duration-300">{review.name}</h4>
-                      <p className="text-sm text-gray-600">{review.location}</p>
+                      <h4 className="font-semibold" style={{ color: 'rgb(0, 31, 60)' }}>
+                        {review.name}
+                      </h4>
+                      <p className="text-sm" style={{ color: 'rgb(4, 80, 115)' }}>{review.location}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold bg-orange-500 transform group-hover:scale-110 transition-all duration-300">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
                       {review.name.charAt(0)}
                     </div>
                   </div>

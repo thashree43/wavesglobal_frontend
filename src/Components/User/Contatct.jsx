@@ -50,25 +50,25 @@ const ContactPage = () => {
       icon: MapPin,
       title: 'Office Address',
       details: ['Iris Tower, Business Bay', 'Dubai, UAE'],
-      color: 'text-orange-500'
+      color: 'text-gray-700'
     },
     {
       icon: Phone,
       title: 'Phone Number',
       details: ['+971 52 259 6860'],
-      color: 'text-orange-500'
+      color: 'text-gray-700'
     },
     {
       icon: Mail,
       title: 'Email Address',
       details: ['https://www.wavesglobal.ae/'],
-      color: 'text-orange-500'
+      color: 'text-gray-700'
     },
     {
       icon: Clock,
       title: 'Business Hours',
       details: ['Mon - Fri: 9:00 AM - 6:00 PM', 'Sat - Sun: 10:00 AM - 4:00 PM'],
-      color: 'text-orange-500'
+      color: 'text-gray-700'
     }
   ];
 
@@ -104,10 +104,10 @@ const ContactPage = () => {
       <Navbar />
       <div className="pt-28">
         
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-20">
+        <div style={{ background: 'rgb(247, 219, 190)' }} className="text-gray-800 py-20">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Get In Touch</h1>
-            <p className="text-xl text-orange-100 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
               Ready to transform your property into a premium holiday home? Contact Wavescation today and discover how we can maximize your returns while providing exceptional guest experiences.
             </p>
           </div>
@@ -119,7 +119,7 @@ const ContactPage = () => {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
                 <h2 className="text-2xl font-bold text-black mb-6 flex items-center gap-3">
-                  <Send className="w-6 h-6 text-orange-500" />
+                  <Send className="w-6 h-6 text-gray-700" />
                   Send Us a Message
                 </h2>
                 
@@ -133,7 +133,7 @@ const ContactPage = () => {
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-600 focus:border-transparent"
                         placeholder="Enter your full name"
                       />
                     </div>
@@ -146,7 +146,7 @@ const ContactPage = () => {
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-600 focus:border-transparent"
                         placeholder="Enter your email address"
                       />
                     </div>
@@ -160,7 +160,7 @@ const ContactPage = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-600 focus:border-transparent"
                         placeholder="Enter your phone number"
                       />
                     </div>
@@ -171,7 +171,7 @@ const ContactPage = () => {
                         name="inquiryType"
                         value={formData.inquiryType}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-600 focus:border-transparent"
                       >
                         <option value="general">General Inquiry</option>
                         <option value="property">Property Management</option>
@@ -190,7 +190,7 @@ const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-600 focus:border-transparent"
                       placeholder="Enter message subject"
                     />
                   </div>
@@ -203,7 +203,7 @@ const ContactPage = () => {
                       onChange={handleInputChange}
                       required
                       rows={6}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-600 focus:border-transparent resize-none"
                       placeholder="Tell us about your inquiry..."
                     />
                   </div>
@@ -211,10 +211,11 @@ const ContactPage = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-orange-500 text-white py-3 px-6 rounded-xl hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 font-medium"
+                    style={{ backgroundColor: 'rgb(247, 219, 190)' }}
+                    className="w-full text-gray-800 py-3 px-6 rounded-xl hover:bg-opacity-80 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 font-medium"
                   >
                     {loading ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-gray-800 border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Send className="w-5 h-5" />
                     )}
@@ -233,7 +234,7 @@ const ContactPage = () => {
                     return (
                       <div key={index} className="flex gap-4">
                         <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                          <div style={{ backgroundColor: 'rgba(247, 219, 190, 0.2)' }} className="w-12 h-12 rounded-xl flex items-center justify-center">
                             <IconComponent className={`w-6 h-6 ${info.color}`} />
                           </div>
                         </div>
@@ -251,7 +252,7 @@ const ContactPage = () => {
 
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 className="text-xl font-bold text-black mb-6 flex items-center gap-3">
-                  <Building className="w-5 h-5 text-orange-500" />
+                  <Building className="w-5 h-5 text-gray-700" />
                   Our Team
                 </h3>
                 <div className="space-y-4">
@@ -259,8 +260,8 @@ const ContactPage = () => {
                     const IconComponent = member.icon;
                     return (
                       <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                          <IconComponent className="w-5 h-5 text-orange-500" />
+                        <div style={{ backgroundColor: 'rgba(247, 219, 190, 0.2)' }} className="w-10 h-10 rounded-full flex items-center justify-center">
+                          <IconComponent className="w-5 h-5 text-gray-700" />
                         </div>
                         <div>
                           <h4 className="font-semibold text-black text-sm">{member.name}</h4>
@@ -292,15 +293,15 @@ const ContactPage = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-8 text-center">
+          <div style={{ background: 'rgb(247, 219, 190)' }} className="text-gray-800 rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-orange-100 mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
               Join the WavesGlobal Group family and experience hassle-free property management with guaranteed minimum returns and exceptional guest experiences.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="tel:+971522596860"
-                className="bg-white text-orange-600 px-6 py-3 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                className="bg-white text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
               >
                 <Phone className="w-5 h-5" />
                 Call Us Now
@@ -309,7 +310,7 @@ const ContactPage = () => {
                 href="https://www.wavescation.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-white text-white px-6 py-3 rounded-xl font-medium hover:bg-white hover:text-orange-600 transition-colors"
+                className="border border-gray-700 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-white hover:text-gray-800 transition-colors"
               >
                 Visit Our Website
               </a>

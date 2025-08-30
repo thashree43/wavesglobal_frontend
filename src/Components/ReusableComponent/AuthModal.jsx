@@ -130,8 +130,7 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
                   ? 'bg-orange-500 text-white shadow-sm' 
                   : 'text-gray-600 hover:text-black hover:bg-gray-50'
               }`}
-              style={isLogin ? { backgroundColor: 'rgb(230, 116, 19)' } : {}}
-            >
+              style={isLogin ? {background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,    } : {}}  >
               Sign In
             </button>
             <button
@@ -141,7 +140,7 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
                   ? 'bg-orange-500 text-white shadow-sm' 
                   : 'text-gray-600 hover:text-black hover:bg-gray-50'
               }`}
-              style={!isLogin ? { backgroundColor: 'rgb(230, 116, 19)' } : {}}
+              style={!isLogin ? {background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,    }  : {}}
             >
               Sign Up
             </button>
@@ -195,7 +194,7 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
                 type="button"
                 onClick={handleLogin}
                 className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm"
-                style={{ backgroundColor: 'rgb(230, 116, 19)' }}
+                style={{background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,    } }
               >
                 Sign In to Your Account
               </button>
@@ -299,7 +298,7 @@ const AuthModal = ({ show, onClose, onRegisterSuccess }) => {
                 type="button"
                 onClick={handleRegister}
                 className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm"
-                style={{ backgroundColor: 'rgb(230, 116, 19)' }}
+                style={{background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,    } }
               >
                 Create Your Account
               </button>

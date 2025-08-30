@@ -13,17 +13,17 @@ export default function AboutUs() {
       <Navbar/>
       
       <div className="pt-20 pb-16">
-        <div className="relative overflow-hidden bg-gradient-to-r from-[rgb(230,116,19)] via-[rgb(250,130,30)] to-[rgb(230,116,19)] text-white">
-          <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative overflow-hidden" style={{ background: 'rgb(247, 219, 190)' }}>
+          <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
             <div className="mb-8 inline-block">
-              <img src={logo} alt="Wavescation" className="h-20 mx-auto filter brightness-0 invert" />
+              <img src={logo} alt="Wavescation" className="h-32 mx-auto" />
             </div>
-            <h1 className="text-6xl font-bold mb-6 tracking-tight">About Wavescation</h1>
-            <p className="text-2xl font-light max-w-3xl mx-auto leading-relaxed opacity-90">
+            <h1 className="text-6xl font-bold mb-6 tracking-tight text-gray-800">About Wavescation</h1>
+            <p className="text-2xl font-light max-w-3xl mx-auto leading-relaxed text-gray-700">
               Steps from everything, Miles from ordinary
             </p>
-            <div className="mt-12 w-24 h-1 bg-white/50 mx-auto rounded-full"></div>
+            <div className="mt-12 w-24 h-1 bg-gray-600 mx-auto rounded-full"></div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[rgb(247,247,247)] to-transparent"></div>
         </div>
@@ -34,8 +34,8 @@ export default function AboutUs() {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8">
                 <div>
-                  <div className="inline-block bg-[rgb(230,116,19)]/10 rounded-full px-6 py-2 mb-6">
-                    <span className="text-[rgb(230,116,19)] font-semibold text-sm uppercase tracking-wider">Who We Are</span>
+                  <div className="inline-block bg-[rgb(247,219,190)]/20 rounded-full px-6 py-2 mb-6">
+                    <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">Who We Are</span>
                   </div>
                   <h2 className="text-4xl font-bold text-[rgb(0,0,0)] mb-8 leading-tight">Redefining Holiday Home Excellence in Dubai</h2>
                 </div>
@@ -51,12 +51,12 @@ export default function AboutUs() {
               </div>
               
               <div className="relative">
-                <div className="bg-gradient-to-br from-[rgb(230,116,19)]/20 to-[rgb(248,252,255)] p-12 rounded-3xl transform hover:scale-105 transition-all duration-500">
+                <div className="bg-gradient-to-br from-[rgb(247,219,190)]/30 to-[rgb(248,252,255)] p-12 rounded-3xl transform hover:scale-105 transition-all duration-500">
                   <div className="bg-white rounded-2xl p-8 shadow-xl">
-                    <img src={logo} alt="Wavescation Logo" className="h-32 mx-auto" />
+                    <img src={logo} alt="Wavescation Logo" className="h-40 mx-auto" />
                   </div>
                 </div>
-                <div className="absolute -top-6 -right-6 w-24 h-24 bg-[rgb(230,116,19)]/20 rounded-full blur-xl"></div>
+                <div className="absolute -top-6 -right-6 w-24 h-24 bg-[rgb(247,219,190)]/30 rounded-full blur-xl"></div>
                 <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[rgb(248,252,255)] rounded-full blur-2xl"></div>
               </div>
             </div>
@@ -66,10 +66,10 @@ export default function AboutUs() {
             <div className="grid md:grid-cols-2 gap-16 max-w-6xl mx-auto px-8">
               
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-[rgb(230,116,19)] to-[rgb(250,130,30)] rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
-                <div className="relative bg-white rounded-3xl p-12 m-1 shadow-2xl">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[rgb(230,116,19)] to-[rgb(250,130,30)] rounded-2xl flex items-center justify-center mb-8 transform group-hover:rotate-12 transition-all duration-500">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute inset-0 bg-[rgb(247,219,190)] rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
+                <div className="relative bg-white rounded-3xl p-12 m-1 shadow-2xl h-full">
+                  <div className="w-16 h-16 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center mb-8 transform group-hover:rotate-12 transition-all duration-500">
+                    <svg className="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                   </div>
@@ -81,25 +81,25 @@ export default function AboutUs() {
               </div>
               
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-[rgb(230,116,19)] to-[rgb(250,130,30)] rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
-                <div className="relative bg-white rounded-3xl p-12 m-1 shadow-2xl">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[rgb(230,116,19)] to-[rgb(250,130,30)] rounded-2xl flex items-center justify-center mb-8 transform group-hover:rotate-12 transition-all duration-500">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute inset-0 bg-[rgb(247,219,190)] rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
+                <div className="relative bg-white rounded-3xl p-12 m-1 shadow-2xl h-full">
+                  <div className="w-16 h-16 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center mb-8 transform group-hover:rotate-12 transition-all duration-500">
+                    <svg className="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
                     </svg>
                   </div>
                   <h3 className="text-3xl font-bold text-[rgb(0,0,0)] mb-6">Our Mission</h3>
                   <div className="space-y-4 text-gray-600 text-lg">
                     <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-[rgb(230,116,19)] rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-gray-600 rounded-full mt-2 flex-shrink-0"></div>
                       <p><span className="font-bold text-[rgb(0,0,0)]">Exceptional Guest Experiences</span> – Through premium properties, spotless in-house cleaning, and 24/7 support.</p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-[rgb(230,116,19)] rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-gray-600 rounded-full mt-2 flex-shrink-0"></div>
                       <p><span className="font-bold text-[rgb(0,0,0)]">Owner Success</span> – With transparent operations, dynamic pricing, and guaranteed care for every property.</p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-[rgb(230,116,19)] rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-gray-600 rounded-full mt-2 flex-shrink-0"></div>
                       <p><span className="font-bold text-[rgb(0,0,0)]">Creative Lifestyle Add-Ons</span> – Leveraging WavesGlobal Event Company to provide unique events and curated experiences.</p>
                     </div>
                   </div>
@@ -110,11 +110,11 @@ export default function AboutUs() {
 
           <div className="py-24">
             <div className="text-center mb-20">
-              <div className="inline-block bg-[rgb(230,116,19)]/10 rounded-full px-6 py-2 mb-6">
-                <span className="text-[rgb(230,116,19)] font-semibold text-sm uppercase tracking-wider">What We Offer</span>
+              <div className="inline-block bg-[rgb(247,219,190)]/20 rounded-full px-6 py-2 mb-6">
+                <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">What We Offer</span>
               </div>
               <h2 className="text-5xl font-bold text-[rgb(0,0,0)] mb-8">Our Services</h2>
-              <div className="w-24 h-1 bg-[rgb(230,116,19)] mx-auto rounded-full"></div>
+              <div className="w-24 h-1 bg-gray-600 mx-auto rounded-full"></div>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -175,10 +175,12 @@ export default function AboutUs() {
                 }
               ].map((service, index) => (
                 <div key={index} className="group relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[rgb(230,116,19)]/10 to-transparent rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
+                  <div className="absolute inset-0 bg-[rgb(247,219,190)]/20 rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
                   <div className="relative p-8 text-center bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/80 transition-all duration-500">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[rgb(230,116,19)] to-[rgb(250,130,30)] rounded-2xl flex items-center justify-center mx-auto mb-6 transform group-hover:rotate-6 transition-all duration-500">
-                      {service.icon}
+                    <div className="w-20 h-20 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center mx-auto mb-6 transform group-hover:rotate-6 transition-all duration-500">
+                      <div className="text-gray-700">
+                        {service.icon}
+                      </div>
                     </div>
                     <h4 className="text-xl font-bold text-[rgb(0,0,0)] mb-4">{service.title}</h4>
                     <p className="text-gray-600 leading-relaxed">{service.description}</p>
@@ -190,11 +192,11 @@ export default function AboutUs() {
 
           <div className="py-24 bg-gradient-to-br from-[rgb(248,252,255)] via-white to-[rgb(247,247,247)] rounded-3xl my-16">
             <div className="text-center mb-20 px-8">
-              <div className="inline-block bg-[rgb(230,116,19)]/10 rounded-full px-6 py-2 mb-6">
-                <span className="text-[rgb(230,116,19)] font-semibold text-sm uppercase tracking-wider">Why Choose Us</span>
+              <div className="inline-block bg-[rgb(247,219,190)]/20 rounded-full px-6 py-2 mb-6">
+                <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">Why Choose Us</span>
               </div>
               <h2 className="text-5xl font-bold text-[rgb(0,0,0)] mb-8">Why Choose Wavescation</h2>
-              <div className="w-24 h-1 bg-[rgb(230,116,19)] mx-auto rounded-full"></div>
+              <div className="w-24 h-1 bg-gray-600 mx-auto rounded-full"></div>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-8">
@@ -257,8 +259,10 @@ export default function AboutUs() {
                 }
               ].map((feature, index) => (
                 <div key={index} className="group text-center p-8 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-500">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[rgb(230,116,19)] to-[rgb(250,130,30)] rounded-2xl flex items-center justify-center mx-auto mb-6 transform group-hover:scale-110 transition-all duration-500">
-                    {feature.icon}
+                  <div className="w-16 h-16 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center mx-auto mb-6 transform group-hover:scale-110 transition-all duration-500">
+                    <div className="text-gray-700">
+                      {feature.icon}
+                    </div>
                   </div>
                   <h4 className="text-lg font-bold text-[rgb(0,0,0)] mb-3">{feature.title}</h4>
                   <p className="text-gray-600 leading-relaxed">{feature.description}</p>
@@ -269,11 +273,11 @@ export default function AboutUs() {
 
           <div className="py-24">
             <div className="text-center mb-20">
-              <div className="inline-block bg-[rgb(230,116,19)]/10 rounded-full px-6 py-2 mb-6">
-                <span className="text-[rgb(230,116,19)] font-semibold text-sm uppercase tracking-wider">Meet Our Team</span>
+              <div className="inline-block bg-[rgb(247,219,190)]/20 rounded-full px-6 py-2 mb-6">
+                <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">Meet Our Team</span>
               </div>
               <h2 className="text-5xl font-bold text-[rgb(0,0,0)] mb-8">Our Leadership Team</h2>
-              <div className="w-24 h-1 bg-[rgb(230,116,19)] mx-auto rounded-full"></div>
+              <div className="w-24 h-1 bg-gray-600 mx-auto rounded-full"></div>
             </div>
             
             <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
@@ -284,14 +288,14 @@ export default function AboutUs() {
                 ].map((member, index) => (
                 <div key={index} className="text-center group">
                     <div className="relative mb-8 inline-block">
-                    <div className="w-56 h-56 bg-gradient-to-br from-[rgb(230,116,19)]/20 to-[rgb(248,252,255)] rounded-full mx-auto shadow-2xl flex items-center justify-center transform group-hover:scale-105 transition-all duration-500">
+                    <div className="w-56 h-56 bg-gradient-to-br from-[rgb(247,219,190)]/30 to-[rgb(248,252,255)] rounded-full mx-auto shadow-2xl flex items-center justify-center transform group-hover:scale-105 transition-all duration-500">
                         <div className="w-48 h-48 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                         <img src={member.image} alt={member.name} className="w-full h-full object-cover rounded-full" />
                         </div>
                     </div>
                     </div>
                     <h4 className="text-2xl font-bold text-[rgb(0,0,0)] mb-2">{member.name}</h4>
-                    <p className="text-[rgb(230,116,19)] font-semibold text-lg">{member.position}</p>
+                    <p className="text-gray-700 font-semibold text-lg">{member.position}</p>
                 </div>
                 ))}
 
@@ -300,17 +304,17 @@ export default function AboutUs() {
 
         </div>
 
-        <div className="relative bg-gradient-to-r from-[rgb(230,116,19)] via-[rgb(250,130,30)] to-[rgb(230,116,19)] text-white overflow-hidden">
-          <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative" style={{ background: 'rgb(247, 219, 190)' }}>
+          <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
             <div className="mb-8">
-              <svg className="w-16 h-16 text-white/80 mx-auto mb-6" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-16 h-16 text-gray-700 mx-auto mb-6" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
               </svg>
             </div>
-            <h3 className="text-4xl font-bold mb-8">Get In Touch With Us</h3>
-            <div className="space-y-4 text-xl font-light">
+            <h3 className="text-4xl font-bold mb-8 text-gray-800">Get In Touch With Us</h3>
+            <div className="space-y-4 text-xl font-light text-gray-700">
               <p className="flex items-center justify-center space-x-3">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
@@ -332,7 +336,7 @@ export default function AboutUs() {
               </p>
             </div>
             <div className="mt-12">
-              <button className="bg-white text-[rgb(230,116,19)] px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg">
+              <button className="bg-white text-gray-700 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg">
                 Contact Us Today
               </button>
             </div>

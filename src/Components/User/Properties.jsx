@@ -94,9 +94,14 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
   };
 
   const handleDateSelect = (date) => {
-    onChange(date.toISOString().split('T')[0]);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${year}-${month}-${day}`; 
+    onChange(formattedDate);
     setIsOpen(false);
   };
+  
 
   const nextMonth = () => {
     const newDate = new Date(selectedDate);
@@ -357,7 +362,7 @@ const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) =
 
   return (
     <section className="mb-8">
-      <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+      <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
         
         <div className="relative">
@@ -694,7 +699,7 @@ const Properties = () => {
             </section>
 
             <section className="mb-8">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <div className=" rounded-2xl shadow-lg border border-gray-200 p-6" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Check In</label>
@@ -732,8 +737,10 @@ const Properties = () => {
                     <button
                       onClick={handleNewSearch}
                       className="w-full h-11 rounded-xl font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                    >
-                      <Search className="h-4 w-4" />
+                      style={{ 
+                        background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                      }} >
+                      <Search className="h-4 w-4"/>
                       Search
                     </button>
                   </div>
@@ -976,7 +983,7 @@ const Properties = () => {
                     onMouseLeave={() => setHoveredProperty(null)}
                     className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
                     onClick={() => handlePropertyClick(property._id)}
-                  >
+                 >
                     <div className="relative h-64 overflow-hidden">
                       {property.images && property.images.length > 0 ? (
                         <img
