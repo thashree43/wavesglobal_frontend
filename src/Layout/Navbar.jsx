@@ -1,162 +1,322 @@
-import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, User, CreditCard, Check } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import AuthModal from "../Components/ReusableComponent/AuthModal";
+import OtpModal from "../Components/ReusableComponent/OtpModal";
+import logo from '../assets/logo.png'
+import axios from 'axios'
+import {baseurl} from "../Base/Base.js"
+import { useNavigate ,Link} from 'react-router-dom';
 
-const CheckoutPayment = ({ formData, handleInputChange, nextStep, prevStep, validateStep }) => {
-  const [loading, setLoading] = useState(false);
+const Navbar = () => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLogged, setisLogged] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  
+  const navigate = useNavigate();
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+  const handleRegisterSuccess = (email) => {
+    setRegisteredEmail(email);
+    setShowOtpModal(true);
   };
 
-  const handleRazorpayPayment = async (amount = 100000) => {
-    setLoading(true);
-    
-    const isScriptLoaded = await loadRazorpayScript();
-    if (!isScriptLoaded) {
-      alert('Razorpay SDK failed to load. Are you online?');
-      setLoading(false);
-      return;
-    }
+  const getUser = async() => {
+    try {
+      const response = await axios.get(`${baseurl}User/getuser`, {
+        withCredentials: true  
+      })
 
-    const options = {
-      key: 'rzp_test_1234567890',
-      amount: amount,
-      currency: 'AED',
-      name: 'Dubai Store',
-      description: 'Product Purchase',
-      image: '/logo.png',
-      order_id: '',
-      handler: function (response) {
-        alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
-        nextStep();
-        setLoading(false);
-      },
-      prefill: {
-        name: formData.fullName || '',
-        email: formData.email || '',
-        contact: formData.phone || ''
-      },
-      notes: {
-        address: formData.address || ''
-      },
-      theme: {
-        color: '#e77900'
-      },
-      modal: {
-        ondismiss: function() {
-          setLoading(false);
-        }
-      },
-      config: {
-        display: {
-          blocks: {
-            banks: {
-              name: 'Pay using Credit/Debit Cards',
-              instruments: [
-                { method: 'card' }
-              ]
-            }
-          },
-          sequence: ['block.banks'],
-          preferences: {
-            show_default_blocks: false
-          }
-        }
+      console.log("first")
+
+      if(response.data.user) {
+        setisLogged(true);
+        setUser(response.data.user);
       }
-    };
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
-    const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', function (response) {
-      alert(`Payment Failed: ${response.error.description}`);
-      setLoading(false);
-    });
-    
-    rzp.open();
+  const handleLoginSuccess = (userData) => {
+    console.log("Navbar received user data:", userData);
+    setisLogged(true);
+    setUser(userData);
+    setShowAuthModal(false);
+  };
+  
+  const handleLogout = async() => {
+    try {
+      await axios.post(`${baseurl}User/logout`, {}, {
+        withCredentials: true  
+      });
+      setisLogged(false);
+      setUser(null);
+      setShowProfileDropdown(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
+  const handleMenuItemClick = () => {
+    setIsMenuOpen(false);
+  };
+
+  useEffect(() => {
+    getUser()
+  }, [])
+
+  const handleOtpModalClose = () => {
+    setShowOtpModal(false);
+    setRegisteredEmail("");
   };
 
   return (
     <>
-      <div className="flex justify-center mb-12">
-        <div className="flex items-center gap-8 relative">
-          <div className="absolute top-5 left-8 right-8 h-0.5 bg-gray-200"></div>
-          <div className="absolute top-5 left-8 w-8 h-0.5 bg-orange-500 transition-all duration-500"></div>
-          
-          <div className="flex flex-col items-center relative z-10 transition-all duration-300 text-orange-500">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300 bg-orange-500 text-white shadow-lg">
-              <User className="w-5 h-5" />
-            </div>
-            <span className="text-sm font-medium">Details</span>
-          </div>
-          
-          <div className="flex flex-col items-center relative z-10 transition-all duration-300 text-orange-500">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300 bg-orange-500 text-white shadow-lg">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <span className="text-sm font-medium">Payment</span>
-          </div>
-          
-          <div className="flex flex-col items-center relative z-10 transition-all duration-300 text-gray-400">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300 bg-gray-200 text-gray-400">
-              <Check className="w-5 h-5" />
-            </div>
-            <span className="text-sm font-medium">Confirm</span>
-          </div>
-        </div>
-      </div>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b" style={{ borderColor: 'rgb(247, 219, 190)', backgroundColor: 'rgb(247, 219, 190)'  }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center cursor-pointer" onClick={handleLogoClick}>
+            <img 
+                src={logo} 
+                alt="Logo" 
+                className="h-28 md:h-36 lg:h-32 w-auto object-contain hover:scale-105 transition-transform duration-200" 
+              />
 
-      <h2 className="text-2xl font-bold text-gray-900 mb-8 relative">
-        Payment Information
-        <div className="absolute bottom-0 left-0 w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
-      </h2>
 
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6 border border-orange-100 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Secure Card Payment</h3>
-        <p className="text-gray-600 text-sm mb-4">Pay securely with your credit or debit card through Razorpay.</p>
-        <div className="flex gap-3 mb-4">
-          <div className="w-12 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">VISA</div>
-          <div className="w-12 h-8 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">MC</div>
-          <div className="w-12 h-8 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">AMEX</div>
+            </div>
+
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link to="/" className="relative group py-2">
+                <span className="font-medium transition-colors duration-300" style={{ color: 'rgb(0, 31, 60)' }} onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'} onMouseLeave={(e) => e.target.style.color = 'rgb(0, 31, 60)'}>Home</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
+              </Link>
+              <Link to="/property" className="relative group py-2">
+                <span className="font-medium transition-colors duration-300" style={{ color: 'rgb(0, 31, 60)' }} onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'} onMouseLeave={(e) => e.target.style.color = 'rgb(0, 31, 60)'}>Properties</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
+              </Link>
+              <Link to="/about" className="relative group py-2">
+                <span className="font-medium transition-colors duration-300" style={{ color: 'rgb(0, 31, 60)' }} onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'} onMouseLeave={(e) => e.target.style.color = 'rgb(0, 31, 60)'}>About</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
+              </Link>
+              <Link to="/contact" className="relative group py-2">
+                <span className="font-medium transition-colors duration-300" style={{ color: 'rgb(0, 31, 60)' }} onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'} onMouseLeave={(e) => e.target.style.color = 'rgb(0, 31, 60)'}>Contact</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
+              </Link>
+            </nav>
+
+            <div className="flex items-center space-x-4">
+              {!isLogged ? (
+           <button
+           onClick={() => setShowAuthModal(true)}
+           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-full font-semibold text-sm md:text-base text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+           style={{ 
+             background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+           }}
+           onMouseEnter={(e) => e.target.style.background = `linear-gradient(to right, rgb(250, 153, 56), rgb(231, 121, 0))`}
+           onMouseLeave={(e) => e.target.style.background = `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`}
+         >
+           <svg
+             className="w-4 h-4 text-white"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24"
+           >
+             <path
+               strokeLinecap="round"
+               strokeLinejoin="round"
+               strokeWidth={2}
+               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+             />
+           </svg>
+           <span>Sign In</span>
+         </button>
+         
+              ) : (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-full font-semibold text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm md:text-base"
+                    style={{ backgroundColor: 'rgb(4, 80, 115)' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(0, 31, 60)'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(4, 80, 115)'}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs font-bold" style={{ color: 'rgb(4, 80, 115)' }}>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="hidden lg:block">{user?.name}</span>
+                    <svg
+                      className={`w-4 h-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-50" style={{ border: `1px solid rgb(247, 219, 190)` }}>
+                      <div className="px-4 py-2 border-b" style={{ borderColor: 'rgb(247, 219, 190)' }}>
+                        <p className="text-sm font-semibold" style={{ color: 'rgb(0, 31, 60)' }}>{user?.name}</p>
+                        <p className="text-xs" style={{ color: 'rgb(4, 80, 115)' }}>{user?.email}</p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        className="flex items-center px-4 py-2 text-sm transition-colors"
+                        style={{ color: 'rgb(0, 31, 60)' }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = 'rgb(247, 219, 190)';
+                          e.target.style.color = 'rgb(0, 31, 60)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = 'rgb(0, 31, 60)';
+                        }}
+                        onClick={() => setShowProfileDropdown(false)}
+                      >
+                        <svg
+                          className="w-4 h-4 mr-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        Profile
+                      </Link>
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm transition-colors"
+                        style={{ color: 'rgb(0, 31, 60)' }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = 'rgb(247, 219, 190)';
+                          e.target.style.color = 'rgb(0, 31, 60)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = 'rgb(0, 31, 60)';
+                        }}
+                      >
+                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 rounded-xl transition-all duration-200"
+                style={{ backgroundColor: 'rgb(247, 219, 190)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(247, 219, 190)'}
+              >
+                <svg className="w-6 h-6" style={{ color: 'rgb(0, 31, 60)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {isMenuOpen && (
+            <div className="md:hidden bg-white" style={{ borderTop: `1px solid rgb(247, 219, 190)` }}>
+              <div className="px-4 pt-4 pb-6 space-y-2">
+                {[
+                  { name: 'Home', href: '/' },
+                  { name: 'Properties', href: '/property' },
+                  { name: 'About', href: '/about' },
+                  { name: 'Contact', href: '/contact' }
+                ].map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={handleMenuItemClick}
+                    className="block px-4 py-3 rounded-lg font-medium transition-all duration-200"
+                    style={{ color: 'rgb(0, 31, 60)' }}
+                    onMouseEnter={(e) => {
+                      e.target.style.color = 'rgb(231, 121, 0)';
+                      e.target.style.backgroundColor = 'rgb(247, 219, 190)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.color = 'rgb(0, 31, 60)';
+                      e.target.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                
+                {isLogged && (
+                  <div className="mt-4 pt-4" style={{ borderTop: `1px solid rgb(247, 219, 190)` }}>
+                    <div className="px-4 py-3 rounded-lg mb-3" style={{ backgroundColor: 'rgb(247, 219, 190)' }}>
+                      <p className="font-semibold" style={{ color: 'rgb(0, 31, 60)' }}>{user?.name}</p>
+                      <p className="text-sm" style={{ color: 'rgb(4, 80, 115)' }}>{user?.email}</p>
+                    </div>
+                    
+                    <Link
+                      to="/profile"
+                      onClick={handleMenuItemClick}
+                      className="block w-full text-left px-4 py-3 rounded-lg font-medium transition-all duration-200"
+                      style={{ color: 'rgb(0, 31, 60)' }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = 'rgb(231, 121, 0)';
+                        e.target.style.backgroundColor = 'rgb(247, 219, 190)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = 'rgb(0, 31, 60)';
+                        e.target.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        handleMenuItemClick();
+                      }}
+                      className="block w-full text-left px-4 py-3 rounded-lg font-medium transition-all duration-200"
+                      style={{ color: 'rgb(231, 121, 0)' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(247, 219, 190)'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-        <button 
-          onClick={() => handleRazorpayPayment()}
-          disabled={loading}
-          className="w-full py-4 px-6 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          style={{ 
-            background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
-          }}
-        >
-          {loading ? 'Processing...' : 'Pay AED 1,000 Securely'}
-        </button>
-      </div>
-        
-      <div className="flex gap-4">
-        <button 
-          onClick={prevStep}
-          className="flex items-center justify-center gap-2 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back
-        </button>
-        <button 
-          onClick={nextStep}
-          disabled={!validateStep(2)}
-          className="flex items-center justify-center gap-2 flex-1 py-4 px-6 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          style={{ 
-            background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
-          }}
-        >
-          Continue to Confirm 
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
+      </header>
+
+      <AuthModal
+        show={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onRegisterSuccess={handleRegisterSuccess}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
+      <OtpModal
+        show={showOtpModal}
+        onClose={handleOtpModalClose}
+        email={registeredEmail}
+      />
     </>
   );
 };
 
-export default CheckoutPayment;
+export default Navbar;
