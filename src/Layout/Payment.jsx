@@ -124,16 +124,17 @@ const CheckoutPayment = ({ formData, handleInputChange, nextStep, prevStep, vali
           Back
         </button>
         <button 
-          onClick={nextStep}
-          disabled={!validateStep(2)}
-          className="flex items-center justify-center gap-2 flex-1 py-4 px-6 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          style={{ 
-            background: 'linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))',
-          }}
-        >
-          Continue to Confirm 
-          <ArrowRight className="w-5 h-5" />
-        </button>
+            onClick={nextStep}
+            disabled={!validateStep(2)}   // ⬅️ this line can crash if validateStep isn't passed
+            className="flex items-center justify-center gap-2 flex-1 py-4 px-6 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            style={{ 
+              background: 'linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))',
+            }}
+          >
+            Continue to Confirm 
+            <ArrowRight className="w-5 h-5" />
+          </button>
+
       </div>
     </>
   );
