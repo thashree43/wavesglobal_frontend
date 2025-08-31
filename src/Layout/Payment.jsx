@@ -52,22 +52,6 @@ const CheckoutPayment = ({ formData, handleInputChange, nextStep, prevStep, vali
         ondismiss: function() {
           setLoading(false);
         }
-      },
-      config: {
-        display: {
-          blocks: {
-            banks: {
-              name: 'Pay using Credit/Debit Cards',
-              instruments: [
-                { method: 'card' }
-              ]
-            }
-          },
-          sequence: ['block.banks'],
-          preferences: {
-            show_default_blocks: false
-          }
-        }
       }
     };
 
@@ -116,22 +100,18 @@ const CheckoutPayment = ({ formData, handleInputChange, nextStep, prevStep, vali
       </h2>
 
       <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6 border border-orange-100 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Secure Card Payment</h3>
-        <p className="text-gray-600 text-sm mb-4">Pay securely with your credit or debit card through Razorpay.</p>
-        <div className="flex gap-3 mb-4">
-          <div className="w-12 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">VISA</div>
-          <div className="w-12 h-8 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">MC</div>
-          <div className="w-12 h-8 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">AMEX</div>
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Secure Payment with Razorpay</h3>
+        <p className="text-gray-600 text-sm mb-6">Complete your purchase securely through Razorpay payment gateway.</p>
+        
         <button 
           onClick={() => handleRazorpayPayment()}
           disabled={loading}
           className="w-full py-4 px-6 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           style={{ 
-            background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+            background: 'linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))',
           }}
         >
-          {loading ? 'Processing...' : 'Pay AED 1,000 Securely'}
+          {loading ? 'Processing...' : 'Pay AED 1,000 with Razorpay'}
         </button>
       </div>
         
@@ -148,7 +128,7 @@ const CheckoutPayment = ({ formData, handleInputChange, nextStep, prevStep, vali
           disabled={!validateStep(2)}
           className="flex items-center justify-center gap-2 flex-1 py-4 px-6 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           style={{ 
-            background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+            background: 'linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))',
           }}
         >
           Continue to Confirm 
