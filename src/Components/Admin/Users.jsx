@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { baseurl } from '../../Base/Base';
-import { User, Shield, ShieldOff, Users, BarChart3, FileText, Bell, DollarSign, Settings, Menu, X, Search } from 'lucide-react';
+import { User, Shield, ShieldOff, Users, BarChart3, FileText, Bell, DollarSign, Settings, Menu, X, Search, MapPin, Home } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,11 +11,13 @@ const UsersList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
-    { id: 'properties', name: 'Properties', icon: Users, route: '/admin/property' },
+    { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
+    { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
     { id: 'revenue', name: 'Revenue', icon: DollarSign, route: '/revenue' },
     { id: 'users', name: 'Users', icon: Users, route: '/users' },
     { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
@@ -25,10 +27,17 @@ const UsersList = () => {
 
   const getUsers = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${baseurl}admin/users`);
-      if (response.data) setUsers(response.data);
+      
+      console.log(response,"may here")
+      if (response.data) {
+        setUsers(response.data);
+      }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,12 +45,27 @@ const UsersList = () => {
     getUsers();
   }, []);
 
-  const handleBlockUnblock = (userId) => {
-    setUsers(users.map(user =>
-      user.id === userId
-        ? { ...user, isBlocked: !user.isBlocked, status: !user.isBlocked ? 'inactive' : 'active' }
-        : user
-    ));
+  const handleBlockUnblock = async (userId) => {
+    try {
+      setLoading(true);
+      const user = users.find(u => u.id === userId);
+      const newStatus = user.isBlocked ? 'active' : 'inactive';
+      
+      await axios.put(`${baseurl}admin/users/${userId}/status`, {
+        status: newStatus,
+        isBlocked: !user.isBlocked
+      });
+
+      setUsers(users.map(user =>
+        user.id === userId
+          ? { ...user, isBlocked: !user.isBlocked, status: newStatus }
+          : user
+      ));
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSidebarClick = (itemId, route) => {
@@ -51,8 +75,8 @@ const UsersList = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'All' || user.status === filterStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
@@ -74,7 +98,6 @@ const UsersList = () => {
       )}
 
       <div className="flex-1 lg:ml-0 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <button
@@ -91,47 +114,71 @@ const UsersList = () => {
         <div className="flex-1 overflow-hidden">
           {activeTab === 'users' ? (
             <div className="h-full flex flex-col">
-              {/* Page Header */}
-              <div className="flex-shrink-0 p-4 sm:p-6 lg:p-8 bg-white border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Users className="text-blue-600 flex-shrink-0" size={32} />
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
-                    <p className="text-gray-600 text-sm sm:text-base">Manage user accounts and permissions</p>
+              <div className="flex-shrink-0 p-4 sm:p-6 lg:p-8 bg-white border-b border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Users className="text-blue-600 flex-shrink-0" size={32} />
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
+                      <p className="text-gray-600 text-sm sm:text-base">Manage user accounts and permissions</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-green-50 px-3 py-2 rounded-lg">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    <span className="text-sm text-green-700">
+                      Active: {users.filter(u => u.status === 'active').length}
+                    </span>
+                  </div>
+                  <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
+                    <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+                    <span className="text-sm text-red-700">
+                      Inactive: {users.filter(u => u.status === 'inactive').length}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Search & Filter */}
               <div className="flex-shrink-0 px-4 sm:px-6 lg:px-8 py-4">
-                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                      type="text"
-                      placeholder="Search users..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                    />
-                  </div>
-                  <div className="flex-shrink-0">
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                    >
-                      <option value="All">All Status</option>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
+                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                          type="text"
+                          placeholder="Search users..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                      >
+                        <option value="All">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Users Table */}
               <div className="flex-1 overflow-hidden px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
                 <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                  {loading && (
+                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+
                   <div className="hidden sm:block flex-shrink-0 overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-50">
@@ -151,20 +198,38 @@ const UsersList = () => {
                       <tbody className="divide-y divide-gray-200">
                         {filteredUsers.map((user) => (
                           <tr key={user.id} className="hover:bg-gray-50">
-                            <td className="py-4 px-3 sm:px-6">{user.name}</td>
-                            <td className="py-4 px-3 sm:px-6">{user.email}</td>
+                            <td className="py-4 px-3 sm:px-6">
+                              <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <User className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <span className="font-medium text-gray-900">{user.name}</span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-3 sm:px-6">
+                              <span className="text-gray-600">{user.email}</span>
+                            </td>
                             <td className="py-4 px-3 sm:px-6">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${
                                 user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>{user.status}</span>
+                              }`}>
+                                {user.status}
+                              </span>
                             </td>
-                            <td className="py-4 px-3 sm:px-6">{new Date(user.joinedDate).toLocaleDateString()}</td>
+                            <td className="py-4 px-3 sm:px-6">
+                              <span className="text-gray-600">
+                                {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : 'N/A'}
+                              </span>
+                            </td>
                             <td className="py-4 px-3 sm:px-6">
                               <button
                                 onClick={() => handleBlockUnblock(user.id)}
-                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs sm:text-sm ${
-                                  user.isBlocked ? 'text-green-700 bg-green-50 border border-green-200' : 'text-red-700 bg-red-50 border border-red-200'
-                                }`}
+                                disabled={loading}
+                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs sm:text-sm transition-colors ${
+                                  user.isBlocked 
+                                    ? 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100' 
+                                    : 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
                                 {user.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />}
                                 {user.isBlocked ? 'Unblock' : 'Block'}
@@ -175,32 +240,45 @@ const UsersList = () => {
                       </tbody>
                     </table>
 
-                    {/* Mobile Cards */}
                     <div className="sm:hidden space-y-4 p-4">
                       {filteredUsers.map(user => (
                         <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium text-gray-900">{user.name}</h3>
-                              <p className="text-xs text-gray-600">{user.email}</p>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                                user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>{user.status}</span>
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <User className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-medium text-gray-900 truncate">{user.name}</h3>
+                                <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                                  user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {user.status}
+                                </span>
+                              </div>
                             </div>
                             <button
                               onClick={() => handleBlockUnblock(user.id)}
-                              className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg ${
-                                user.isBlocked ? 'text-green-700 bg-green-50 border border-green-200' : 'text-red-700 bg-red-50 border border-red-200'
-                              }`}
+                              disabled={loading}
+                              className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors ${
+                                user.isBlocked 
+                                  ? 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100' 
+                                  : 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               {user.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />}
                             </button>
+                          </div>
+
+                          <div className="text-xs text-gray-500">
+                            <span>Joined: {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : 'N/A'}</span>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    {filteredUsers.length === 0 && (
+                    {filteredUsers.length === 0 && !loading && (
                       <div className="text-center py-12">
                         <Users className="mx-auto h-12 w-12 text-gray-400" />
                         <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
@@ -215,7 +293,10 @@ const UsersList = () => {
             <div className="h-full flex items-center justify-center p-4 sm:p-8">
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 sm:p-12 text-center max-w-md w-full">
                 <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                  {React.createElement(sidebarItems.find(item => item.id === activeTab)?.icon || Users, { size: 48, className: "text-blue-600" })}
+                  {React.createElement(sidebarItems.find(item => item.id === activeTab)?.icon || Users, { 
+                    size: window.innerWidth < 640 ? 32 : 48, 
+                    className: "text-blue-600" 
+                  })}
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                   {sidebarItems.find(item => item.id === activeTab)?.name} Page
