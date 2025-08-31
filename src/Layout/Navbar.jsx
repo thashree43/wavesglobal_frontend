@@ -14,6 +14,7 @@ const Navbar = () => {
   const [isLogged, setisLogged] = useState(false);
   const [user, setUser] = useState(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   
   const navigate = useNavigate();
 
@@ -27,20 +28,22 @@ const Navbar = () => {
       const response = await axios.get(`${baseurl}User/getuser`, {
         withCredentials: true  
       })
-
-      console.log("first")
-
       if(response.data.user) {
         setisLogged(true);
         setUser(response.data.user);
+      } else {
+        setisLogged(false);
+        setUser(null);
       }
     } catch (error) {
-      console.error(error)
+      setisLogged(false);
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
     }
   }
 
   const handleLoginSuccess = (userData) => {
-    console.log("Navbar received user data:", userData);
     setisLogged(true);
     setUser(userData);
     setShowAuthModal(false);
@@ -54,9 +57,7 @@ const Navbar = () => {
       setisLogged(false);
       setUser(null);
       setShowProfileDropdown(false);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    } catch (error) {}
   }
 
   const handleLogoClick = () => {
@@ -82,13 +83,11 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center cursor-pointer" onClick={handleLogoClick}>
-            <img 
+              <img 
                 src={logo} 
                 alt="Logo" 
                 className="h-28 md:h-36 lg:h-32 w-auto object-contain hover:scale-105 transition-transform duration-200" 
               />
-
-
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
@@ -111,32 +110,33 @@ const Navbar = () => {
             </nav>
 
             <div className="flex items-center space-x-4">
-              {!isLogged ? (
-           <button
-           onClick={() => setShowAuthModal(true)}
-           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-full font-semibold text-sm md:text-base text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-           style={{ 
-             background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
-           }}
-           onMouseEnter={(e) => e.target.style.background = `linear-gradient(to right, rgb(250, 153, 56), rgb(231, 121, 0))`}
-           onMouseLeave={(e) => e.target.style.background = `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`}
-         >
-           <svg
-             className="w-4 h-4 text-white"
-             fill="none"
-             stroke="currentColor"
-             viewBox="0 0 24 24"
-           >
-             <path
-               strokeLinecap="round"
-               strokeLinejoin="round"
-               strokeWidth={2}
-               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-             />
-           </svg>
-           <span>Sign In</span>
-         </button>
-         
+              {authLoading ? (
+                <div className="w-20 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+              ) : !isLogged ? (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-full font-semibold text-sm md:text-base text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  style={{ 
+                    background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = `linear-gradient(to right, rgb(250, 153, 56), rgb(231, 121, 0))`}
+                  onMouseLeave={(e) => e.target.style.background = `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`}
+                >
+                  <svg
+                    className="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  <span>Sign In</span>
+                </button>
               ) : (
                 <div className="relative">
                   <button
