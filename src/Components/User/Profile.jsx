@@ -22,6 +22,7 @@ const ProfilePage = () => {
     mobile: ''
   });
 
+
   const [originalUserDetails, setOriginalUserDetails] = useState({
     name: '',
     email: '',
@@ -54,7 +55,7 @@ const ProfilePage = () => {
     {
       id: '1',
       propertyName: 'Luxury Beach Villa',
-      location: 'Malibu, CA',
+      location: 'Malibu',
       checkIn: '2024-09-15',
       checkOut: '2024-09-18',
       guests: 4,
@@ -506,5 +507,6 @@ const ProfilePage = () => {
     </div>
   );
 };
+
 
 export default ProfilePage;
