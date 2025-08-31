@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, X, BarChart3, DollarSign, Settings, Users, FileText, Bell, MapPin } from 'lucide-react';
+import { Home, X, BarChart3, DollarSign,Calendar, Settings, Users, FileText, Bell, MapPin } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick }) => {
   const sidebarItems = [
@@ -10,7 +10,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick })
     { id: 'users', name: 'Users', icon: Users, route: '/admin/users' },
     // { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
     // { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
+    { id: 'bookings', name: 'Bookings', icon: Calendar, route: '/bookings' },
     { id: 'settings', name: 'Settings', icon: Settings, route: '/settings' },
+
   ];
 
   return (
