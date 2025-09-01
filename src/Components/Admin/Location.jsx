@@ -20,6 +20,8 @@ const LocationManagement = () => {
   });
   const navigate = useNavigate()
   const [locations, setLocations] = useState([]);
+  const token = localStorage.getItem("adminToken");
+
 
   const handleSidebarClick = (itemId, route) => {
     setActiveTab(itemId);
@@ -169,7 +171,11 @@ const LocationManagement = () => {
 
   const getlocation = async()=>{
     try {
-      const response = await axios.get(`${baseurl}admin/getlocation`)
+      const response = await axios.get(`${baseurl}admin/getlocation`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       console.log('Get location response:', response.data);
       if(response.data.success){
         setLocations(response.data.location)

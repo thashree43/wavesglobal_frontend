@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { baseurl } from "../../Base/Base";
 import { toast } from 'react-toastify';
 
+
+
 const AuthModal = ({ show, onClose, onRegisterSuccess, onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   

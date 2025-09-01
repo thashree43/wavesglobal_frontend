@@ -15,6 +15,8 @@ const BookingsList = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
+  const token = localStorage.getItem("adminToken");
+
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
@@ -31,7 +33,12 @@ const BookingsList = () => {
   const getBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${baseurl}admin/bookings`);
+      const response = await axios.get(`${baseurl}admin/bookings`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
       console.log(response.data)
       if (response.data) {
         setBookings(response.data);

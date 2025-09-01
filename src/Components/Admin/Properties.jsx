@@ -21,6 +21,7 @@ const PropertyPage = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [neighborhoods, setNeighborhoods] = useState([]);
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("adminToken");
 
   const propertyTypes = ['Apartment', 'Villa', 'Studio', 'Penthouse', 'Townhouse', 'Office'];
 
@@ -38,7 +39,11 @@ const PropertyPage = () => {
   const getProperty = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${baseurl}admin/getproperty`);
+      const response = await axios.get(`${baseurl}admin/getproperty`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       if (response.data.success) {
         setProperties(response.data.property);
       }
