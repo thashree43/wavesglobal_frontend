@@ -11,7 +11,7 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
     const loadGoogleMaps = () => {
       if (!window.google) {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?keyAIzaSyCsK67a47ywMieu1-APTA5ZQxgnQPQpouk&libraries=places`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBZ9GxgYg-jf4okROBNUfZl1d529SRxKwY&libraries=places`;
         script.async = true;
         script.defer = true;
         script.onload = initializeMap;
@@ -45,9 +45,7 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
 
         mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
 
-        if (markerRef.current) {
-          markerRef.current.setMap(null);
-        }
+        if (markerRef.current) markerRef.current.setMap(null);
 
         markerRef.current = new window.google.maps.Marker({
           position: { lat: parseFloat(lat), lng: parseFloat(lng) },
