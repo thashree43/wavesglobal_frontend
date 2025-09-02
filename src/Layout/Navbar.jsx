@@ -5,7 +5,8 @@ import logo from "../assets/logo.png";
 import axios from "axios";
 import { baseurl } from "../Base/Base.js";
 import { useNavigate, Link } from "react-router-dom";
-
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ClientId } from "../Base/Base.js";
 const Navbar = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -91,7 +92,7 @@ const Navbar = () => {
   };
 
   return (
-    <>
+    <GoogleOAuthProvider clientId={ClientId}>
       <header
         className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b"
         style={{
@@ -477,7 +478,7 @@ const Navbar = () => {
         onClose={handleOtpModalClose}
         email={registeredEmail}
       />
-    </>
+    </GoogleOAuthProvider>
   );
 };
 
