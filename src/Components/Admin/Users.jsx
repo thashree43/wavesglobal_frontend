@@ -13,6 +13,8 @@ const UsersList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const token = localStorage.getItem("adminToken");
+
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
@@ -28,7 +30,11 @@ const UsersList = () => {
   const getUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${baseurl}admin/users`);
+      const response = await axios.get(`${baseurl}admin/users`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       
       console.log(response,"may here")
       if (response.data) {

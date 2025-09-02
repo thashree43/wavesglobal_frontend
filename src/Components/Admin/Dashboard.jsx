@@ -50,6 +50,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const token = localStorage.getItem("adminToken");
+
 
   const [dashboardData, setDashboardData] = useState({
     stats: {},
@@ -76,7 +78,11 @@ const Dashboard = () => {
 
   const getDashboarddata = async()=>{
     try {
-    const response = await axios.get(`${baseurl}admin/data`)
+    const response = await axios.get(`${baseurl}admin/data`,{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
 
     if(response.data.success){
         setDashboardData(response.data.data)

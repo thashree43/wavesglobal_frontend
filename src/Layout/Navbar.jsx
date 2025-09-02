@@ -12,12 +12,12 @@ const Navbar = () => {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLogged, setIsLogged] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return !!savedUser;
+    const savedUserData = localStorage.getItem("userData");
+    return !!savedUserData;
   });
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+    const savedUserData = localStorage.getItem("userData");
+    return savedUserData ? JSON.parse(savedUserData) : null;
   });
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const navigate = useNavigate();
@@ -34,24 +34,32 @@ const Navbar = () => {
       });
       if (response.data.user) {
         setIsLogged(true);
-        setUser(response.data.user);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        const userData = {
+          name: response.data.user.name,
+          email: response.data.user.email
+        };
+        setUser(userData);
+        localStorage.setItem("userData", JSON.stringify(userData));
       } else {
         setIsLogged(false);
         setUser(null);
-        localStorage.removeItem("user");
+        localStorage.removeItem("userData");
       }
     } catch {
       setIsLogged(false);
       setUser(null);
-      localStorage.removeItem("user");
+      localStorage.removeItem("userData");
     }
   };
 
   const handleLoginSuccess = (userData) => {
     setIsLogged(true);
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+    const userInfo = {
+      name: userData.name,
+      email: userData.email
+    };
+    setUser(userInfo);
+    localStorage.setItem("userData", JSON.stringify(userInfo));
     setShowAuthModal(false);
   };
 
@@ -60,7 +68,7 @@ const Navbar = () => {
       await axios.post(`${baseurl}User/logout`, {}, { withCredentials: true });
       setIsLogged(false);
       setUser(null);
-      localStorage.removeItem("user");
+      localStorage.removeItem("userData");
       setShowProfileDropdown(false);
     } catch {}
   };
