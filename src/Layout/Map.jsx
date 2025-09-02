@@ -33,14 +33,7 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
           zoomControl: true,
           zoomControlOptions: {
             position: window.google?.maps?.ControlPosition?.RIGHT_CENTER,
-          },
-          styles: [
-            {
-              featureType: 'poi',
-              elementType: 'labels',
-              stylers: [{ visibility: 'on' }]
-            }
-          ]
+          }
         };
 
         mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
