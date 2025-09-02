@@ -4,7 +4,6 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
   const [mapType, setMapType] = useState('roadmap');
   const [activeView, setActiveView] = useState('Map');
   const mapRef = useRef(null);
-  const streetViewRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
 
@@ -12,7 +11,7 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
     const loadGoogleMaps = () => {
       if (!window.google) {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBZ9GxgYg-jf4okROBNUfZl1d529SRxKwY&libraries=places`;
+        script.src = `https://maps.googleapis.com/maps/api/js?keyAIzaSyCsK67a47ywMieu1-APTA5ZQxgnQPQpouk&libraries=places`;
         script.async = true;
         script.defer = true;
         script.onload = initializeMap;
@@ -98,12 +97,16 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
   };
 
   const openStreetView = () => {
-    if (streetViewRef.current && lat && lng) {
-      new window.google.maps.StreetViewPanorama(streetViewRef.current, {
-        position: { lat: parseFloat(lat), lng: parseFloat(lng) },
-        pov: { heading: 34, pitch: 10 },
-        visible: true
-      });
+    if (mapInstanceRef.current && lat && lng) {
+      const panorama = new window.google.maps.StreetViewPanorama(
+        mapRef.current,
+        {
+          position: { lat: parseFloat(lat), lng: parseFloat(lng) },
+          pov: { heading: 34, pitch: 10 },
+          visible: true
+        }
+      );
+      mapInstanceRef.current.setStreetView(panorama);
       setActiveView('Street view');
     }
   };
@@ -162,15 +165,7 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
         ref={mapRef}
         className={`w-full rounded-lg transition-all duration-300 ${
           isExpanded ? 'h-96' : 'h-64'
-        } ${activeView === 'Street view' ? 'hidden' : ''}`}
-        style={{ minHeight: '250px' }}
-      />
-      
-      <div
-        ref={streetViewRef}
-        className={`w-full rounded-lg transition-all duration-300 ${
-          isExpanded ? 'h-96' : 'h-64'
-        } ${activeView === 'Street view' ? '' : 'hidden'}`}
+        }`}
         style={{ minHeight: '250px' }}
       />
       
