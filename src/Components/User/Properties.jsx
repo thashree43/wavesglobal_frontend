@@ -413,6 +413,81 @@ const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) =
   );
 };
 
+const Pagination = ({ currentPage, totalPages, onPageChange, itemsPerPage, totalItems }) => {
+  const getVisiblePages = () => {
+    const pages = [];
+    const showPages = 5;
+    
+    if (totalPages <= showPages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, currentPage - Math.floor(showPages / 2));
+      let end = Math.min(totalPages, start + showPages - 1);
+      
+      if (end - start + 1 < showPages) {
+        start = Math.max(1, end - showPages + 1);
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  };
+
+  if (totalPages <= 1) return null;
+
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  return (
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 px-4">
+      <div className="text-sm text-gray-600">
+        Showing {startItem} to {endItem} of {totalItems} properties
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        
+        {getVisiblePages().map((page) => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentPage === page
+                ? 'bg-orange-500 text-white shadow-md'
+                : 'border border-gray-200 hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+      
+      <div className="text-sm text-gray-600">
+        Page {currentPage} of {totalPages}
+      </div>
+    </div>
+  );
+};
+
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -428,6 +503,8 @@ const Properties = () => {
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState({ adults: 1, children: 0, infants: 0 });
   const [guestsOpen, setGuestsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -475,15 +552,12 @@ const Properties = () => {
       setGuests((prev) => ({ ...prev, infants: parseInt(searchParams.get("infants")) || 0 }));
     }
   
-    // ✅ Add this
     if (searchParams.get("locationId")) {
       params.locationId = searchParams.get("locationId");
     }
   
     return params;
   };
-
-  
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
@@ -499,7 +573,6 @@ const Properties = () => {
 
   const fetchProperties = async () => {
     try {
-
       setIsLoading(true);
       const urlParams = getUrlParams();
       let endpoint = `${baseurl}user/properties`;
@@ -509,11 +582,8 @@ const Properties = () => {
         endpoint += `?${queryString}`;
       }
 
-      
       const response = await axios.get(endpoint);
-      console.log("nporpor",response)
 
-      console.log(response,endpoint,"heee")
       if (response.data.success) {
         setProperties(response.data.data);
       } else {
@@ -529,8 +599,6 @@ const Properties = () => {
 
   const fetchNeighborhoods = async () => {
     try {
-
-      console.log("neigh")
       const response = await axios.get(`${baseurl}user/location`);
       if (response.data && response.data.location) {
         setNeighborhoods(response.data.location);
@@ -543,7 +611,12 @@ const Properties = () => {
   useEffect(() => {
     fetchProperties();
     fetchNeighborhoods();
+    setCurrentPage(1);
   }, [location.search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchTerm, sortBy]);
 
   const toggleLike = (id) => {
     setLikedProperties((prev) =>
@@ -642,6 +715,18 @@ const Properties = () => {
     }
   };
 
+  const paginatedProperties = () => {
+    const filtered = filteredAndSortedProperties();
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const PropertySkeleton = () => (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
       <div className="h-64 bg-gradient-to-r from-gray-100 to-gray-200"></div>
@@ -663,6 +748,8 @@ const Properties = () => {
 
   const totalGuests = guests.adults + guests.children + guests.infants;
   const guestDisplayText = totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`;
+  
+  const totalPages = Math.ceil(filteredAndSortedProperties().length / itemsPerPage);
 
   if (error) {
     return (
@@ -947,7 +1034,7 @@ const Properties = () => {
 
             <div className="mb-6">
               <p className="text-gray-600">
-                Showing {filteredAndSortedProperties().length} of {properties.length} properties
+                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedProperties().length)}-{Math.min(currentPage * itemsPerPage, filteredAndSortedProperties().length)} of {filteredAndSortedProperties().length} properties
               </p>
             </div>
 
@@ -975,147 +1062,157 @@ const Properties = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredAndSortedProperties().map((property, index) => (
-                  <article
-                    key={property._id || index}
-                    onMouseEnter={() => setHoveredProperty(property._id)}
-                    onMouseLeave={() => setHoveredProperty(null)}
-                    className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
-                    onClick={() => handlePropertyClick(property._id)}
-                 >
-                    <div className="relative h-64 overflow-hidden">
-                      {property.images && property.images.length > 0 ? (
-                        <img
-                          src={hoveredProperty === property._id && property.images[1] 
-                            ? property.images[1].url 
-                            : property.images[0].url}
-                          alt={property.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <span className="text-gray-400">No Image</span>
-                        </div>
-                      )}
-
-                      <div className="absolute top-4 left-4">
-                        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium">
-                          {propertyTypes.find(t => t.value === property.type)?.icon}
-                          <span>{property.type}</span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLike(property._id);
-                        }}
-                        className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
-                          likedProperties.includes(property._id)
-                            ? "bg-red-500 text-white scale-110"
-                            : "bg-white/95 hover:bg-white text-gray-700"
-                        }`}
-                      >
-                        <Heart 
-                          size={18} 
-                          fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
-                        />
-                      </button>
-
-                      {property.images && property.images.length > 1 && (
-                        <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
-                          1/{property.images.length}
-                        </div>
-                      )}
-
-                      {property.propertyHighlights && property.propertyHighlights.length > 0 && (
-                        <div className="absolute bottom-4 left-4">
-                          <div className="bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
-                            {property.propertyHighlights[0].name}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-6">
-                      <div className="mb-4">
-                        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors">
-                          {property.title || "Untitled Property"}
-                        </h3>
-                        <div className="flex items-center text-gray-500 text-sm gap-1 mb-1">
-                          <MapPin size={14} />
-                          <span className="line-clamp-1">
-                            {property.neighborhood?.name || property.location || "Location not specified"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
-                        {property.bedrooms && (
-                          <div className="flex items-center gap-2">
-                            <Bed size={16} className="text-gray-400" />
-                            <span>{property.bedrooms} Bed{property.bedrooms !== 1 ? 's' : ''}</span>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {paginatedProperties().map((property, index) => (
+                    <article
+                      key={property._id || index}
+                      onMouseEnter={() => setHoveredProperty(property._id)}
+                      onMouseLeave={() => setHoveredProperty(null)}
+                      className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+                      onClick={() => handlePropertyClick(property._id)}
+                   >
+                      <div className="relative h-64 overflow-hidden">
+                        {property.images && property.images.length > 0 ? (
+                          <img
+                            src={hoveredProperty === property._id && property.images[1] 
+                              ? property.images[1].url 
+                              : property.images[0].url}
+                            alt={property.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <span className="text-gray-400">No Image</span>
                           </div>
                         )}
-                        {property.bathrooms && (
-                          <div className="flex items-center gap-2">
-                            <Bath size={16} className="text-gray-400" />
-                            <span>{property.bathrooms} Bath{property.bathrooms !== 1 ? 's' : ''}</span>
-                          </div>
-                        )}
-                        {property.guests && (
-                          <div className="flex items-center gap-2">
-                            <Users size={16} className="text-gray-400" />
-                            <span>{property.guests} Guest{property.guests !== 1 ? 's' : ''}</span>
-                          </div>
-                        )}
-                        {property.area && (
-                          <div className="flex items-center gap-2">
-                            <Square size={16} className="text-gray-400" />
-                            <span>{property.area} m²</span>
-                          </div>
-                        )}
-                      </div>
 
-                      {property.amenities && (
-                        <div className="mb-4">
-                          <div className="flex flex-wrap gap-1">
-                            {property.amenities.general?.slice(0, 3).map((amenity, idx) => (
-                              <span key={idx} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
-                                {amenity.name}
-                              </span>
-                            ))}
-                            {property.amenities.general?.length > 3 && (
-                              <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
-                                +{property.amenities.general.length - 3} more
-                              </span>
-                            )}
+                        <div className="absolute top-4 left-4">
+                          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium">
+                            {propertyTypes.find(t => t.value === property.type)?.icon}
+                            <span>{property.type}</span>
                           </div>
                         </div>
-                      )}
 
-                      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                        <div>
-                          <span className="text-2xl font-bold text-gray-900">
-                            AED {property.price?.toLocaleString() || "N/A"}
-                          </span>
-                          <span className="text-gray-500 text-sm ml-1">/night</span>
-                        </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handlePropertyClick(property._id);
+                            toggleLike(property._id);
                           }}
-                          className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
+                          className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
+                            likedProperties.includes(property._id)
+                              ? "bg-red-500 text-white scale-110"
+                              : "bg-white/95 hover:bg-white text-gray-700"
+                          }`}
                         >
-                          View
+                          <Heart 
+                            size={18} 
+                            fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
+                          />
                         </button>
+
+                        {property.images && property.images.length > 1 && (
+                          <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
+                            1/{property.images.length}
+                          </div>
+                        )}
+
+                        {property.propertyHighlights && property.propertyHighlights.length > 0 && (
+                          <div className="absolute bottom-4 left-4">
+                            <div className="bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
+                              {property.propertyHighlights[0].name}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+
+                      <div className="p-6">
+                        <div className="mb-4">
+                          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                            {property.title || "Untitled Property"}
+                          </h3>
+                          <div className="flex items-center text-gray-500 text-sm gap-1 mb-1">
+                            <MapPin size={14} />
+                            <span className="line-clamp-1">
+                              {property.neighborhood?.name || property.location || "Location not specified"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
+                          {property.bedrooms && (
+                            <div className="flex items-center gap-2">
+                              <Bed size={16} className="text-gray-400" />
+                              <span>{property.bedrooms} Bed{property.bedrooms !== 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                          {property.bathrooms && (
+                            <div className="flex items-center gap-2">
+                              <Bath size={16} className="text-gray-400" />
+                              <span>{property.bathrooms} Bath{property.bathrooms !== 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                          {property.guests && (
+                            <div className="flex items-center gap-2">
+                              <Users size={16} className="text-gray-400" />
+                              <span>{property.guests} Guest{property.guests !== 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                          {property.area && (
+                            <div className="flex items-center gap-2">
+                              <Square size={16} className="text-gray-400" />
+                              <span>{property.area} m²</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {property.amenities && (
+                          <div className="mb-4">
+                            <div className="flex flex-wrap gap-1">
+                              {property.amenities.general?.slice(0, 3).map((amenity, idx) => (
+                                <span key={idx} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
+                                  {amenity.name}
+                                </span>
+                              ))}
+                              {property.amenities.general?.length > 3 && (
+                                <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
+                                  +{property.amenities.general.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                          <div>
+                            <span className="text-2xl font-bold text-gray-900">
+                              AED {property.price?.toLocaleString() || "N/A"}
+                            </span>
+                            <span className="text-gray-500 text-sm ml-1">/night</span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePropertyClick(property._id);
+                            }}
+                            className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredAndSortedProperties().length}
+                />
+              </>
             )}
           </main>
         </div>

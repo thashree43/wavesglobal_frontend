@@ -56,7 +56,11 @@ const PropertyPage = () => {
 
   const getArea = async () => {
     try {
-      const response = await axios.get(`${baseurl}admin/getlocation`);
+      const response = await axios.get(`${baseurl}admin/getlocation`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       if (response.data.success) {
         setNeighborhoods(response.data.location);
       }
