@@ -11,7 +11,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick })
     // { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
     // { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
     { id: 'bookings', name: 'Bookings', icon: Calendar, route: '/admin/bookings' },
-    { id: 'settings', name: 'Settings', icon: Settings, route: '/settings' },
+    { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
 
   ];
 

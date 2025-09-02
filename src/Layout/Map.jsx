@@ -3,26 +3,60 @@ import React, { useState, useEffect, useRef } from 'react';
 const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
   const [mapType, setMapType] = useState('roadmap');
   const [activeView, setActiveView] = useState('Map');
+  const [isLoading, setIsLoading] = useState(true);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
 
   useEffect(() => {
     const loadGoogleMaps = () => {
-      if (!window.google) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBZ9GxgYg-jf4okROBNUfZl1d529SRxKwY&libraries=places`;
-        script.async = true;
-        script.defer = true;
-        script.onload = initializeMap;
-        document.head.appendChild(script);
-      } else {
+      if (window.google && window.google.maps) {
+        setMapLoaded(true);
         initializeMap();
+        return;
       }
+
+      if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        const checkGoogle = setInterval(() => {
+          if (window.google && window.google.maps) {
+            clearInterval(checkGoogle);
+            setMapLoaded(true);
+            initializeMap();
+          }
+        }, 100);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBZ9GxgYg-jf4okROBNUfZl1d529SRxKwY&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        const checkGoogle = setInterval(() => {
+          if (window.google && window.google.maps && window.google.maps.Map) {
+            clearInterval(checkGoogle);
+            setMapLoaded(true);
+            initializeMap();
+          }
+        }, 100);
+      };
+      
+      script.onerror = () => {
+        console.error('Failed to load Google Maps API');
+        setIsLoading(false);
+      };
+      
+      document.head.appendChild(script);
     };
 
     const initializeMap = () => {
-      if (mapRef.current && lat && lng) {
+      if (!mapRef.current || !lat || !lng || !window.google || !window.google.maps) {
+        return;
+      }
+
+      try {
         const mapOptions = {
           center: { lat: parseFloat(lat), lng: parseFloat(lng) },
           zoom: 15,
@@ -32,13 +66,15 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
           fullscreenControl: false,
           zoomControl: true,
           zoomControlOptions: {
-            position: window.google?.maps?.ControlPosition?.RIGHT_CENTER,
+            position: window.google.maps.ControlPosition.RIGHT_CENTER,
           }
         };
 
         mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
 
-        if (markerRef.current) markerRef.current.setMap(null);
+        if (markerRef.current) {
+          markerRef.current.setMap(null);
+        }
 
         markerRef.current = new window.google.maps.Marker({
           position: { lat: parseFloat(lat), lng: parseFloat(lng) },
@@ -68,15 +104,26 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
         markerRef.current.addListener('click', () => {
           infoWindow.open(mapInstanceRef.current, markerRef.current);
         });
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        setIsLoading(false);
       }
     };
 
     loadGoogleMaps();
   }, [lat, lng, location, mapType]);
 
+  useEffect(() => {
+    if (mapLoaded && mapInstanceRef.current) {
+      mapInstanceRef.current.setMapTypeId(mapType);
+    }
+  }, [mapType, mapLoaded]);
+
   const handleViewChange = (view) => {
     setActiveView(view);
-    if (mapInstanceRef.current) {
+    if (mapInstanceRef.current && window.google && window.google.maps) {
       if (view === 'Map') {
         setMapType('roadmap');
         mapInstanceRef.current.setMapTypeId('roadmap');
@@ -88,17 +135,21 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
   };
 
   const openStreetView = () => {
-    if (mapInstanceRef.current && lat && lng) {
-      const panorama = new window.google.maps.StreetViewPanorama(
-        mapRef.current,
-        {
-          position: { lat: parseFloat(lat), lng: parseFloat(lng) },
-          pov: { heading: 34, pitch: 10 },
-          visible: true
-        }
-      );
-      mapInstanceRef.current.setStreetView(panorama);
-      setActiveView('Street view');
+    if (mapInstanceRef.current && lat && lng && window.google && window.google.maps) {
+      try {
+        const panorama = new window.google.maps.StreetViewPanorama(
+          mapRef.current,
+          {
+            position: { lat: parseFloat(lat), lng: parseFloat(lng) },
+            pov: { heading: 34, pitch: 10 },
+            visible: true
+          }
+        );
+        mapInstanceRef.current.setStreetView(panorama);
+        setActiveView('Street view');
+      } catch (error) {
+        console.error('Error opening street view:', error);
+      }
     }
   };
 
@@ -160,8 +211,8 @@ const GoogleMapsComponent = ({ lat, lng, location, isExpanded }) => {
         style={{ minHeight: '250px' }}
       />
       
-      {!window.google && (
-        <div className={`bg-gray-200 rounded-lg ${isExpanded ? 'h-96' : 'h-64'} flex items-center justify-center`}>
+      {isLoading && (
+        <div className={`absolute inset-0 bg-gray-200 rounded-lg ${isExpanded ? 'h-96' : 'h-64'} flex items-center justify-center`}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
             <p className="text-gray-600">Loading map...</p>
