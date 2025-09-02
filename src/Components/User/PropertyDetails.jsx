@@ -32,6 +32,8 @@ import Footer from '../../Layout/Footer';
 import axios from 'axios';
 import { baseurl } from '../../Base/Base';
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
+import GoogleMapsComponent from '../../Layout/Map';
+
 
 const PropertyDetailsPage = () => {
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -780,34 +782,45 @@ return (
                   </div>
                 )}
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold">Location</h2>
-                    <button 
-                      onClick={() => setIsMapExpanded(!isMapExpanded)}
-                      className="text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                    >
-                      {isMapExpanded ? 'Collapse' : 'Expand'} Map
-                    </button>
-                  </div>
-                  <div className={`bg-gray-200 rounded-lg ${isMapExpanded ? 'h-96' : 'h-64'} flex items-center justify-center transition-all duration-300`}>
-                    <div className="text-center">
-                      <MapIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-gray-600">Interactive Map</p>
-                      <p className="text-sm text-gray-500">{property.location}</p>
-                    </div>
-                  </div>
-                  {property.nearbyAttractions?.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-sm text-gray-600"><strong>Nearby Attractions:</strong></p>
-                      <ul className="text-sm text-gray-700 space-y-1">
-                        {property.nearbyAttractions.map((attraction, index) => (
-                          <li key={index}>• {attraction.name} - {attraction.distance}km away</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+<div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+  <div className="flex items-center justify-between mb-4">
+    <h2 className="text-xl font-bold">Location</h2>
+    <button 
+      onClick={() => setIsMapExpanded(!isMapExpanded)}
+      className="text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+    >
+      {isMapExpanded ? 'Collapse' : 'Expand'} Map
+    </button>
+  </div>
+  
+  {property.mapLocation?.lat && property.mapLocation?.lng ? (
+    <GoogleMapsComponent 
+      lat={property.mapLocation.lat}
+      lng={property.mapLocation.lng}
+      location={property.location}
+      isExpanded={isMapExpanded}
+    />
+  ) : (
+    <div className={`bg-gray-200 rounded-lg ${isMapExpanded ? 'h-96' : 'h-64'} flex items-center justify-center transition-all duration-300`}>
+      <div className="text-center">
+        <MapIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+        <p className="text-gray-600">Interactive Map</p>
+        <p className="text-sm text-gray-500">{property.location}</p>
+      </div>
+    </div>
+  )}
+  
+  {property.nearbyAttractions?.length > 0 && (
+    <div className="mt-4 space-y-2">
+      <p className="text-sm text-gray-600"><strong>Nearby Attractions:</strong></p>
+      <ul className="text-sm text-gray-700 space-y-1">
+        {property.nearbyAttractions.map((attraction, index) => (
+          <li key={index}>• {attraction.name} - {attraction.distance}km away</li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
 
                 {property.houseRules && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" >
