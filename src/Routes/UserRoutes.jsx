@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
+import axios from 'axios';
+import { baseurl } from '../Base/Base';
 import Homepage from '../Components/User/Homepage';
 import PropertyDetailsPage from '../Components/User/PropertyDetails';
 import Propertypage from "../Components/User/Properties"
@@ -11,17 +13,39 @@ import AuthModal from "../Components/ReusableComponent/AuthModal";
 
 function UserRoutes() {
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [isLogged] = useState(() => {
-    const savedUser = localStorage.getItem("user")
-    return !!savedUser
-  })
+  const [isLogged, setIsLogged] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const location = useLocation()
 
+  // Check authentication status on mount
   useEffect(() => {
-    if (location.pathname === "/checkout" && !isLogged) {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await axios.get(`${baseurl}User/getuser`, {
+          withCredentials: true  
+        })
+        if (response.data.user) {
+          setIsLogged(true)
+        }
+      } catch (error) {
+        setIsLogged(false)
+      } finally {
+        setIsCheckingAuth(false)
+      }
+    }
+    
+    checkAuthStatus()
+  }, [])
+
+  useEffect(() => {
+    if (location.pathname === "/checkout" && !isLogged && !isCheckingAuth) {
       setShowAuthModal(true)
     }
-  }, [location, isLogged])
+  }, [location, isLogged, isCheckingAuth])
+
+  if (isCheckingAuth) {
+    return <div>Loading...</div>
+  }
 
   return (
    <>
@@ -42,7 +66,11 @@ function UserRoutes() {
       show={showAuthModal}
       onClose={() => setShowAuthModal(false)}
       onRegisterSuccess={() => {}}
-      onLoginSuccess={() => {window.location.href="/checkout"}}
+      onLoginSuccess={() => {
+        setIsLogged(true)
+        setShowAuthModal(false)
+        window.location.href="/checkout"
+      }}
     />
    </>
   )
