@@ -17,7 +17,6 @@ function UserRoutes() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const location = useLocation()
 
-  // Check authentication status on mount
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -43,10 +42,6 @@ function UserRoutes() {
     }
   }, [location, isLogged, isCheckingAuth])
 
-  if (isCheckingAuth) {
-    return <div>Loading...</div>
-  }
-
   return (
    <>
     <Routes>
@@ -58,7 +53,7 @@ function UserRoutes() {
       <Route path='/contact' element={<ContactPage/>}/>
       <Route
         path='/checkout'
-        element={isLogged ? <HotelCheckout/> : <Navigate to="/" />}
+        element={isLogged ? <HotelCheckout/> : <Homepage />}
       />
     </Routes>
 
