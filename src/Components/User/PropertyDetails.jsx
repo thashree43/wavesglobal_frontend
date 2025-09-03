@@ -34,7 +34,6 @@ import { baseurl } from '../../Base/Base';
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
 import GoogleMapsComponent from '../../Layout/Map';
 
-
 const PropertyDetailsPage = () => {
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
 const [selectedDates, setSelectedDates] = useState({ checkin: '', checkout: '' });
@@ -132,9 +131,7 @@ const getUser = async() => {
   }
 } 
 
-
-
-  const getProperty = async () => {
+const getProperty = async () => {
   try {
     setLoading(true);
     const response = await axios.get(`${baseurl}user/property/${id}`, {
@@ -288,7 +285,6 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
     }
   };
   
-
   if (!isOpen) return null;
 
   return (
@@ -476,49 +472,101 @@ const calculateNights = () => {
   return 3;
 };
 
-const handleBookNow = async() => {
+const handleBookNow = async () => {
+  console.log('Book Now clicked');
+  console.log('Selected dates:', selectedDates);
+  console.log('User ID:', userId);
+  console.log('Property:', property);
+
   if (!selectedDates.checkin || !selectedDates.checkout) {
     alert('Please select check-in and check-out dates');
     return;
   }
 
-  const bookingData = {
-    propertyId: property._id,
-    propertyTitle: property.title,
-    checkinDate: selectedDates.checkin,
-    checkoutDate: selectedDates.checkout,
-    guests: selectedGuests,
-    nights: calculateNights(),
-    pricePerNight: property.price,
-    totalPrice: (property.price * calculateNights()) + 40,
-    cleaningFee: 25,
-    serviceFee: 15,
-    location: property.location,
-    hostName: "Wavescation Team",
-    propertyImage: property.images?.[0]?.url
-  };
+  const nights = calculateNights();
+  const totalPrice = property.price * nights + 40;
 
   try {
+    let currentUserId = userId;
+    
+    if (!currentUserId) {
+      console.log('No userId, fetching user...');
+      try {
+        const userResponse = await axios.get(`${baseurl}User/getuser`, { 
+          withCredentials: true 
+        });
+        const user = userResponse.data.user;
+        console.log('Fetched user:', user);
+        
+        if (!user || !user._id) {
+          console.log('No user found, redirecting to login');
+          alert("Please login before booking.");
+          navigate('/login');
+          return;
+        }
+        currentUserId = user._id;
+        setuserId(currentUserId);
+      } catch (userError) {
+        console.error('Error fetching user:', userError);
+        alert("Please login before booking.");
+        navigate('/login');
+        return;
+      }
+    }
+
+    const bookingData = {
+      propertyId: property._id,
+      propertyTitle: property.title,
+      checkinDate: selectedDates.checkin,
+      checkoutDate: selectedDates.checkout,
+      guests: selectedGuests,
+      nights: nights,
+      pricePerNight: property.price,
+      totalPrice: totalPrice,
+      cleaningFee: 25,
+      serviceFee: 15,
+      location: property.location,
+      hostName: "Wavescation Team",
+      propertyImage: property.images?.[0]?.url
+    };
+
+    console.log('Booking data:', bookingData);
+
     const response = await axios.post(`${baseurl}user/add-booking`, bookingData, {
       headers: { 'Content-Type': 'application/json' },
       withCredentials: true,
     });
-    
+
+    console.log('Booking response:', response);
+
     if (response.status === 200 || response.status === 201) {
       const queryParams = new URLSearchParams({
-        userId: userId,
+        userId: currentUserId,
         propertyId: property._id,
         checkin: selectedDates.checkin,
         checkout: selectedDates.checkout,
         guests: selectedGuests,
-        totalPrice: (property.price * calculateNights()) + 40
+        totalPrice: totalPrice
       });
+
+      const checkoutUrl = `/checkout?${queryParams.toString()}`;
+      console.log('Navigating to:', checkoutUrl);
       
-      navigate(`/checkout?${queryParams.toString()}`);
+      navigate(checkoutUrl);
+    } else {
+      console.log('Unexpected response status:', response.status);
+      alert('Booking failed. Please try again.');
     }
   } catch (error) {
-    console.error(error);
-    alert('Booking failed. Please try again.');
+    console.error('Booking error:', error);
+    console.error('Error response:', error.response);
+    
+    if (error.response?.status === 401) {
+      alert("Please login before booking.");
+      navigate('/login');
+    } else {
+      alert(`Booking failed: ${error.response?.data?.message || error.message || 'Please try again.'}`);
+    }
   }
 };
 
