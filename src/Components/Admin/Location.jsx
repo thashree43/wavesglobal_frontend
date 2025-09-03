@@ -197,7 +197,7 @@ const LocationManagement = () => {
     { id: 'users', name: 'Users', icon: Users, route: '/users' },
     { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
     { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
-    { id: 'settings', name: 'Settings', icon: Settings, route: '/settings' },
+    { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
   ];
 
   return (

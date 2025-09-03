@@ -7,6 +7,7 @@ import Dashboard from '../Components/Admin/Dashboard'
 import BookingsList from '../Components/Admin/Bookings'
 import LoginPage from '../Components/Admin/AdminLogin'
 import PrivateRoute from './Private'
+import AdminSettings from '../Components/Admin/AdminSettings'
 
 function AdminRoutes() {
   return (
@@ -49,6 +50,14 @@ function AdminRoutes() {
         element={
           <PrivateRoute>
             <BookingsList />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path='/settings'
+        element={
+          <PrivateRoute>
+            <AdminSettings />
           </PrivateRoute>
         }
       />
