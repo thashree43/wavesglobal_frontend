@@ -5,6 +5,8 @@ import { baseurl } from '../../Base/Base';
 import CheckoutPayment from '../../Layout/Payment';
 import CheckoutDetails from '../../Layout/Chekout';
 import CheckoutComplete from "../../Layout/BookingComplete"
+import Navbar from '../../Layout/Navbar';
+import Footer from '../../Layout/Footer';
 
 const HotelCheckout = () => {
   const [bookingDetails, setBookingDetails] = useState({
@@ -141,61 +143,9 @@ const HotelCheckout = () => {
     return true;
   };
 
-  const createBooking = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const bookingData = {
-        userId: bookingDetails.userId,
-        propertyId: bookingDetails.propertyId,
-        checkIn: bookingDetails.checkIn,
-        checkOut: bookingDetails.checkOut,
-        guests: bookingDetails.guests,
-        nights: bookingDetails.nights,
-        totalPrice: bookingDetails.total,
-        guestDetails: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          country: formData.country,
-          specialRequests: formData.specialRequests
-        }
-      };
-
-      const response = await axios.post(`${baseurl}user/add-booking`, bookingData, { withCredentials: true });
-
-      if (response.data.success) {
-        setBookingDetails(prev => ({
-          ...prev,
-          bookingId: response.data.booking._id,
-          total: response.data.booking.totalPrice || prev.total
-        }));
-        return response.data.booking._id;
-      } else {
-        throw new Error(response.data.message || 'Booking creation failed');
-      }
-      
-    } catch (err) {
-      console.error('Booking creation error:', err);
-      let errorMessage = 'Failed to create booking. Please try again.';
-      
-      if (err.response) {
-        errorMessage = err.response.data.message || `Booking failed: ${err.response.status}`;
-      } else if (err.request) {
-        errorMessage = 'Unable to connect to server. Please check your connection.';
-      }
-      
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handlePaymentSuccess = () => {
     setBookingComplete(true);
-    setCurrentStep(4);
+    setCurrentStep(3);
   };
 
   const nextStep = async () => {
@@ -204,15 +154,7 @@ const HotelCheckout = () => {
         setCurrentStep(2);
         setError(null);
       } else if (currentStep === 2) {
-        try {
-          await createBooking();
-          setCurrentStep(3);
-          setError(null);
-        } catch (err) {
-          
-        }
-      } else if (currentStep === 3) {
-        setCurrentStep(4);
+        setCurrentStep(3);
         setError(null);
       }
     } else {
@@ -230,7 +172,7 @@ const HotelCheckout = () => {
     window.location.href = `http://localhost:5173/property/${bookingDetails.propertyId}?adults=${urlParams.guests}`;
   };
 
-  if (loading && currentStep < 4) {
+  if (loading && currentStep < 3) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 pt-24">
@@ -243,7 +185,7 @@ const HotelCheckout = () => {
     );
   }
 
-  if (error && currentStep < 4) {
+  if (error && currentStep < 3) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 pt-24">
@@ -273,6 +215,7 @@ const HotelCheckout = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <Navbar/>
       <div className="container mx-auto px-4 pt-24 pb-10">
         
         <header className="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
@@ -312,70 +255,6 @@ const HotelCheckout = () => {
               )}
               
               {currentStep === 2 && (
-                <div className="space-y-6 animate-fadeIn">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-8 relative">
-                    Confirm Your Booking
-                    <div className="absolute bottom-0 left-0 w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
-                  </h2>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Special Requests (Optional)</label>
-                    <textarea
-                      name="specialRequests"
-                      value={formData.specialRequests}
-                      onChange={handleInputChange}
-                      placeholder="Any special requests or preferences?"
-                      rows="3"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 hover:border-orange-300 hover:shadow-md bg-gray-50 focus:bg-white text-gray-900 resize-none"
-                    />
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Review Your Details</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Name:</span>
-                        <span className="font-medium text-gray-900">{formData.name || 'Not provided'}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Email:</span>
-                        <span className="font-medium text-gray-900">{formData.email || 'Not provided'}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Phone:</span>
-                        <span className="font-medium text-gray-900">{formData.phone || 'Not provided'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-4">
-                    <button 
-                      onClick={prevStep}
-                      disabled={loading}
-                      className="flex items-center justify-center gap-2 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                      Back
-                    </button>
-                    <button 
-                      onClick={nextStep}
-                      disabled={loading}
-                      className="flex items-center justify-center gap-2 flex-1 py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Creating Booking...
-                        </>
-                      ) : (
-                        'Create Booking & Proceed to Payment'
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 3 && (
                 <CheckoutPayment
                   formData={formData}
                   handleInputChange={handleInputChange}
@@ -472,6 +351,7 @@ const HotelCheckout = () => {
           animation: fadeIn 0.6s ease-out;
         }
       `}</style>
+      <Footer/>
     </div>
   );
 };

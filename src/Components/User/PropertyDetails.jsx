@@ -29,7 +29,8 @@ ChevronDown,
 CheckCircle,
 XCircle,
 AlertCircle,
-Info
+Info,
+Loader2
 } from 'lucide-react';
 import Navbar from '../../Layout/Navbar';
 import Footer from '../../Layout/Footer';
@@ -51,6 +52,7 @@ const [showGuestDropdown, setShowGuestDropdown] = useState(false);
 const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
 const [bookedDates, setBookedDates] = useState([]);
 const [loading, setLoading] = useState(true);
+const [bookingLoading, setBookingLoading] = useState(false);
 const [toast, setToast] = useState(null);
 const [userId, setUserId] = useState();
 const [error, setError] = useState(null);
@@ -102,6 +104,13 @@ const CustomToast = ({ message, type = 'default', onClose }) => {
     </div>
   );
 };
+
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center gap-3">
+    <Loader2 className="w-5 h-5 animate-spin text-white" />
+    <span>Processing...</span>
+  </div>
+);
 
 const PropertySkeleton = () => (
   <div className="animate-pulse">
@@ -710,6 +719,7 @@ const handleBookNow = async () => {
   };
 
   try {
+    setBookingLoading(true);
     const response = await axios.post(`${baseurl}user/add-booking`, bookingData, {
       headers: { 'Content-Type': 'application/json' },
       withCredentials: true
@@ -739,9 +749,10 @@ const handleBookNow = async () => {
     } else {
       showToast(error.response?.data?.message || 'Booking failed. Please try again.', 'error');
     }
+  } finally {
+    setBookingLoading(false);
   }
 };
-
 
 useEffect(() => {
   const handleClickOutside = (event) => {
@@ -1195,13 +1206,13 @@ return (
 
                 <button 
                   onClick={handleBookNow}
-                  disabled={!selectedDates.checkin || !selectedDates.checkout}
+                  disabled={!selectedDates.checkin || !selectedDates.checkout || bookingLoading}
                   className="w-full py-3 rounded-lg font-semibold text-white transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ 
                     background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
                   }}                      
                 >
-                  Book Now
+                  {bookingLoading ? <LoadingSpinner /> : 'Book Now'}
                 </button>
 
                 <div className="space-y-3 text-sm">
@@ -1288,13 +1299,13 @@ return (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={handleBookNow}
-                disabled={!selectedDates.checkin || !selectedDates.checkout}
+                disabled={!selectedDates.checkin || !selectedDates.checkout || bookingLoading}
                 className="px-8 py-3 rounded-lg font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ 
                   background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
                 }}  
               >
-                Book Now - {formatPrice(property.price)}/night
+                {bookingLoading ? <LoadingSpinner /> : `Book Now - ${formatPrice(property.price)}/night`}
               </button>
               <Link to="/property">
                 <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors bg-white">
