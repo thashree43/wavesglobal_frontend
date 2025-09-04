@@ -38,9 +38,8 @@ import axios from 'axios';
 import { baseurl } from '../../Base/Base';
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
 import GoogleMapsComponent from '../../Layout/Map';
-import AuthModal from '../ReusableComponent/AuthModal';
 
-const PropertyDetailsPage = () => {
+const PropertyDetailsPage = ({ user, isLogged, onAuthRequired }) => {
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
 const [selectedDates, setSelectedDates] = useState({ checkin: '', checkout: '' });
 const [isMapExpanded, setIsMapExpanded] = useState(false);
@@ -55,11 +54,8 @@ const [bookedDates, setBookedDates] = useState([]);
 const [loading, setLoading] = useState(true);
 const [bookingLoading, setBookingLoading] = useState(false);
 const [toast, setToast] = useState(null);
-const [userId, setUserId] = useState();
 const [error, setError] = useState(null);
 const [dateError, setDateError] = useState('');
-const [showAuthModal, setShowAuthModal] = useState(false);
-const [isLogged, setIsLogged] = useState(false);
 const { id } = useParams();
 const location = useLocation();
 const navigate = useNavigate();
@@ -179,33 +175,6 @@ const SidebarSkeleton = () => (
   </div>
 );
 
-const checkUserAuth = useCallback(async () => {
-  try {
-    const storedUser = JSON.parse(localStorage.getItem('userData') || 'null');
-    if (storedUser && storedUser._id) {
-      setUserId(storedUser._id);
-      setIsLogged(true);
-      return storedUser._id;
-    }
-
-    const response = await axios.get(`${baseurl}User/getuser`, { withCredentials: true });
-    const user = response.data?.user;
-
-    if (user?._id) {
-      setUserId(user._id); 
-      setIsLogged(true);
-      localStorage.setItem('userData', JSON.stringify(user)); 
-      return user._id;
-    }
-    setIsLogged(false);
-    return null;
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    setIsLogged(false);
-    return null;
-  }
-}, []);
-
 const getProperty = useCallback(async () => {
   try {
     setLoading(true);
@@ -259,41 +228,6 @@ useEffect(() => {
     getProperty();
   }
 }, [id, getProperty]);
-
-useEffect(() => {
-  checkUserAuth();
-}, [checkUserAuth]);
-
-useEffect(() => {
-  const handleStorageChange = () => {
-    const storedUser = JSON.parse(localStorage.getItem('userData') || 'null');
-    if (storedUser && storedUser._id) {
-      setUserId(storedUser._id);
-      setIsLogged(true);
-    } else {
-      setUserId(null);
-      setIsLogged(false);
-    }
-  };
-
-  window.addEventListener('storage', handleStorageChange);
-  
-  const interval = setInterval(() => {
-    const storedUser = JSON.parse(localStorage.getItem('userData') || 'null');
-    if (storedUser && storedUser._id && !userId) {
-      setUserId(storedUser._id);
-      setIsLogged(true);
-    } else if (!storedUser && userId) {
-      setUserId(null);
-      setIsLogged(false);
-    }
-  }, 1000);
-
-  return () => {
-    window.removeEventListener('storage', handleStorageChange);
-    clearInterval(interval);
-  };
-}, [userId]);
 
 useEffect(() => {
   const urlParams = new URLSearchParams(location.search);
@@ -701,8 +635,12 @@ const handleDateChange = (date, type) => {
 };
 
 const handleBookNow = async () => {
-  if (!isLogged) {
-    setShowAuthModal(true);
+  if (!isLogged || !user?._id) {
+    if (onAuthRequired) {
+      onAuthRequired();
+    } else {
+      showToast('Please login before booking', 'error');
+    }
     return;
   }
 
@@ -728,7 +666,7 @@ const handleBookNow = async () => {
     location: property.location,
     hostName: "Wavescation Team",
     propertyImage: property.images?.[0]?.url,
-    userId: userId
+    userId: user._id
   };
 
   try {
@@ -742,7 +680,7 @@ const handleBookNow = async () => {
       showToast('Booking successful', 'success');
 
       const queryParams = new URLSearchParams({
-        userId: userId,
+        userId: user._id,
         propertyId: property._id,
         checkin: selectedDates.checkin,
         checkout: selectedDates.checkout,
@@ -757,20 +695,17 @@ const handleBookNow = async () => {
   } catch (error) {
     console.error('Booking error:', error);
     if (error.response?.status === 401) {
-      showToast('Please login before booking', 'error');
-      setShowAuthModal(true);
+      if (onAuthRequired) {
+        onAuthRequired();
+      } else {
+        showToast('Please login before booking', 'error');
+      }
     } else {
       showToast(error.response?.data?.message || 'Booking failed. Please try again.', 'error');
     }
   } finally {
     setBookingLoading(false);
   }
-};
-
-const handleAuthSuccess = () => {
-  setShowAuthModal(false);
-  checkUserAuth();
-  showToast('Login successful! You can now book this property.', 'success');
 };
 
 useEffect(() => {
@@ -1259,7 +1194,7 @@ return (
                 <div className="flex items-center gap-4 mb-4">
                   <div>
                     <h3 className="font-semibold text-lg">Wavescation Team</h3>
-                    <p className="text-gray-600 text-sm">Professional Property Management</p>
+                    <p className="text-gray-600 text-sm">Professional PropertyManagement</p>
                   </div>
                 </div>
                 <div className="space-y-2 mb-4">

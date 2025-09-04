@@ -1,82 +1,71 @@
-import React, { useState, useEffect } from 'react'
-import { Route, Routes, useLocation, Navigate } from "react-router-dom";
-import axios from 'axios';
-import { baseurl } from '../Base/Base';
-import Homepage from '../Components/User/Homepage';
-import PropertyDetailsPage from '../Components/User/PropertyDetails';
-import Propertypage from "../Components/User/Properties"
-import AboutUs from '../Components/User/About';
-import ProfilePage from '../Components/User/Profile';
-import ContactPage from '../Components/User/Contatct';
-import HotelCheckout from '../Components/User/HotelBooking';
+import React, { useState, useEffect } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
+import Homepage from "../Components/User/Homepage";
+import PropertyDetailsPage from "../Components/User/PropertyDetails";
+import Propertypage from "../Components/User/Properties";
+import AboutUs from "../Components/User/About";
+import ProfilePage from "../Components/User/Profile";
+import ContactPage from "../Components/User/Contatct";
+import HotelCheckout from "../Components/User/HotelBooking";
 import AuthModal from "../Components/ReusableComponent/AuthModal";
-import PrivacyPolicy from '../Components/Policy/Privacy';
-import TermsConditions from '../Components/Policy/Terms';
-import CancellationsRefunds from '../Components/Policy/Refund';
-import ShippingPolicy from '../Components/Policy/Shipping';
+import PrivacyPolicy from "../Components/Policy/Privacy";
+import TermsConditions from "../Components/Policy/Terms";
+import CancellationsRefunds from "../Components/Policy/Refund";
+import ShippingPolicy from "../Components/Policy/Shipping";
+import { useAuth } from "../Context/Auth";
 
 function UserRoutes() {
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [isLogged, setIsLogged] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const location = useLocation()
-
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await axios.get(`${baseurl}User/getuser`, {
-          withCredentials: true  
-        })
-        if (response.data.user) {
-          setIsLogged(true)
-        }
-      } catch (error) {
-        setIsLogged(false)
-      } finally {
-        setIsCheckingAuth(false)
-      }
-    }
-    
-    checkAuthStatus()
-  }, [])
+  const { user, isLogged, isCheckingAuth, checkAuthStatus } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     if (location.pathname === "/checkout" && !isLogged && !isCheckingAuth) {
-      setShowAuthModal(true)
+      setShowAuthModal(true);
     }
-  }, [location, isLogged, isCheckingAuth])
+  }, [location, isLogged, isCheckingAuth]);
+
+  const handleLoginSuccess = async () => {
+    await checkAuthStatus();
+    setShowAuthModal(false);
+  };
 
   return (
-   <>
-    <Routes>
-      <Route path='/' element={<Homepage/>}/>
-      <Route path='/property' element={<Propertypage/>}/>
-      <Route path='/property/:id' element={<PropertyDetailsPage/>}/>
-      <Route path='/about' element={<AboutUs/>}/>
-      <Route path='/profile' element={<ProfilePage/>}/>
-      <Route path='/contact' element={<ContactPage/>}/>
-      <Route path='/privacy-policy' element={<PrivacyPolicy/>}/>
-      <Route path='/terms-and-conditions' element={<TermsConditions/>}/>
-      <Route path='/refund-policy' element={<CancellationsRefunds/>}/>
-      <Route path='/shipping-policy' element={<ShippingPolicy/>}/>
-      <Route
-        path='/checkout'
-        element={isLogged ? <HotelCheckout/> : <Homepage />}
-      />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/property" element={<Propertypage />} />
+        <Route
+          path="/property/:id"
+          element={
+            <PropertyDetailsPage
+              user={user}
+              isLogged={isLogged}
+              onAuthRequired={() => setShowAuthModal(true)}
+            />
+          }
+        />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsConditions />} />
+        <Route path="/refund-policy" element={<CancellationsRefunds />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route
+          path="/checkout"
+          element={isLogged ? <HotelCheckout /> : <Homepage />}
+        />
+      </Routes>
 
-    <AuthModal
-      show={showAuthModal}
-      onClose={() => setShowAuthModal(false)}
-      onRegisterSuccess={() => {}}
-      onLoginSuccess={() => {
-        setIsLogged(true)
-        setShowAuthModal(false)
-        window.location.href="/checkout"
-      }}
-    />
-   </>
-  )
+      <AuthModal
+        show={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onRegisterSuccess={() => {}}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    </>
+  );
 }
 
-export default UserRoutes
+export default UserRoutes;
