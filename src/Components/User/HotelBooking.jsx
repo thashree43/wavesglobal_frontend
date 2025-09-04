@@ -19,7 +19,8 @@ const HotelCheckout = () => {
     propertyId: '',
     userId: '',
     propertyImage: '',
-    property: null
+    property: null,
+    bookingId: null
   });
 
   const [formData, setFormData] = useState({
@@ -87,7 +88,8 @@ const HotelCheckout = () => {
         propertyId: urlParams.propertyId,
         userId: urlParams.userId,
         propertyImage: propertyData?.images?.[0]?.url || '',
-        property: propertyData
+        property: propertyData,
+        bookingId: null
       });
 
       if (userData) {
@@ -134,14 +136,12 @@ const HotelCheckout = () => {
       return formData.name && formData.email && formData.phone;
     }
     if (step === 2) {
-      return formData.cardNumber && formData.expiryDate && formData.cvv;
+      return true;
     }
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const createBooking = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -160,27 +160,25 @@ const HotelCheckout = () => {
           phone: formData.phone,
           country: formData.country,
           specialRequests: formData.specialRequests
-        },
-        paymentDetails: {
-          cardNumber: formData.cardNumber.replace(/\s/g, ''), 
-          expiryDate: formData.expiryDate,
-          cvv: formData.cvv
         }
       };
 
-      const response = await axios.post(`${baseurl}/add-booking`, bookingData, {
-        withCredentials: true
-      });
-      
+      const response = await axios.post(`${baseurl}user/add-booking`, bookingData, { withCredentials: true });
+
       if (response.data.success) {
-        setBookingComplete(true);
+        setBookingDetails(prev => ({
+          ...prev,
+          bookingId: response.data.booking._id,
+          total: response.data.booking.totalPrice || prev.total
+        }));
+        return response.data.booking._id;
       } else {
-        throw new Error(response.data.message || 'Booking failed');
+        throw new Error(response.data.message || 'Booking creation failed');
       }
       
     } catch (err) {
-      console.error('Booking submission error:', err);
-      let errorMessage = 'Failed to complete booking. Please try again.';
+      console.error('Booking creation error:', err);
+      let errorMessage = 'Failed to create booking. Please try again.';
       
       if (err.response) {
         errorMessage = err.response.data.message || `Booking failed: ${err.response.status}`;
@@ -189,15 +187,34 @@ const HotelCheckout = () => {
       }
       
       setError(errorMessage);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const nextStep = () => {
+  const handlePaymentSuccess = () => {
+    setBookingComplete(true);
+    setCurrentStep(4);
+  };
+
+  const nextStep = async () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(currentStep + 1);
-      setError(null);
+      if (currentStep === 1) {
+        setCurrentStep(2);
+        setError(null);
+      } else if (currentStep === 2) {
+        try {
+          await createBooking();
+          setCurrentStep(3);
+          setError(null);
+        } catch (err) {
+          
+        }
+      } else if (currentStep === 3) {
+        setCurrentStep(4);
+        setError(null);
+      }
     } else {
       setError('Please fill in all required fields before continuing.');
     }
@@ -213,7 +230,7 @@ const HotelCheckout = () => {
     window.location.href = `http://localhost:5173/property/${bookingDetails.propertyId}?adults=${urlParams.guests}`;
   };
 
-  if (loading && currentStep < 3) {
+  if (loading && currentStep < 4) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 pt-24">
@@ -226,7 +243,7 @@ const HotelCheckout = () => {
     );
   }
 
-  if (error && currentStep < 3) {
+  if (error && currentStep < 4) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 pt-24">
@@ -295,16 +312,6 @@ const HotelCheckout = () => {
               )}
               
               {currentStep === 2 && (
-                <CheckoutPayment
-                  formData={formData}
-                  handleInputChange={handleInputChange}
-                  nextStep={nextStep}
-                  prevStep={prevStep}
-                  validateStep={validateStep}
-                />
-              )}
-              
-              {currentStep === 3 && (
                 <div className="space-y-6 animate-fadeIn">
                   <h2 className="text-2xl font-bold text-gray-900 mb-8 relative">
                     Confirm Your Booking
@@ -338,10 +345,6 @@ const HotelCheckout = () => {
                         <span className="text-gray-600">Phone:</span>
                         <span className="font-medium text-gray-900">{formData.phone || 'Not provided'}</span>
                       </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Payment:</span>
-                        <span className="font-medium text-gray-900">****{formData.cardNumber.slice(-4)}</span>
-                      </div>
                     </div>
                   </div>
                   
@@ -355,21 +358,33 @@ const HotelCheckout = () => {
                       Back
                     </button>
                     <button 
-                      onClick={handleSubmit}
+                      onClick={nextStep}
                       disabled={loading}
                       className="flex items-center justify-center gap-2 flex-1 py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                       {loading ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Processing...
+                          Creating Booking...
                         </>
                       ) : (
-                        'Confirm Booking'
+                        'Create Booking & Proceed to Payment'
                       )}
                     </button>
                   </div>
                 </div>
+              )}
+
+              {currentStep === 3 && (
+                <CheckoutPayment
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  bookingDetails={bookingDetails}
+                  nextStep={nextStep}
+                  prevStep={prevStep}
+                  validateStep={validateStep}
+                  onPaymentSuccess={handlePaymentSuccess}
+                />
               )}
             </div>
           </div>
