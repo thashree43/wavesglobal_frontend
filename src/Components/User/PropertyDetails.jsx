@@ -38,6 +38,7 @@ import axios from 'axios';
 import { baseurl } from '../../Base/Base';
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
 import GoogleMapsComponent from '../../Layout/Map';
+import AuthModal from '../ReusableComponent/AuthModal';
 
 const PropertyDetailsPage = () => {
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -57,6 +58,8 @@ const [toast, setToast] = useState(null);
 const [userId, setUserId] = useState();
 const [error, setError] = useState(null);
 const [dateError, setDateError] = useState('');
+const [showAuthModal, setShowAuthModal] = useState(false);
+const [isLogged, setIsLogged] = useState(false);
 const { id } = useParams();
 const location = useLocation();
 const navigate = useNavigate();
@@ -181,6 +184,7 @@ const checkUserAuth = useCallback(async () => {
     const storedUser = JSON.parse(localStorage.getItem('userData') || 'null');
     if (storedUser && storedUser._id) {
       setUserId(storedUser._id);
+      setIsLogged(true);
       return storedUser._id;
     }
 
@@ -189,12 +193,15 @@ const checkUserAuth = useCallback(async () => {
 
     if (user?._id) {
       setUserId(user._id); 
+      setIsLogged(true);
       localStorage.setItem('userData', JSON.stringify(user)); 
       return user._id;
     }
+    setIsLogged(false);
     return null;
   } catch (error) {
     console.error('Error fetching user:', error);
+    setIsLogged(false);
     return null;
   }
 }, []);
@@ -262,6 +269,10 @@ useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('userData') || 'null');
     if (storedUser && storedUser._id) {
       setUserId(storedUser._id);
+      setIsLogged(true);
+    } else {
+      setUserId(null);
+      setIsLogged(false);
     }
   };
 
@@ -271,6 +282,10 @@ useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('userData') || 'null');
     if (storedUser && storedUser._id && !userId) {
       setUserId(storedUser._id);
+      setIsLogged(true);
+    } else if (!storedUser && userId) {
+      setUserId(null);
+      setIsLogged(false);
     }
   }, 1000);
 
@@ -686,10 +701,8 @@ const handleDateChange = (date, type) => {
 };
 
 const handleBookNow = async () => {
-  const currentUserId = await checkUserAuth(); 
-
-  if (!currentUserId) {
-    showToast('Please login before booking', 'error');
+  if (!isLogged) {
+    setShowAuthModal(true);
     return;
   }
 
@@ -715,7 +728,7 @@ const handleBookNow = async () => {
     location: property.location,
     hostName: "Wavescation Team",
     propertyImage: property.images?.[0]?.url,
-    userId: currentUserId
+    userId: userId
   };
 
   try {
@@ -729,7 +742,7 @@ const handleBookNow = async () => {
       showToast('Booking successful', 'success');
 
       const queryParams = new URLSearchParams({
-        userId: currentUserId,
+        userId: userId,
         propertyId: property._id,
         checkin: selectedDates.checkin,
         checkout: selectedDates.checkout,
@@ -745,13 +758,19 @@ const handleBookNow = async () => {
     console.error('Booking error:', error);
     if (error.response?.status === 401) {
       showToast('Please login before booking', 'error');
-      navigate('/login');
+      setShowAuthModal(true);
     } else {
       showToast(error.response?.data?.message || 'Booking failed. Please try again.', 'error');
     }
   } finally {
     setBookingLoading(false);
   }
+};
+
+const handleAuthSuccess = () => {
+  setShowAuthModal(false);
+  checkUserAuth();
+  showToast('Login successful! You can now book this property.', 'success');
 };
 
 useEffect(() => {
