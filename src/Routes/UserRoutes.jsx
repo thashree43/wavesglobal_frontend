@@ -10,6 +10,10 @@ import ProfilePage from '../Components/User/Profile';
 import ContactPage from '../Components/User/Contatct';
 import HotelCheckout from '../Components/User/HotelBooking';
 import AuthModal from "../Components/ReusableComponent/AuthModal";
+import PrivacyPolicy from '../Components/Policy/Privacy';
+import TermsConditions from '../Components/Policy/Terms';
+import CancellationsRefunds from '../Components/Policy/Refund';
+import ShippingPolicy from '../Components/Policy/Shipping';
 
 function UserRoutes() {
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -17,7 +21,6 @@ function UserRoutes() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const location = useLocation()
 
-  // Check authentication status on mount
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -43,10 +46,6 @@ function UserRoutes() {
     }
   }, [location, isLogged, isCheckingAuth])
 
-  if (isCheckingAuth) {
-    return <div>Loading...</div>
-  }
-
   return (
    <>
     <Routes>
@@ -56,9 +55,13 @@ function UserRoutes() {
       <Route path='/about' element={<AboutUs/>}/>
       <Route path='/profile' element={<ProfilePage/>}/>
       <Route path='/contact' element={<ContactPage/>}/>
+      <Route path='/privacy-policy' element={<PrivacyPolicy/>}/>
+      <Route path='/terms-and-conditions' element={<TermsConditions/>}/>
+      <Route path='/refund-policy' element={<CancellationsRefunds/>}/>
+      <Route path='/shipping-policy' element={<ShippingPolicy/>}/>
       <Route
         path='/checkout'
-        element={isLogged ? <HotelCheckout/> : <Navigate to="/" />}
+        element={isLogged ? <HotelCheckout/> : <Homepage />}
       />
     </Routes>
 

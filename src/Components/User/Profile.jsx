@@ -1,431 +1,1055 @@
-import React, { useState, useEffect } from 'react';
-import { User, Lock, Calendar, MapPin, Clock, Eye, EyeOff, Edit, Check, X } from 'lucide-react';
-import Footer from '../../Layout/Footer';
-import Navbar from '../../Layout/Navbar';
-import axios from 'axios';
-import { baseurl } from '../../Base/Base';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+Heart,
+Share2,
+Star,
+MapPin,
+Users,
+Bed,
+Bath,
+Wifi,
+Car,
+Coffee,
+Tv,
+Wind,
+Dumbbell,
+WavesLadder,
+Shield,
+Clock,
+Phone,
+Mail,
+Calendar,
+ChevronLeft,
+ChevronRight,
+Check,
+X,
+Map as MapIcon,
+CalendarDays,
+ChevronDown,
+AlertCircle,
+CheckCircle,
+Info,
+XCircle
+} from 'lucide-react';
 
-const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState('profile');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [bookings, setBookings] = useState([]);
+const PropertyDetailsPage = () => {
+const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const [selectedDates, setSelectedDates] = useState({ checkin: '', checkout: '' });
+const [isMapExpanded, setIsMapExpanded] = useState(false);
+const [activeTab, setActiveTab] = useState('overview');
+const [amenities, setAmenities] = useState({});
+const [property, setProperty] = useState({
+  _id: '507f1f77bcf86cd799439011',
+  title: 'Luxury Beachfront Villa',
+  location: 'Dubai Marina, Dubai',
+  price: 850,
+  images: [
+    { url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=600&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&h=600&fit=crop' }
+  ],
+  guests: 8,
+  bedrooms: 4,
+  beds: 5,
+  bathrooms: 3,
+  type: 'Villa',
+  description: 'Experience luxury living in this stunning beachfront villa with panoramic ocean views and world-class amenities.',
+  propertyHighlights: [
+    { name: 'Ocean View' },
+    { name: 'Private Pool' },
+    { name: 'Beach Access' },
+    { name: 'Modern Kitchen' },
+    { name: 'WiFi' },
+    { name: 'Air Conditioning' }
+  ],
+  houseRules: {
+    checkIn: '3:00 PM',
+    checkOut: '11:00 AM',
+    maxGuests: 8,
+    smoking: false,
+    parties: false,
+    pets: false,
+    children: true
+  }
+});
+const [showCalendar, setShowCalendar] = useState({ checkin: false, checkout: false });
+const [selectedGuests, setSelectedGuests] = useState(1);
+const [showGuestDropdown, setShowGuestDropdown] = useState(false);
+const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
+const [bookedDates, setBookedDates] = useState([]);
+const [loading, setLoading] = useState(false);
+const [userId, setUserId] = useState('user123');
+const [error, setError] = useState(null);
+const [toast, setToast] = useState(null);
+const [dateError, setDateError] = useState('');
 
-  const [userDetails, setUserDetails] = useState({
-    name: '',
-    email: '',
-    mobile: '',
-    isGoogleUser: false
-  });
+const showToast = (message, type = 'info') => {
+  setToast({ message, type });
+};
 
-  const [originalUserDetails, setOriginalUserDetails] = useState({
-    name: '',
-    email: '',
-    mobile: '',
-    isGoogleUser: false
-  });
+const closeToast = () => {
+  setToast(null);
+  setDateError('');
+};
 
-  const getUserAndBookings = async () => {
-    try {
-      const response = await axios.get(`${baseurl}User/getuser`, { withCredentials: true });
-      if (response.data.user) {
-        setUserDetails(response.data.user);
-  
-        const bookingsRes = await axios.get(`${baseurl}User/get-booking`, {
-          params: { id: response.data.user._id }
-        });
-        
-        if (bookingsRes.data && bookingsRes.data.bookings) {
-          setBookings(bookingsRes.data.bookings);
-        }
-        console.log(bookingsRes.data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  
+const CustomToast = ({ message, type, onClose }) => {
   useEffect(() => {
-    getUserAndBookings();
-  }, []);
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const handlePropertyClick = (propertyId, guests) => {
-    window.location.href = `/property/${propertyId}?adults=${guests}`;
-  };
-
-  const handleProfileSave = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.put(`${baseurl}User/updateuser`, {
-        name: userDetails.name,
-        mobile: userDetails.mobile
-      }, { withCredentials: true });
-
-      if (response.data.success) {
-        alert(response.data.message || 'Profile updated successfully!');
-        setOriginalUserDetails({ ...userDetails });
-        setIsEditingProfile(false);
-      } else {
-        alert(response.data.message || 'Failed to update profile');
-      }
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || 'Error updating profile');
-    } finally {
-      setLoading(false);
+  const getToastStyles = () => {
+    switch (type) {
+      case 'success':
+        return {
+          bg: 'bg-green-50 border-green-200',
+          icon: CheckCircle,
+          iconColor: 'text-green-500',
+          textColor: 'text-green-800'
+        };
+      case 'error':
+        return {
+          bg: 'bg-red-50 border-red-200',
+          icon: XCircle,
+          iconColor: 'text-red-500',
+          textColor: 'text-red-800'
+        };
+      case 'warning':
+        return {
+          bg: 'bg-yellow-50 border-yellow-200',
+          icon: AlertCircle,
+          iconColor: 'text-yellow-500',
+          textColor: 'text-yellow-800'
+        };
+      default:
+        return {
+          bg: 'bg-blue-50 border-blue-200',
+          icon: Info,
+          iconColor: 'text-blue-500',
+          textColor: 'text-blue-800'
+        };
     }
   };
 
-  const handlePasswordChange = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match');
-      return;
-    }
-    if (passwordData.newPassword.length < 6) {
-      alert('New password must be at least 6 characters long');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.put(`${baseurl}User/changepassword`, {
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
-      }, { withCredentials: true });
-
-      if (response.data.success) {
-        alert(response.data.message || 'Password changed successfully!');
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setIsChangingPassword(false);
-      } else {
-        alert(response.data.message || 'Failed to change password');
-      }
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || 'Error changing password');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setUserDetails({ ...originalUserDetails });
-    setIsEditingProfile(false);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getPropertyImage = (property) => {
-    if (property.images && property.images.length > 0) {
-      return property.images[0].url || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&h=250&fit=crop';
-    }
-    return 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&h=250&fit=crop';
-  };
+  const styles = getToastStyles();
+  const IconComponent = styles.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[rgb(247,247,247)] via-white to-[rgb(248,252,255)]">
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-4 py-8 pt-28">
-        <div className="mb-20 text-center">
-          <h1 className="text-5xl font-bold text-[rgb(0,0,0)] mb-4 tracking-tight">My Profile</h1>
-          <p className="text-xl font-light text-gray-700 max-w-2xl mx-auto leading-relaxed">Manage your account settings and view your bookings</p>
-          <div className="mt-8 w-24 h-1 bg-gray-600 mx-auto rounded-full"></div>
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-1/4">
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden sticky top-8">
-              <div className="p-8 bg-gradient-to-br from-[rgb(247,219,190)] to-[rgb(247,219,190)]/80 text-gray-800 relative">
-                <div className="absolute inset-0 bg-black/5"></div>
-                <div className="relative">
-                  <div className="w-24 h-24 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center mb-6 mx-auto shadow-xl">
-                    <User className="w-12 h-12 text-gray-800" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-center mb-2">{userDetails.name}</h3>
-                  <p className="text-gray-700 text-center text-sm">{userDetails.email}</p>
-                </div>
-              </div>
-              <div className="p-8">
-                <nav className="space-y-4">
-                  <button onClick={() => setActiveTab('profile')} className={`w-full text-left px-6 py-4 rounded-2xl transition-all duration-300 flex items-center gap-3 font-semibold ${activeTab === 'profile' ? 'bg-[rgb(247,219,190)]/30 text-gray-800 border border-[rgb(247,219,190)]/50 shadow-lg transform scale-105' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}>
-                    <User className="w-5 h-5" /> Profile Details
-                  </button>
-                  <button onClick={() => setActiveTab('bookings')} className={`w-full text-left px-6 py-4 rounded-2xl transition-all duration-300 flex items-center gap-3 font-semibold ${activeTab === 'bookings' ? 'bg-[rgb(247,219,190)]/30 text-gray-800 border border-[rgb(247,219,190)]/50 shadow-lg transform scale-105' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}>
-                    <Calendar className="w-5 h-5" /> My Bookings ({bookings.length})
-                  </button>
-                </nav>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:w-3/4">
-            {activeTab === 'profile' && (
-              <div className="space-y-8">
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-[rgb(247,219,190)]/20 rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
-                  <div className="relative bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-10 m-1">
-                    <div className="flex items-center justify-between mb-8">
-                      <h2 className="text-3xl font-bold text-[rgb(0,0,0)] flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center">
-                          <User className="w-6 h-6 text-gray-800" />
-                        </div>
-                        Profile Information
-                      </h2>
-                      <button onClick={() => setIsEditingProfile(!isEditingProfile)} disabled={loading} className="px-6 py-3 bg-[rgb(247,219,190)] text-gray-800 rounded-2xl hover:bg-[rgb(247,219,190)]/80 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 font-semibold shadow-lg">
-                        <Edit className="w-4 h-4" />
-                        {isEditingProfile ? 'Cancel' : 'Edit Profile'}
-                      </button>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Full Name</label>
-                        {isEditingProfile ? (
-                          <input type="text" value={userDetails.name} onChange={(e) => setUserDetails({...userDetails, name: e.target.value})} className="w-full px-6 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[rgb(247,219,190)] focus:border-transparent bg-white/50 backdrop-blur-sm text-gray-800 font-medium transition-all duration-300" />
-                        ) : (
-                          <div className="px-6 py-4 bg-[rgb(248,252,255)] rounded-2xl text-gray-800 font-medium">{userDetails.name}</div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Email Address</label>
-                        <div className="px-6 py-4 bg-gray-100 rounded-2xl text-gray-500 font-medium">{userDetails.email}</div>
-                        <p className="text-xs text-gray-500 mt-2 italic">Email cannot be changed</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Phone Number</label>
-                        {isEditingProfile ? (
-                          <input type="tel" value={userDetails.mobile} onChange={(e) => setUserDetails({...userDetails, mobile: e.target.value})} className="w-full px-6 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[rgb(247,219,190)] focus:border-transparent bg-white/50 backdrop-blur-sm text-gray-800 font-medium transition-all duration-300" />
-                        ) : (
-                          <div className="px-6 py-4 bg-[rgb(248,252,255)] rounded-2xl text-gray-800 font-medium">{userDetails.mobile}</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {isEditingProfile && (
-                      <div className="flex gap-4 mt-8">
-                        <button onClick={handleProfileSave} disabled={loading} className="px-8 py-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 font-semibold shadow-lg">
-                          <Check className="w-4 h-4" /> {loading ? 'Saving...' : 'Save Changes'}
-                        </button>
-                        <button onClick={handleCancelEdit} disabled={loading} className="px-8 py-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 font-semibold shadow-lg">
-                          <X className="w-4 h-4" /> Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {!userDetails.isGoogleUser && (
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-[rgb(247,219,190)]/20 rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
-                    <div className="relative bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-10 m-1">
-                      <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-3xl font-bold text-[rgb(0,0,0)] flex items-center gap-4">
-                          <div className="w-12 h-12 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center">
-                            <Lock className="w-6 h-6 text-gray-800" />
-                          </div>
-                          Change Password
-                        </h2>
-                        <button onClick={() => setIsChangingPassword(!isChangingPassword)} disabled={loading} className="px-6 py-3 bg-[rgb(247,219,190)] text-gray-800 rounded-2xl hover:bg-[rgb(247,219,190)]/80 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 font-semibold shadow-lg">
-                          {isChangingPassword ? 'Cancel' : 'Change Password'}
-                        </button>
-                      </div>
-
-                      {isChangingPassword ? (
-                        <div className="space-y-6">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Current Password</label>
-                            <div className="relative">
-                              <input type={showPassword ? 'text' : 'password'} value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} className="w-full px-6 py-4 pr-14 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[rgb(247,219,190)] focus:border-transparent bg-white/50 backdrop-blur-sm transition-all duration-300" placeholder="Enter current password" />
-                              <button onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">New Password</label>
-                            <div className="relative">
-                              <input type={showNewPassword ? 'text' : 'password'} value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} className="w-full px-6 py-4 pr-14 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[rgb(247,219,190)] focus:border-transparent bg-white/50 backdrop-blur-sm transition-all duration-300" placeholder="Enter new password" />
-                              <button onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Confirm New Password</label>
-                            <div className="relative">
-                              <input type={showConfirmPassword ? 'text' : 'password'} value={passwordData.confirmPassword} onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})} className="w-full px-6 py-4 pr-14 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[rgb(247,219,190)] focus:border-transparent bg-white/50 backdrop-blur-sm transition-all duration-300" placeholder="Confirm new password" />
-                              <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-4 mt-8">
-                            <button onClick={handlePasswordChange} disabled={loading} className="px-8 py-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 font-semibold shadow-lg">
-                              <Check className="w-4 h-4" /> {loading ? 'Updating...' : 'Update Password'}
-                            </button>
-                            <button onClick={() => setIsChangingPassword(false)} disabled={loading} className="px-8 py-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 font-semibold shadow-lg">
-                              <X className="w-4 h-4" /> Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600 text-lg font-light leading-relaxed">Keep your account secure by updating your password regularly.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {userDetails.isGoogleUser && (
-                  <div className="text-center text-gray-500 italic mt-4">
-                    Password management is disabled for Google accounts.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'bookings' && (
-              <div className="relative group">
-                <div className="absolute inset-0 bg-[rgb(247,219,190)]/20 rounded-3xl transform group-hover:scale-105 transition-all duration-500"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-10 m-1">
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-3xl font-bold text-[rgb(0,0,0)] flex items-center gap-4">
-                      <div className="w-12 h-12 bg-[rgb(247,219,190)] rounded-2xl flex items-center justify-center">
-                        <Calendar className="w-6 h-6 text-gray-800" />
-                      </div>
-                      My Bookings ({bookings.length})
-                    </h2>
-                  </div>
-
-                  {bookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-600 mb-2">No bookings found</h3>
-                      <p className="text-gray-500">You haven't made any bookings yet.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {bookings.map((booking) => (
-                        <div 
-                          key={booking._id} 
-                          className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
-                          onClick={() => handlePropertyClick(booking.property._id, booking.guests)}
-                        >
-                          <div className="flex flex-col md:flex-row">
-                            <div className="md:w-1/3">
-                              <img
-                                src={getPropertyImage(booking.property)}
-                                alt={booking.property.title}
-                                className="w-full h-48 md:h-full object-cover"
-                              />
-                            </div>
-                            
-                            <div className="md:w-2/3 p-6">
-                              <div className="flex items-start justify-between mb-4">
-                                <div>
-                                  <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.property.title}</h3>
-                                  <div className="flex items-center text-gray-600 mb-2">
-                                    <MapPin className="w-4 h-4 mr-1" />
-                                    <span>{booking.property.location}</span>
-                                  </div>
-                                  <div className="flex items-center text-gray-600 mb-2">
-                                    <User className="w-4 h-4 mr-1" />
-                                    <span>{booking.guests} Guest{booking.guests > 1 ? 's' : ''}</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="text-right">
-                                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.bookingStatus)}`}>
-                                    {booking.bookingStatus.charAt(0).toUpperCase() + booking.bookingStatus.slice(1)}
-                                  </span>
-                                  <div className="mt-2 text-2xl font-bold text-gray-800">
-                                    ${booking.totalPrice}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                                <div className="flex items-center text-gray-600">
-                                  <Calendar className="w-4 h-4 mr-2" />
-                                  <div>
-                                    <span className="text-sm font-medium">Check-in</span>
-                                    <div className="font-semibold">{formatDate(booking.checkIn)}</div>
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center text-gray-600">
-                                  <Calendar className="w-4 h-4 mr-2" />
-                                  <div>
-                                    <span className="text-sm font-medium">Check-out</span>
-                                    <div className="font-semibold">{formatDate(booking.checkOut)}</div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                                <div className="flex items-center text-sm text-gray-500">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  Booked on {formatDate(booking.createdAt)}
-                                </div>
-                                
-                                <div className="flex items-center text-sm">
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    booking.paymentStatus === 'confirmed' 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-orange-100 text-orange-800'
-                                  }`}>
-                                    Payment {booking.paymentStatus}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="mt-4 text-xs text-gray-500">
-                                Booking ID: {booking._id}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
+      <div className={`flex items-center gap-3 p-4 border rounded-lg shadow-lg ${styles.bg} min-w-80 max-w-96`}>
+        <IconComponent className={`w-5 h-5 ${styles.iconColor} flex-shrink-0`} />
+        <p className={`${styles.textColor} flex-grow`}>{message}</p>
+        <button 
+          onClick={onClose}
+          className={`${styles.iconColor} hover:opacity-70 transition-opacity`}
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
-      <Footer />
     </div>
   );
 };
 
-export default ProfilePage;
+const PropertySkeleton = () => (
+  <div className="animate-pulse">
+    <div className="bg-gray-300 h-8 w-3/4 mb-2"></div>
+    <div className="bg-gray-300 h-4 w-1/2 mb-4"></div>
+    <div className="bg-gray-300 h-64 sm:h-80 lg:h-96 rounded-xl mb-4"></div>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {Array(4).fill(0).map((_, i) => (
+        <div key={i} className="bg-gray-300 h-24 sm:h-32 rounded-lg"></div>
+      ))}
+    </div>
+  </div>
+);
+
+const StatsSkeleton = () => (
+  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {Array(4).fill(0).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-gray-200">
+            <div className="w-5 h-5 bg-gray-300 rounded"></div>
+          </div>
+          <div>
+            <div className="bg-gray-300 h-3 w-16 mb-1 rounded"></div>
+            <div className="bg-gray-300 h-4 w-20 rounded"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const nextImage = () => {
+  if (property.images?.length > 0) {
+    setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+  }
+};
+
+const prevImage = () => {
+  if (property.images?.length > 0) {
+    setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+  }
+};
+
+const formatPrice = (price) => {
+  if (!price || isNaN(price)) return 'AED 0';
+  return `AED ${parseInt(price).toLocaleString()}`;
+};
+
+const getDaysInMonth = (date) => {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+};
+
+const getFirstDayOfMonth = (date) => {
+  return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+};
+
+const isDateDisabled = (date, type = 'checkin') => {
+  if (!date || isNaN(date.getTime())) return true;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  
+  if (checkDate < today) return true;
+  
+  if (type === 'checkout' && selectedDates.checkin) {
+    const checkinDate = new Date(selectedDates.checkin);
+    checkinDate.setHours(0, 0, 0, 0);
+    if (checkDate <= checkinDate) return true;
+  }
+  
+  return bookedDates.some(bookedDate => {
+    const bookedDateOnly = new Date(bookedDate);
+    bookedDateOnly.setHours(0, 0, 0, 0);
+    return bookedDateOnly.getTime() === checkDate.getTime();
+  });
+};
+
+const isDateSelected = (date, type) => {
+  const selectedDate = type === 'checkin' ? selectedDates.checkin : selectedDates.checkout;
+  if (!selectedDate || !date) return false;
+  
+  const selected = new Date(selectedDate);
+  const checkDate = new Date(date);
+  
+  if (isNaN(selected.getTime()) || isNaN(checkDate.getTime())) return false;
+  
+  return checkDate.toDateString() === selected.toDateString();
+};
+
+const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  const daysInMonth = getDaysInMonth(currentCalendarMonth);
+  const firstDay = getFirstDayOfMonth(currentCalendarMonth);
+  const today = new Date();
+  
+  const nextMonth = () => {
+    setCurrentCalendarMonth(new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1));
+  };
+  
+  const prevMonth = () => {
+    setCurrentCalendarMonth(new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() - 1));
+  };
+  
+  const handleDateClick = (day) => {
+    const selectedDate = new Date(
+      currentCalendarMonth.getFullYear(),
+      currentCalendarMonth.getMonth(),
+      day
+    );
+    
+    if (!isDateDisabled(selectedDate, type)) {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const date = String(selectedDate.getDate()).padStart(2, "0");
+      const dateString = `${year}-${month}-${date}`;
+  
+      onDateSelect(dateString);
+      onClose();
+    }
+  };
+  
+  if (!isOpen) return null;
+
+  return (
+    <div className="absolute top-full left-0 right-0 mt-2 z-50">
+      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-2xl p-6 max-w-sm">
+        <div className="flex items-center justify-between mb-6">
+          <button 
+            onClick={prevMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          <h3 className="text-lg font-semibold text-gray-800">
+            {monthNames[currentCalendarMonth.getMonth()]} {currentCalendarMonth.getFullYear()}
+          </h3>
+          <button 
+            onClick={nextMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Next month"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayNames.map(day => (
+            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1">
+          {Array(firstDay).fill(null).map((_, index) => (
+            <div key={`empty-${index}`} className="h-10"></div>
+          ))}
+          
+          {Array(daysInMonth).fill(null).map((_, index) => {
+            const day = index + 1;
+            const date = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
+            const isDisabled = isDateDisabled(date, type);
+            const isSelected = isDateSelected(date, type);
+            const isToday = date.toDateString() === today.toDateString();
+            
+            return (
+              <button
+                key={day}
+                onClick={() => handleDateClick(day)}
+                disabled={isDisabled}
+                className={`
+                  h-10 w-10 rounded-lg text-sm font-medium transition-all duration-200
+                  ${isSelected 
+                    ? 'bg-orange-500 text-white shadow-md' 
+                    : isToday 
+                      ? 'bg-orange-100 text-orange-600 border border-orange-300'
+                      : isDisabled 
+                        ? 'text-gray-300 cursor-not-allowed bg-red-50' 
+                        : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                  }
+                `}
+                aria-label={`Select ${date.toDateString()}`}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <button 
+            onClick={onClose}
+            className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Close Calendar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CustomDatePicker = ({ label, value, onChange, isOpen, onToggle, disabled }) => {
+  const handleToggle = () => {
+    if (disabled) {
+      showToast('Please select check-in date first', 'error');
+      return;
+    }
+    onToggle();
+  };
+
+  const formatDisplayDate = (dateValue) => {
+    if (!dateValue) return null;
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return null;
+    return date;
+  };
+
+  const displayDate = formatDisplayDate(value);
+
+  return (
+    <div className="relative">
+      <label className="block text-sm font-semibold mb-2 text-gray-700">{label}</label>
+      <div 
+        className={`w-full p-5 border-2 border-gray-200 rounded-2xl cursor-pointer transition-all duration-300 bg-white group ${
+          disabled 
+            ? 'opacity-50 cursor-not-allowed' 
+            : 'hover:border-orange-300 hover:shadow-md'
+        }`}
+        onClick={handleToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`p-2 rounded-xl transition-colors ${
+              disabled ? 'bg-gray-100' : 'bg-orange-50 group-hover:bg-orange-100'
+            }`}>
+              <CalendarDays className={`w-5 h-5 ${disabled ? 'text-gray-400' : 'text-orange-500'}`} />
+            </div>
+            <div>
+              {displayDate ? (
+                <div>
+                  <div className="text-gray-900 font-semibold text-lg">
+                    {displayDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric'
+                    })}
+                  </div>
+                  <div className="text-gray-500 text-sm">
+                    {displayDate.toLocaleDateString('en-US', { 
+                      year: 'numeric',
+                      weekday: 'short'
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className={`font-medium ${disabled ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Select date
+                  </div>
+                  <div className={`text-sm ${disabled ? 'text-gray-300' : 'text-gray-400'}`}>
+                    Choose {label.toLowerCase()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
+      </div>
+      
+      {!disabled && (
+        <CustomCalendar 
+          type={label.toLowerCase()}
+          onDateSelect={onChange}
+          isOpen={isOpen}
+          onClose={() => setShowCalendar({checkin: false, checkout: false})}
+        />
+      )}
+    </div>
+  );
+};
+
+const GuestSelector = () => {
+  return (
+    <div className="relative">
+      <label className="block text-sm font-semibold mb-2 text-gray-700">Guests</label>
+      <div 
+        className="w-full p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-300 transition-all duration-200 bg-white"
+        onClick={() => setShowGuestDropdown(!showGuestDropdown)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setShowGuestDropdown(!showGuestDropdown);
+          }
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Users className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-900 font-medium">
+              {selectedGuests} {selectedGuests === 1 ? 'Guest' : 'Guests'}
+            </span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showGuestDropdown ? 'rotate-180' : ''}`} />
+        </div>
+      </div>
+      
+      {showGuestDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-2 z-50">
+          <div className="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4">
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                <div 
+                  key={num}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedGuests === num 
+                      ? 'bg-orange-50 text-orange-600 border border-orange-200' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setSelectedGuests(num);
+                    setShowGuestDropdown(false);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedGuests(num);
+                      setShowGuestDropdown(false);
+                    }
+                  }}
+                >
+                  {num} {num === 1 ? 'Guest' : 'Guests'}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const calculateNights = () => {
+  if (selectedDates.checkin && selectedDates.checkout) {
+    const checkin = new Date(selectedDates.checkin);
+    const checkout = new Date(selectedDates.checkout);
+    
+    if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) return 1;
+    
+    const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+    return nights > 0 ? nights : 1;
+  }
+  return 3;
+};
+
+const handleDateChange = (date, type) => {
+  if (!date) return;
+  
+  if (type === 'checkin') {
+    if (selectedDates.checkout && new Date(date) >= new Date(selectedDates.checkout)) {
+      setSelectedDates({ checkin: date, checkout: '' });
+      showToast('Check-out date cleared. Please select a new check-out date.', 'info');
+    } else {
+      setSelectedDates(prev => ({ ...prev, checkin: date }));
+    }
+  } else {
+    if (selectedDates.checkin && new Date(date) <= new Date(selectedDates.checkin)) {
+      showToast('Check-out date must be after check-in date', 'error');
+      return;
+    }
+    setSelectedDates(prev => ({ ...prev, checkout: date }));
+  }
+};
+
+const handleBookNow = async () => {
+  if (!selectedDates.checkin || !selectedDates.checkout) {
+    showToast('Please select check-in and check-out dates', 'error');
+    return;
+  }
+
+  if (!userId) {
+    showToast('Please login before booking.', 'error');
+    return;
+  }
+
+  const checkinDate = new Date(selectedDates.checkin);
+  const checkoutDate = new Date(selectedDates.checkout);
+  
+  if (isNaN(checkinDate.getTime()) || isNaN(checkoutDate.getTime())) {
+    showToast('Invalid dates selected', 'error');
+    return;
+  }
+  
+  if (checkoutDate <= checkinDate) {
+    showToast('Check-out date must be after check-in date', 'error');
+    return;
+  }
+
+  const nights = calculateNights();
+  const basePrice = property.price || 0;
+  const totalPrice = basePrice * nights + 40;
+
+  try {
+    showToast('Processing your booking...', 'info');
+    
+    const bookingData = {
+      propertyId: property._id,
+      propertyTitle: property.title || 'Property',
+      checkinDate: selectedDates.checkin,
+      checkoutDate: selectedDates.checkout,
+      guests: selectedGuests,
+      nights: nights,
+      pricePerNight: basePrice,
+      totalPrice: totalPrice,
+      cleaningFee: 25,
+      serviceFee: 15,
+      location: property.location || '',
+      hostName: "Wavescation Team",
+      propertyImage: property.images?.[0]?.url || ''
+    };
+
+    setTimeout(() => {
+      showToast('Booking initiated successfully!', 'success');
+    }, 1500);
+
+  } catch (error) {
+    console.error('Booking error:', error);
+    showToast('Booking failed. Please try again.', 'error');
+  }
+};
+
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (!event.target.closest('.date-picker-container') && !event.target.closest('.guest-selector-container')) {
+      setShowCalendar({ checkin: false, checkout: false });
+      setShowGuestDropdown(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
+
+return (
+  <>
+    <style jsx>{`
+      @keyframes slide-in-right {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+      }
+    `}</style>
+    
+    <div className="min-h-screen" style={{ backgroundColor: 'rgb(247, 247, 247)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-10 mt-20"> 
+        <div className="mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-2">
+                {property.title || 'Property Title'}
+              </h1>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 fill-current" style={{ color: 'rgb(230, 116, 19)' }} />
+                  <span className="font-semibold">4.8</span>
+                  <span>(124 reviews)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{property.location || 'Location'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 mt-4 lg:mt-0">
+              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition-colors">
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Share</span>
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition-colors">
+                <Heart className="w-4 h-4" />
+                <span className="hidden sm:inline">Save</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            
+            <div className="relative">
+              <div className="aspect-w-16 aspect-h-10 lg:aspect-h-8">
+                <img 
+                  src={property.images?.[currentImageIndex]?.url || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop'} 
+                  alt="Property" 
+                  className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-xl"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop';
+                  }}
+                />
+              </div>
+              {property.images?.length > 1 && (
+                <>
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                {property.images?.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                    }`}
+                    aria-label={`View image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {property.images?.length > 1 && (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {property.images.slice(1, 5).map((img, index) => (
+                  <img 
+                    key={index}
+                    src={img.url} 
+                    alt={`Property view ${index + 2}`}
+                    className="w-full h-24 sm:h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setCurrentImageIndex(index + 1)}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgb(248, 252, 255)' }}>
+                    <Users className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Guests</p>
+                    <p className="font-semibold">{property.guests || '-'} Guests</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgb(248, 252, 255)' }}>
+                    <Bed className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Bedrooms</p>
+                    <p className="font-semibold">{property.bedrooms || '-'} Bedrooms</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgb(248, 252, 255)' }}>
+                    <Bed className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Beds</p>
+                    <p className="font-semibold">{property.beds || '-'} Beds</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgb(248, 252, 255)' }}>
+                    <Bath className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Bathrooms</p>
+                    <p className="font-semibold">{property.bathrooms || '-'} Bathrooms</p>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 pt-6">
+                <p className="text-sm text-gray-600 mb-2">Property Type</p>
+                <p className="font-semibold text-lg">{property.type || 'Property Type'}</p>
+              </div>
+            </div>
+
+            {property.propertyHighlights?.length > 0 && (
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-xl font-bold mb-4">Property Highlights</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {property.propertyHighlights.map((highlight, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: 'rgb(248, 252, 255)' }}>
+                      <Wifi className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                      <span className="text-sm">{highlight.name || highlight}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {property.description && (
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-xl font-bold mb-4">About This Property</h2>
+                <div className="prose prose-gray max-w-none">
+                  <p className="text-gray-700">{property.description}</p>
+                </div>
+              </div>
+            )}
+
+            {property.houseRules && (
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-xl font-bold mb-6">House Rules</h2>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Clock className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                      <div>
+                        <p className="font-semibold">Check-in</p>
+                        <p className="text-gray-600">After {property.houseRules.checkIn || '3:00 PM'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Clock className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                      <div>
+                        <p className="font-semibold">Check-out</p>
+                        <p className="text-gray-600">Before {property.houseRules.checkOut || '11:00 AM'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5" style={{ color: 'rgb(230, 116, 19)' }} />
+                      <div>
+                        <p className="font-semibold">Maximum Guests</p>
+                        <p className="text-gray-600">{property.houseRules.maxGuests || property.guests || 6} Guests</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      {property.houseRules.smoking ? 
+                        <Check className="w-5 h-5 text-green-500" /> : 
+                        <X className="w-5 h-5 text-red-500" />
+                      }
+                      <span>{property.houseRules.smoking ? 'Smoking allowed' : 'No smoking'}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {property.houseRules.parties ? 
+                        <Check className="w-5 h-5 text-green-500" /> : 
+                        <X className="w-5 h-5 text-red-500" />
+                      }
+                      <span>{property.houseRules.parties ? 'Parties allowed' : 'No parties or events'}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {property.houseRules.pets ? 
+                        <Check className="w-5 h-5 text-green-500" /> : 
+                        <X className="w-5 h-5 text-red-500" />
+                      }
+                      <span>{property.houseRules.pets ? 'Pets allowed' : 'No pets'}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {property.houseRules.children ? 
+                        <Check className="w-5 h-5 text-green-500" /> : 
+                        <X className="w-5 h-5 text-red-500" />
+                      }
+                      <span>{property.houseRules.children ? 'Children welcome' : 'No children'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Location</h2>
+                <button 
+                  onClick={() => setIsMapExpanded(!isMapExpanded)}
+                  className="text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  {isMapExpanded ? 'Collapse' : 'Expand'} Map
+                </button>
+              </div>
+              
+              <div className={`bg-gray-200 rounded-lg ${isMapExpanded ? 'h-96' : 'h-64'} flex items-center justify-center transition-all duration-300`}>
+                <div className="text-center">
+                  <MapIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  <p className="text-gray-600">Interactive Map</p>
+                  <p className="text-sm text-gray-500">{property.location}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 space-y-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <p className="text-2xl font-bold">{formatPrice(property.price)} <span className="text-base font-normal text-gray-600">/ night</span></p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="w-4 h-4 fill-current" style={{ color: 'rgb(230, 116, 19)' }} />
+                      <span className="text-sm">4.8 (124 reviews)</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4 mb-6 date-picker-container">
+                  <CustomDatePicker
+                    label="Check-in"
+                    value={selectedDates.checkin}
+                    onChange={(date) => handleDateChange(date, 'checkin')}
+                    isOpen={showCalendar.checkin}
+                    onToggle={() => setShowCalendar({checkin: !showCalendar.checkin, checkout: false})}
+                    disabled={false}
+                  />
+                  <CustomDatePicker
+                    label="Check-out"
+                    value={selectedDates.checkout}
+                    onChange={(date) => handleDateChange(date, 'checkout')}
+                    isOpen={showCalendar.checkout}
+                    onToggle={() => setShowCalendar({checkin: false, checkout: !showCalendar.checkout})}
+                    disabled={!selectedDates.checkin}
+                  />
+                  <div className="guest-selector-container">
+                    <GuestSelector />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleBookNow}
+                  disabled={!selectedDates.checkin || !selectedDates.checkout}
+                  className="w-full py-3 rounded-lg font-semibold text-white transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ 
+                    background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                  }}                      
+                >
+                  Book Now
+                </button>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span>{formatPrice(property.price)} × {calculateNights()} nights</span>
+                    <span>{formatPrice(property.price * calculateNights())}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Cleaning fee</span>
+                    <span>AED 25</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Service fee</span>
+                    <span>AED 15</span>
+                  </div>
+                  <hr />
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>{formatPrice((property.price * calculateNights()) + 40)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
+                <div className="flex items-center gap-4 mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg">Wavescation Team</h3>
+                    <p className="text-gray-600 text-sm">Professional Property Management</p>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm">Responds within an hour</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">Arabic, English</span>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
+                    <Phone className="w-4 h-4" />
+                    <span className="text-sm">Call</span>
+                  </button>
+                  <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
+                    <Mail className="w-4 h-4" />
+                    <span className="text-sm">Message</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
+                <h3 className="font-semibold text-lg mb-4">Quick Info</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Property ID</span>
+                    <span className="font-medium">#{property._id?.slice(-8) || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Minimum Stay</span>
+                    <span className="font-medium">2 nights</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Cancellation</span>
+                    <span className="font-medium">Free until 48h</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Security Deposit</span>
+                    <span className="font-medium">AED 200</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 bg-white rounded-xl p-8 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Ready to Book Your Stay?</h2>
+            <p className="text-gray-600 mb-6">
+              Experience luxury living with this stunning property. Book now for the best rates and instant confirmation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                onClick={handleBookNow}
+                disabled={!selectedDates.checkin || !selectedDates.checkout}
+                className="px-8 py-3 rounded-lg font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                }}  
+              >
+                Book Now - {formatPrice(property.price)}/night
+              </button>
+              <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors bg-white">
+                View More Properties
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <footer className="mt-12 py-8 border-t border-gray-200">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div className="flex flex-wrap gap-6 text-sm text-gray-600">
+              <a href="#" className="hover:text-black transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-black transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-black transition-colors">Support</a>
+              <a href="#" className="hover:text-black transition-colors">Contact</a>
+            </div>
+            <div className="text-sm text-gray-600">
+              © 2025 Wavescation. All rights reserved.
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+    
+    {toast && (
+      <CustomToast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={closeToast} 
+      />
+    )}
+  </>
+);
+};
+
+export default PropertyDetailsPage
