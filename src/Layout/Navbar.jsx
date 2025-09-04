@@ -31,7 +31,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await axios.post(`${baseurl}User/logout`, {}, { withCredentials: true });
-      logout(); // ✅ clear global state
+      logout(); 
       setShowProfileDropdown(false);
     } catch {}
   };
