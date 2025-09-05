@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, Instagram, Facebook, Linkedin, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -40,18 +41,42 @@ const Footer = () => {
             <p className="mb-6 leading-relaxed" style={{ color: 'rgb(4, 80, 115)' }}>
               Your gateway to extraordinary luxury staycation experiences across Dubai.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
                    style={{ backgroundColor: 'rgb(231, 121, 0)' }}
                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
-                <Phone className="h-5 w-5 text-white group-hover:animate-bounce" />
+                <Phone className="h-4 w-4 text-white group-hover:animate-bounce" />
               </div>
               <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
                    style={{ backgroundColor: 'rgb(231, 121, 0)' }}
                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
                    onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
-                <Mail className="h-5 w-5 text-white group-hover:animate-bounce" />
+                <Mail className="h-4 w-4 text-white group-hover:animate-bounce" />
+              </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
+                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+                <Instagram className="h-4 w-4 text-white group-hover:animate-bounce" />
+              </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
+                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+                <Facebook className="h-4 w-4 text-white group-hover:animate-bounce" />
+              </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
+                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+                <Linkedin className="h-4 w-4 text-white group-hover:animate-bounce" />
+              </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
+                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+                <MessageCircle className="h-4 w-4 text-white group-hover:animate-bounce" />
               </div>
             </div>
           </div>
@@ -62,30 +87,30 @@ const Footer = () => {
               <span className="absolute -bottom-2 left-0 w-8 h-0.5" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
             </h4>
             <div className="space-y-3">
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              <Link to="/about" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 About Us
-              </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              </Link>
+              <Link to="/property" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Properties
-              </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              </Link>
+              {/* <Link to="/profile" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
-                Services
-              </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+                Profile
+              </Link> */}
+              <Link to="/contact" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Contact
-              </a>
+              </Link>
             </div>
           </div>
           
@@ -124,34 +149,34 @@ const Footer = () => {
           
           <div className={`transition-all duration-1000 delay-600 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             <h4 className="text-lg font-semibold mb-6 relative" style={{ color: 'rgb(0, 31, 60)' }}>
-              Support
+              Policies
               <span className="absolute -bottom-2 left-0 w-8 h-0.5" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
             </h4>
             <div className="space-y-3">
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
-                 style={{ color: 'rgb(4, 80, 115)' }}
-                 onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
-                 onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
-                Help Center
-              </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              <Link to="/privacy-policy" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Privacy Policy
-              </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              </Link>
+              <Link to="/terms-and-conditions" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
-                Terms of Service
-              </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+                Terms & Conditions
+              </Link>
+              <Link to="/refund-policy" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
-                Cancellation Policy
-              </a>
+                Refund Policy
+              </Link>
+              <Link to="/shipping-policy" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+                 style={{ color: 'rgb(4, 80, 115)' }}
+                 onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
+                 onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
+                Shipping Policy
+              </Link>
             </div>
           </div>
         </div>
