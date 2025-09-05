@@ -271,7 +271,7 @@ export default function AboutUs() {
             </div>
           </div>
 
-          <div className="py-24">
+          {/* <div className="py-24">
             <div className="text-center mb-20">
               <div className="inline-block bg-[rgb(247,219,190)]/20 rounded-full px-6 py-2 mb-6">
                 <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">Meet Our Team</span>
@@ -300,7 +300,7 @@ export default function AboutUs() {
                 ))}
 
             </div>
-          </div>
+          </div> */}
 
         </div>
 

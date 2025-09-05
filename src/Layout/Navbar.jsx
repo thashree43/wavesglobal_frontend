@@ -7,10 +7,10 @@ import { baseurl } from "../Base/Base.js";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ClientId } from "../Base/Base.js";
-import { useAuth } from "../Context/Auth"; // ✅ use AuthContext
+import { useAuth } from "../Context/Auth";
 
 const Navbar = () => {
-  const { user, isLogged, checkAuthStatus, logout } = useAuth(); // ✅ global state
+  const { user, isLogged, checkAuthStatus, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -24,14 +24,14 @@ const Navbar = () => {
   };
 
   const handleLoginSuccess = async () => {
-    await checkAuthStatus(); // ✅ update context immediately
+    await checkAuthStatus();
     setShowAuthModal(false);
   };
 
   const handleLogout = async () => {
     try {
       await axios.post(`${baseurl}User/logout`, {}, { withCredentials: true });
-      logout(); // ✅ clear global state
+      logout(); 
       setShowProfileDropdown(false);
     } catch {}
   };
@@ -71,7 +71,6 @@ const Navbar = () => {
               />
             </div>
 
-            {/* ✅ your old nav design kept as-is */}
             <nav className="hidden md:flex items-center space-x-8">
               <Link to="/" className="relative group py-2">
                 <span
@@ -108,30 +107,89 @@ const Navbar = () => {
             </nav>
 
             <div className="flex items-center space-x-4">
-              {!isLogged ? (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-full font-semibold text-sm md:text-base text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                  style={{
-                    background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
-                  }}
-                >
-                  <span>Sign In</span>
-                </button>
-              ) : (
-                <div className="relative">
+              <div className="hidden md:block">
+                {!isLogged ? (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-full font-semibold text-sm md:text-base text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    style={{
+                      background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                    }}
+                  >
+                    <span>Sign In</span>
+                  </button>
+                ) : (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      className="inline-flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-full font-semibold text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm md:text-base"
+                      style={{ backgroundColor: "rgb(4, 80, 115)" }}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs font-bold"
+                        style={{ color: "rgb(4, 80, 115)" }}
+                      >
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="hidden lg:block">{user?.name}</span>
+                    </button>
+
+                    {showProfileDropdown && (
+                      <div
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-50"
+                        style={{ border: `1px solid rgb(247, 219, 190)` }}
+                      >
+                        <div
+                          className="px-4 py-2 border-b"
+                          style={{ borderColor: "rgb(247, 219, 190)" }}
+                        >
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: "rgb(0, 31, 60)" }}
+                          >
+                            {user?.name}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{ color: "rgb(4, 80, 115)" }}
+                          >
+                            {user?.email}
+                          </p>
+                        </div>
+                        <Link
+                          to="/profile"
+                          className="flex items-center px-4 py-2 text-sm transition-colors"
+                          style={{ color: "rgb(0, 31, 60)" }}
+                          onClick={() => setShowProfileDropdown(false)}
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors"
+                          style={{ color: "rgb(0, 31, 60)" }}
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {isLogged && (
+                <div className="md:hidden relative">
                   <button
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                    className="inline-flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-full font-semibold text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm md:text-base"
+                    className="inline-flex items-center justify-center p-2 rounded-full font-semibold text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     style={{ backgroundColor: "rgb(4, 80, 115)" }}
                   >
                     <div
-                      className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs font-bold"
+                      className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-sm font-bold"
                       style={{ color: "rgb(4, 80, 115)" }}
                     >
                       {user?.name?.charAt(0).toUpperCase()}
                     </div>
-                    <span className="hidden lg:block">{user?.name}</span>
                   </button>
 
                   {showProfileDropdown && (
@@ -175,7 +233,128 @@ const Navbar = () => {
                   )}
                 </div>
               )}
+
+              <button
+                className="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                <span
+                  className={`block w-6 h-0.5 transition-all duration-300 ${
+                    isMenuOpen ? 'rotate-45 translate-y-2' : ''
+                  }`}
+                  style={{ backgroundColor: "rgb(0, 31, 60)" }}
+                />
+                <span
+                  className={`block w-6 h-0.5 transition-all duration-300 ${
+                    isMenuOpen ? 'opacity-0' : ''
+                  }`}
+                  style={{ backgroundColor: "rgb(0, 31, 60)" }}
+                />
+                <span
+                  className={`block w-6 h-0.5 transition-all duration-300 ${
+                    isMenuOpen ? '-rotate-45 -translate-y-2' : ''
+                  }`}
+                  style={{ backgroundColor: "rgb(0, 31, 60)" }}
+                />
+              </button>
             </div>
+          </div>
+
+          <div
+            className={`md:hidden transition-all duration-300 ease-in-out ${
+              isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            } overflow-hidden`}
+          >
+            <nav className="px-4 py-4 space-y-4">
+              <Link
+                to="/"
+                className="block py-2 text-lg font-medium transition-colors duration-300"
+                style={{ color: "rgb(0, 31, 60)" }}
+                onClick={handleMenuItemClick}
+              >
+                Home
+              </Link>
+              <Link
+                to="/property"
+                className="block py-2 text-lg font-medium transition-colors duration-300"
+                style={{ color: "rgb(0, 31, 60)" }}
+                onClick={handleMenuItemClick}
+              >
+                Properties
+              </Link>
+              <Link
+                to="/about"
+                className="block py-2 text-lg font-medium transition-colors duration-300"
+                style={{ color: "rgb(0, 31, 60)" }}
+                onClick={handleMenuItemClick}
+              >
+                About
+              </Link>
+              <Link
+                to="/contact"
+                className="block py-2 text-lg font-medium transition-colors duration-300"
+                style={{ color: "rgb(0, 31, 60)" }}
+                onClick={handleMenuItemClick}
+              >
+                Contact
+              </Link>
+
+              <div className="pt-4 border-t" style={{ borderColor: "rgb(247, 219, 190)" }}>
+                {!isLogged ? (
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      handleMenuItemClick();
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full font-semibold text-base text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    style={{
+                      background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
+                    }}
+                  >
+                    <span>Sign In</span>
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div
+                      className="px-4 py-3 bg-white rounded-lg"
+                      style={{ border: `1px solid rgb(247, 219, 190)` }}
+                    >
+                      <p
+                        className="text-sm font-semibold"
+                        style={{ color: "rgb(0, 31, 60)" }}
+                      >
+                        {user?.name}
+                      </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: "rgb(4, 80, 115)" }}
+                      >
+                        {user?.email}
+                      </p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      className="block py-2 text-lg font-medium transition-colors duration-300"
+                      style={{ color: "rgb(0, 31, 60)" }}
+                      onClick={handleMenuItemClick}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        handleMenuItemClick();
+                      }}
+                      className="block w-full text-left py-2 text-lg font-medium transition-colors duration-300"
+                      style={{ color: "rgb(0, 31, 60)" }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </nav>
           </div>
         </div>
       </header>
