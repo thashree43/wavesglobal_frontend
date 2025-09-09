@@ -12,9 +12,7 @@ const Homepage = () => {
       <ContentSections />
       <Footer />
 
-      {/* Floating WhatsApp + Mail */}
       <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
-        {/* WhatsApp */}
         <a
           href="https://wa.me/971522596860"
           target="_blank"
