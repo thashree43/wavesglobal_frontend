@@ -26,7 +26,6 @@ const Homepage = () => {
           />
         </a>
 
-        {/* Mail */}
         <a
           href="mailto:Info@wavescation.com"
           className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"

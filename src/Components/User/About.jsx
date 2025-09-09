@@ -282,10 +282,22 @@ export default function AboutUs() {
             <h3 className="text-4xl font-bold mb-8 text-gray-800">Get In Touch With Us</h3>
             <div className="space-y-4 text-xl font-light text-gray-700">
               <p className="flex items-center justify-center space-x-3">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
-                </svg>
-                <span>Iris Tower, Business Bay, Dubai</span>
+              <a
+  href="https://www.google.com/maps/place/Iris+Bay+Tower/@25.1858998,55.2575013,17z/data=!3m1!4b1!4m6!3m5!1s0x3e5f69001c8d0399:0x8f6d40395efc45af!8m2!3d25.1858998!4d55.2600762!16s%2Fg%2F11y32dlhtl"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center justify-center space-x-3 hover:text-gray-900 transition-colors duration-300"
+>
+  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+    <path
+      fillRule="evenodd"
+      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+      clipRule="evenodd"
+    />
+  </svg>
+  <span>Iris Bay Tower, Business Bay, Dubai</span>
+</a>
+
               </p>
               <a 
                 href="tel:+971522596860" 
