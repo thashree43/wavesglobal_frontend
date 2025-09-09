@@ -507,6 +507,7 @@ const Properties = () => {
   const [itemsPerPage] = useState(12);
   const navigate = useNavigate();
   const location = useLocation();
+  const mainContentRef = useRef(null);
   
   const [filters, setFilters] = useState({
     priceRange: [0, 200000],
@@ -758,7 +759,19 @@ const Properties = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     updateUrlWithPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(() => {
+      if (mainContentRef.current) {
+        const mainTop = mainContentRef.current.offsetTop;
+        const navbarHeight = 80;
+        const targetScrollPosition = Math.max(0, mainTop - navbarHeight);
+        
+        window.scrollTo({ 
+          top: targetScrollPosition, 
+          behavior: 'smooth' 
+        });
+      }
+    }, 50);
   };
 
   const PropertySkeleton = () => (
@@ -809,7 +822,7 @@ const Properties = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
           <Navbar />
 
-          <main className="container mx-auto px-4 pt-24 pb-10">
+          <main ref={mainContentRef} className="container mx-auto px-4 pt-24 pb-10">
             <section className="mb-8 text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-orange-700 to-orange-600">
                 Discover Premium Properties
@@ -1277,4 +1290,4 @@ const Properties = () => {
   );
 };
 
-export default Properties
+export default Properties;
