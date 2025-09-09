@@ -39,6 +39,9 @@ import { baseurl } from '../../Base/Base';
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
 import GoogleMapsComponent from '../../Layout/Map';
 
+
+
+
 const PropertyDetailsPage = ({ user, isLogged, onAuthRequired }) => {
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
 const [selectedDates, setSelectedDates] = useState({ checkin: '', checkout: '' });
@@ -59,6 +62,21 @@ const [dateError, setDateError] = useState('');
 const { id } = useParams();
 const location = useLocation();
 const navigate = useNavigate();
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: document.title,
+          url,
+        });
+      } catch (err) {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard");
+    }
+  };
 
 const showToast = (message, type = 'info') => {
   setToast({ message, type });
@@ -229,6 +247,8 @@ useEffect(() => {
   }
 }, [id, getProperty]);
 
+
+
 useEffect(() => {
   const urlParams = new URLSearchParams(location.search);
   const checkinParam = urlParams.get('checkin');
@@ -367,6 +387,8 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
       onClose();
     }
   };
+
+
   
   if (!isOpen) return null;
 
@@ -798,14 +820,14 @@ return (
               </div>
             </div>
             <div className="flex items-center gap-3 mt-4 lg:mt-0">
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition-colors">
-                <Share2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Share</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition-colors">
-                <Heart className="w-4 h-4" />
-                <span className="hidden sm:inline">Save</span>
-              </button>
+            <button
+      onClick={handleShare}
+      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition-colors"
+    >
+      <Share2 className="w-4 h-4" />
+      <span className="hidden sm:inline">Share</span>
+    </button>
+  
             </div>
           </div>
         </div>
