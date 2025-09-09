@@ -94,7 +94,7 @@ const Footer = () => {
                 <Linkedin className="h-4 w-4 text-white group-hover:animate-bounce" />
               </a>
               <a 
-                href="#"
+                href="https://wa.me/971522596860"
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
                 style={{ backgroundColor: 'rgb(231, 121, 0)' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
@@ -138,25 +138,25 @@ const Footer = () => {
               <span className="absolute -bottom-2 left-0 w-8 h-0.5" style={{ backgroundColor: 'rgb(231, 121, 0)' }}></span>
             </h4>
             <div className="space-y-3">
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              <a href="/property" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Dubai Marina
               </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              <a href="/property" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Downtown Dubai
               </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              <a href="/property" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Palm Jumeirah
               </a>
-              <a href="#" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
+              <a href="/property" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
