@@ -50,19 +50,22 @@ const ContactPage = () => {
       icon: MapPin,
       title: 'Office Address',
       details: ['Iris Tower, Business Bay', 'Dubai, UAE'],
-      color: 'text-gray-700'
+      color: 'text-gray-700',
+      href: 'https://maps.google.com/?q=Iris+Tower+Business+Bay+Dubai+UAE'
     },
     {
       icon: Phone,
       title: 'Phone Number',
       details: ['+971 52 259 6860'],
-      color: 'text-gray-700'
+      color: 'text-gray-700',
+      href: 'tel:+971522596860'
     },
     {
       icon: Mail,
       title: 'Email Address',
-      details: ['https://www.wavesglobal.ae/'],
-      color: 'text-gray-700'
+      details: ['info@wavesglobal.ae'],
+      color: 'text-gray-700',
+      href: 'mailto:info@wavesglobal.ae'
     },
     {
       icon: Clock,
@@ -241,7 +244,13 @@ const ContactPage = () => {
                         <div>
                           <h4 className="font-semibold text-black mb-1">{info.title}</h4>
                           {info.details.map((detail, idx) => (
-                            <p key={idx} className="text-gray-600 text-sm">{detail}</p>
+                            info.href ? (
+                              <a key={idx} href={info.href} className="text-blue-600 hover:text-blue-800 text-sm block">
+                                {detail}
+                              </a>
+                            ) : (
+                              <p key={idx} className="text-gray-600 text-sm">{detail}</p>
+                            )
                           ))}
                         </div>
                       </div>
@@ -249,29 +258,6 @@ const ContactPage = () => {
                   })}
                 </div>
               </div>
-
-              {/* <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-xl font-bold text-black mb-6 flex items-center gap-3">
-                  <Building className="w-5 h-5 text-gray-700" />
-                  Our Team
-                </h3>
-                <div className="space-y-4">
-                  {teamMembers.map((member, index) => {
-                    const IconComponent = member.icon;
-                    return (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div style={{ backgroundColor: 'rgba(247, 219, 190, 0.2)' }} className="w-10 h-10 rounded-full flex items-center justify-center">
-                          <IconComponent className="w-5 h-5 text-gray-700" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-black text-sm">{member.name}</h4>
-                          <p className="text-gray-600 text-xs">{member.position}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div> */}
             </div>
           </div>
 
