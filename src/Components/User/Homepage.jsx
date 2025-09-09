@@ -1,5 +1,4 @@
 import React from "react";
-import { Helmet } from "react-helmet-async";
 import Navbar from "../../Layout/Navbar";
 import Footer from "../../Layout/Footer";
 import Hero from "../../Layout/Hero";
@@ -8,13 +7,6 @@ import ContentSections from "../../Layout/Content";
 const Homepage = () => {
   return (
     <div className="min-h-screen bg-slate-50">
-      <Helmet>
-        <title>Wavescation - Best Beach Vacations</title>
-        <meta name="description" content="Book your perfect beach vacation with Wavescation. Surf, relax, and enjoy coastal adventures!" />
-        <meta name="keywords" content="wavescation, beach vacation, surf trip, coastal getaway" />
-        <link rel="canonical" href="https://wavescation.com/" />
-      </Helmet>
-
       <Navbar />
       <Hero />
       <ContentSections />
