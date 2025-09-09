@@ -531,6 +531,11 @@ const Properties = () => {
     const searchParams = new URLSearchParams(location.search);
     const params = {};
     
+    const urlPage = searchParams.get("page");
+    if (urlPage) {
+      setCurrentPage(parseInt(urlPage));
+    }
+    
     if (searchParams.get("checkin")) {
       params.checkin = searchParams.get("checkin");
       setCheckIn(searchParams.get("checkin"));
@@ -559,7 +564,7 @@ const Properties = () => {
     return params;
   };
 
-  const buildQueryString = () => {
+  const buildQueryString = (includePage = false) => {
     const params = new URLSearchParams();
     
     if (checkIn) params.set('checkin', checkIn);
@@ -567,8 +572,21 @@ const Properties = () => {
     params.set('adults', guests.adults.toString());
     if (guests.children > 0) params.set('children', guests.children.toString());
     if (guests.infants > 0) params.set('infants', guests.infants.toString());
+    if (includePage && currentPage > 1) params.set('page', currentPage.toString());
     
     return params.toString();
+  };
+
+  const updateUrlWithPage = (page) => {
+    const searchParams = new URLSearchParams(location.search);
+    if (page > 1) {
+      searchParams.set('page', page.toString());
+    } else {
+      searchParams.delete('page');
+    }
+    const queryString = searchParams.toString();
+    const newUrl = queryString ? `${location.pathname}?${queryString}` : location.pathname;
+    window.history.replaceState(null, '', newUrl);
   };
 
   const fetchProperties = async () => {
@@ -577,8 +595,11 @@ const Properties = () => {
       const urlParams = getUrlParams();
       let endpoint = `${baseurl}user/properties`;
 
-      if (Object.keys(urlParams).length > 0) {
-        const queryString = new URLSearchParams(urlParams).toString();
+      const queryParams = { ...urlParams };
+      delete queryParams.page;
+
+      if (Object.keys(queryParams).length > 0) {
+        const queryString = new URLSearchParams(queryParams).toString();
         endpoint += `?${queryString}`;
       }
 
@@ -611,12 +632,17 @@ const Properties = () => {
   useEffect(() => {
     fetchProperties();
     fetchNeighborhoods();
-    setCurrentPage(1);
   }, [location.search]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, searchTerm, sortBy]);
+    if (location.search.includes('page=')) {
+      const searchParams = new URLSearchParams(location.search);
+      const page = parseInt(searchParams.get('page') || '1');
+      setCurrentPage(page);
+    } else {
+      setCurrentPage(1);
+    }
+  }, [filters, searchTerm, sortBy, location.search]);
 
   const toggleLike = (id) => {
     setLikedProperties((prev) =>
@@ -643,10 +669,17 @@ const Properties = () => {
     });
   };
 
-  const handlePropertyClick = (propertyId) => {
-    const queryString = buildQueryString();
+  const handlePropertyClick = (propertyId, index) => {
+    const queryString = buildQueryString(true);
     const url = queryString ? `/property/${propertyId}?${queryString}` : `/property/${propertyId}`;
-    navigate(url);
+    
+    const isFirstOrSecondRow = index < 8;
+    
+    if (isFirstOrSecondRow) {
+      navigate(url);
+    } else {
+      window.open(url, '_blank');
+    }
   };
 
   const handleNeighborhoodClick = (neighborhood) => {
@@ -724,6 +757,7 @@ const Properties = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    updateUrlWithPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1070,7 +1104,7 @@ const Properties = () => {
                       onMouseEnter={() => setHoveredProperty(property._id)}
                       onMouseLeave={() => setHoveredProperty(null)}
                       className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
-                      onClick={() => handlePropertyClick(property._id)}
+                      onClick={() => handlePropertyClick(property._id, index)}
                    >
                       <div className="relative h-64 overflow-hidden">
                         {property.images && property.images.length > 0 ? (
@@ -1193,7 +1227,7 @@ const Properties = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handlePropertyClick(property._id);
+                              handlePropertyClick(property._id, index);
                             }}
                             className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
                           >
@@ -1243,4 +1277,4 @@ const Properties = () => {
   );
 };
 
-export default Properties;
+export default Properties
