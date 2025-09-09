@@ -285,44 +285,86 @@ export default function PrivacyPolicy() {
                 <p className="text-lg mb-6">
                   If you have any questions about this Privacy Policy or how we handle your personal information, please contact us:
                 </p>
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-[rgb(247,219,190)] rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                        </svg>
-                      </div>
-                      <span className="text-lg">privacy@wavescation.com</span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-[rgb(247,219,190)] rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
-                        </svg>
-                      </div>
-                      <span className="text-lg">+971522596860</span>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-[rgb(247,219,190)] rounded-lg flex items-center justify-center mt-1">
-                        <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
-                        </svg>
-                      </div>
-                      <span className="text-lg">Iris Tower, Business Bay, Dubai, UAE</span>
-                    </div>
-                  </div>
-                </div>
+                <div className="space-y-4 text-xl font-light text-gray-700 mt-6">
+  <p className="flex items-center space-x-3">
+    <a
+      href="https://www.google.com/maps/place/Iris+Bay+Tower/@25.1858998,55.2575013,17z/data=!3m1!4b1!4m6!3m5!1s0x3e5f69001c8d0399:0x8f6d40395efc45af!8m2!3d25.1858998!4d55.2600762!16s%2Fg%2F11y32dlhtl"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center space-x-3 hover:text-gray-900 transition-colors duration-300"
+    >
+      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fillRule="evenodd"
+          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <span>Iris Bay Tower, Business Bay, Dubai</span>
+    </a>
+  </p>
+
+  <a
+    href="tel:+971522596860"
+    className="flex items-center space-x-3 hover:text-gray-900 transition-colors duration-300"
+  >
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+    </svg>
+    <span>+971522596860</span>
+  </a>
+
+  <a
+    href="mailto:info@wavescation.com"
+    className="flex items-center space-x-3 hover:text-gray-900 transition-colors duration-300"
+  >
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M2.25 6.75A2.25 2.25 0 014.5 4.5h15a2.25 2.25 0 012.25 2.25v.44l-9.75 5.7-9.75-5.7v-.44z" />
+      <path d="M2.25 8.66v8.59a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25V8.66l-9.75 5.7-9.75-5.7z" />
+    </svg>
+    <span>info@wavescation.com</span>
+  </a>
+</div>
+
+
               </div>
             </div>
           </div>
 
         </div>
       </div>
-      
+      <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
+        <a
+          href="https://wa.me/971522596860"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+            alt="WhatsApp"
+            className="h-10 w-10"
+          />
+        </a>
+        <a
+          href="mailto:Info@wavescation.com"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png"
+            alt="Mail"
+            className="h-10 w-10"
+          />
+        </a>
+        <a
+          href="tel:+971522596860"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <svg className="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+          </svg>
+        </a>
+      </div>
       <Footer/>
     </div>
   );

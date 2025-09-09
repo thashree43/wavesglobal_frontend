@@ -182,7 +182,7 @@ export default function ShippingPolicy() {
             </section>
 
             {/* Contact Information */}
-            <section className="bg-gradient-to-r from-[rgb(247,219,190)]/20 via-[rgb(248,252,255)]/50 to-[rgb(247,219,190)]/20 rounded-3xl p-6 sm:p-8 md:p-12 text-center">
+            {/* <section className="bg-gradient-to-r from-[rgb(247,219,190)]/20 via-[rgb(248,252,255)]/50 to-[rgb(247,219,190)]/20 rounded-3xl p-6 sm:p-8 md:p-12 text-center">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[rgb(0,0,0)] mb-6">Questions About Our Services?</h2>
               <p className="text-gray-700 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
                 For more information about our service delivery or to discuss your specific requirements, please contact our team.
@@ -202,11 +202,42 @@ export default function ShippingPolicy() {
                   <span>wavescation.com</span>
                 </div>
               </div>
-            </section>
+            </section> */}
           </div>
         </div>
       </div>
-      
+      <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
+        <a
+          href="https://wa.me/971522596860"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+            alt="WhatsApp"
+            className="h-10 w-10"
+          />
+        </a>
+        <a
+          href="mailto:Info@wavescation.com"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png"
+            alt="Mail"
+            className="h-10 w-10"
+          />
+        </a>
+        <a
+          href="tel:+971522596860"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <svg className="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+          </svg>
+        </a>
+      </div>
       <Footer/>
     </div>
   );
