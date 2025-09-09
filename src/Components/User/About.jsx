@@ -1,8 +1,5 @@
 import React from 'react';
 import logo from '../../assets/logo.png'
-import om from '../../assets/om.png'
-import md from '../../assets/md.png'
-import ceo from '../../assets/ceo.png'
 import Navbar from '../../Layout/Navbar';
 import Footer from '../../Layout/Footer';
 
@@ -271,37 +268,6 @@ export default function AboutUs() {
             </div>
           </div>
 
-          {/* <div className="py-24">
-            <div className="text-center mb-20">
-              <div className="inline-block bg-[rgb(247,219,190)]/20 rounded-full px-6 py-2 mb-6">
-                <span className="text-gray-700 font-semibold text-sm uppercase tracking-wider">Meet Our Team</span>
-              </div>
-              <h2 className="text-5xl font-bold text-[rgb(0,0,0)] mb-8">Our Leadership Team</h2>
-              <div className="w-24 h-1 bg-gray-600 mx-auto rounded-full"></div>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            {[
-                { name: "Mrs. Surya Sijil", position: "Managing Director", image: md },
-                { name: "Mr. Sijil Sidharthan", position: "CEO", image: ceo },
-                { name: "Mr. Aghil Shajahan", position: "Operation Manager", image: om }
-                ].map((member, index) => (
-                <div key={index} className="text-center group">
-                    <div className="relative mb-8 inline-block">
-                    <div className="w-56 h-56 bg-gradient-to-br from-[rgb(247,219,190)]/30 to-[rgb(248,252,255)] rounded-full mx-auto shadow-2xl flex items-center justify-center transform group-hover:scale-105 transition-all duration-500">
-                        <div className="w-48 h-48 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
-                        <img src={member.image} alt={member.name} className="w-full h-full object-cover rounded-full" />
-                        </div>
-                    </div>
-                    </div>
-                    <h4 className="text-2xl font-bold text-[rgb(0,0,0)] mb-2">{member.name}</h4>
-                    <p className="text-gray-700 font-semibold text-lg">{member.position}</p>
-                </div>
-                ))}
-
-            </div>
-          </div> */}
-
         </div>
 
         <div className="relative" style={{ background: 'rgb(247, 219, 190)' }}>
@@ -321,27 +287,69 @@ export default function AboutUs() {
                 </svg>
                 <span>Iris Tower, Business Bay, Dubai</span>
               </p>
-              <p className="flex items-center justify-center space-x-3">
+              <a 
+                href="tel:+971522596860" 
+                className="flex items-center justify-center space-x-3 hover:text-gray-900 transition-colors duration-300"
+              >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
                 </svg>
                 <span>+971522596860</span>
-              </p>
-              <p className="flex items-center justify-center space-x-3">
+              </a>
+              <a 
+                href="mailto:Info@wavescation.com" 
+                className="flex items-center justify-center space-x-3 hover:text-gray-900 transition-colors duration-300"
+              >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                 </svg>
-                <span>wavescation.com</span>
-              </p>
+                <span>Info@wavescation.com</span>
+              </a>
             </div>
             <div className="mt-12">
-              <button className="bg-white text-gray-700 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg">
+              <a
+                href="mailto:Info@wavescation.com"
+                className="bg-white text-gray-700 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg inline-block"
+              >
                 Contact Us Today
-              </button>
+              </a>
             </div>
           </div>
         </div>
+      </div>
+      
+      <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
+        <a
+          href="https://wa.me/971522596860"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+            alt="WhatsApp"
+            className="h-10 w-10"
+          />
+        </a>
+        <a
+          href="mailto:Info@wavescation.com"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png"
+            alt="Mail"
+            className="h-10 w-10"
+          />
+        </a>
+        <a
+          href="tel:+971522596860"
+          className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <svg className="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+          </svg>
+        </a>
       </div>
       
       <Footer/>
