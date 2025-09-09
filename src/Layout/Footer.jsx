@@ -27,7 +27,7 @@ const Footer = () => {
     <footer 
       id="footer" 
       className="py-16 px-6 relative overflow-hidden"
-      style={ {backgroundColor: 'rgb(247, 219, 190)' }}
+      style={{ backgroundColor: 'rgb(247, 219, 190)' }}
     >
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(231, 121, 0, 0.05), rgba(231, 121, 0, 0.1))' }}></div>
       <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(231, 121, 0, 0.3), transparent)' }}></div>
@@ -42,42 +42,66 @@ const Footer = () => {
               Your gateway to extraordinary luxury staycation experiences across Dubai.
             </p>
             <div className="flex space-x-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
-                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
-                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
-                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+              <a 
+                href="tel:+971522596860" 
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(231, 121, 0)'}
+              >
                 <Phone className="h-4 w-4 text-white group-hover:animate-bounce" />
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
-                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
-                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
-                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+              </a>
+              <a 
+                href="mailto:Info@wavescation.com"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(231, 121, 0)'}
+              >
                 <Mail className="h-4 w-4 text-white group-hover:animate-bounce" />
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
-                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
-                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
-                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+              </a>
+              <a 
+                href="https://www.instagram.com/_wavescation2025?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(231, 121, 0)'}
+              >
                 <Instagram className="h-4 w-4 text-white group-hover:animate-bounce" />
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
-                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
-                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
-                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+              </a>
+              <a 
+                href="#"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(231, 121, 0)'}
+              >
                 <Facebook className="h-4 w-4 text-white group-hover:animate-bounce" />
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
-                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
-                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
-                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+              </a>
+              <a 
+                href="#"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(231, 121, 0)'}
+              >
                 <Linkedin className="h-4 w-4 text-white group-hover:animate-bounce" />
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
-                   style={{ backgroundColor: 'rgb(231, 121, 0)' }}
-                   onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(250, 153, 56)'}
-                   onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(231, 121, 0)'}>
+              </a>
+              <a 
+                href="#"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
+                style={{ backgroundColor: 'rgb(231, 121, 0)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(250, 153, 56)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(231, 121, 0)'}
+              >
                 <MessageCircle className="h-4 w-4 text-white group-hover:animate-bounce" />
-              </div>
+              </a>
             </div>
           </div>
           
@@ -99,12 +123,6 @@ const Footer = () => {
                  onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
                 Properties
               </Link>
-              {/* <Link to="/profile" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
-                 style={{ color: 'rgb(4, 80, 115)' }}
-                 onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
-                 onMouseLeave={(e) => e.target.style.color = 'rgb(4, 80, 115)'}>
-                Profile
-              </Link> */}
               <Link to="/contact" className="block transition-all duration-300 hover:translate-x-2 hover:scale-105" 
                  style={{ color: 'rgb(4, 80, 115)' }}
                  onMouseEnter={(e) => e.target.style.color = 'rgb(231, 121, 0)'}
