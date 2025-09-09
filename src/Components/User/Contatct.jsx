@@ -56,9 +56,9 @@ const ContactPage = () => {
     {
       icon: Phone,
       title: 'Phone Number',
-      details: ['+971 52 259 6860'],
+      details: ['+971 52 259 6860', '+971 55 517 5056'],
       color: 'text-gray-700',
-      href: 'tel:+971522596860'
+      href: '' 
     },
     {
       icon: Mail,
@@ -74,6 +74,7 @@ const ContactPage = () => {
       color: 'text-gray-700'
     }
   ];
+  
 
   const teamMembers = [
     {
@@ -243,15 +244,23 @@ const ContactPage = () => {
                         </div>
                         <div>
                           <h4 className="font-semibold text-black mb-1">{info.title}</h4>
-                          {info.details.map((detail, idx) => (
-                            info.href ? (
-                              <a key={idx} href={info.href} className="text-blue-600 hover:text-blue-800 text-sm block">
-                                {detail}
-                              </a>
-                            ) : (
-                              <p key={idx} className="text-gray-600 text-sm">{detail}</p>
-                            )
-                          ))}
+                          {info.details.map((detail, idx) => {
+                              if (info.title === 'Phone Number') {
+                                return (
+                                  <a key={idx} href={`tel:${detail.replace(/\s+/g, '')}`} className="text-blue-600 hover:text-blue-800 text-sm block">
+                                    {detail}
+                                  </a>
+                                )
+                              }
+                              return info.href ? (
+                                <a key={idx} href={info.href} className="text-blue-600 hover:text-blue-800 text-sm block">
+                                  {detail}
+                                </a>
+                              ) : (
+                                <p key={idx} className="text-gray-600 text-sm">{detail}</p>
+                              )
+                            })}
+
                         </div>
                       </div>
                     );
@@ -285,23 +294,19 @@ const ContactPage = () => {
               Join the WavesGlobal Group family and experience hassle-free property management with guaranteed minimum returns and exceptional guest experiences.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="tel:+971522596860"
-                className="bg-white text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-              >
-                <Phone className="w-5 h-5" />
-                Call Us Now
-              </a>
-              <a
-                href="https://www.wavescation.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-gray-700 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-white hover:text-gray-800 transition-colors"
-              >
-                Visit Our Website
-              </a>
-            </div>
+            <a href="tel:+971522596860" className="bg-white text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+              <Phone className="w-5 h-5" /> Call Us Now
+            </a>
+            <a href="tel:+971555175056" className="bg-white text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+              <Phone className="w-5 h-5" /> Call Us Now
+            </a>
+            <a href="https://www.wavescation.com" target="_blank" rel="noopener noreferrer" className="border border-gray-700 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-white hover:text-gray-800 transition-colors">
+              Visit Our Website
+            </a>
           </div>
+
+          </div>
+
         </div>
       </div>
       <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
