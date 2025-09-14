@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
@@ -33,12 +33,12 @@ import { baseurl } from "../../Base/Base";
 import Navbar from "../../Layout/Navbar";
 import Footer from "../../Layout/Footer";
 
-const CustomDatePicker = ({ value, onChange, placeholder }) => {
+const CustomDatePicker = React.memo(({ value, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dropdownRef = useRef(null);
 
-  const toggleCalendar = () => setIsOpen(!isOpen);
+  const toggleCalendar = useCallback(() => setIsOpen(!isOpen), [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -54,15 +54,15 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const formatDate = (date) => {
+  const formatDate = useCallback((date) => {
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric', 
       year: 'numeric' 
     });
-  };
+  }, []);
 
-  const generateCalendar = () => {
+  const generateCalendar = useMemo(() => {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -78,48 +78,44 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
     }
     
     return days;
-  };
+  }, [selectedDate]);
 
-  const isToday = (date) => {
+  const isToday = useCallback((date) => {
     const today = new Date();
     return date.toDateString() === today.toDateString();
-  };
+  }, []);
 
-  const isSameMonth = (date) => {
+  const isSameMonth = useCallback((date) => {
     return date.getMonth() === selectedDate.getMonth();
-  };
+  }, [selectedDate]);
 
-  const isSelected = (date) => {
+  const isSelected = useCallback((date) => {
     return value && date.toDateString() === new Date(value).toDateString();
-  };
+  }, [value]);
 
-  const handleDateSelect = (date) => {
+  const handleDateSelect = useCallback((date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     const formattedDate = `${year}-${month}-${day}`; 
     onChange(formattedDate);
     setIsOpen(false);
-  };
-  
+  }, [onChange]);
 
-  const nextMonth = () => {
+  const nextMonth = useCallback(() => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(newDate.getMonth() + 1);
     setSelectedDate(newDate);
-  };
+  }, [selectedDate]);
 
-  const prevMonth = () => {
+  const prevMonth = useCallback(() => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(newDate.getMonth() - 1);
     setSelectedDate(newDate);
-  };
+  }, [selectedDate]);
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
@@ -175,7 +171,7 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
               </div>
 
               <div className="grid grid-cols-7 gap-1">
-                {generateCalendar().map((date, index) => (
+                {generateCalendar.map((date, index) => (
                   <button
                     key={index}
                     onClick={() => handleDateSelect(date)}
@@ -197,9 +193,9 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
         )}
     </div>
   );
-};
+});
 
-const GuestSelector = ({ isOpen, onClose, guests, onGuestsChange }) => {
+const GuestSelector = React.memo(({ isOpen, onClose, guests, onGuestsChange }) => {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -216,7 +212,7 @@ const GuestSelector = ({ isOpen, onClose, guests, onGuestsChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  const updateGuestCount = (type, operation) => {
+  const updateGuestCount = useCallback((type, operation) => {
     const newGuests = { ...guests };
     if (operation === 'increment') {
       newGuests[type] = Math.min(newGuests[type] + 1, type === 'adults' ? 16 : 5);
@@ -224,7 +220,7 @@ const GuestSelector = ({ isOpen, onClose, guests, onGuestsChange }) => {
       newGuests[type] = Math.max(newGuests[type] - 1, type === 'adults' ? 1 : 0);
     }
     onGuestsChange(newGuests);
-  };
+  }, [guests, onGuestsChange]);
 
   if (!isOpen) return null;
 
@@ -324,20 +320,20 @@ const GuestSelector = ({ isOpen, onClose, guests, onGuestsChange }) => {
     </div>,
     document.body
   );
-};
+});
 
-const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) => {
+const NeighborhoodScroller = React.memo(({ neighborhoods, filters, onNeighborhoodClick }) => {
   const scrollContainerRef = useRef(null);
   const [showLeftButton, setShowLeftButton] = useState(false);
   const [showRightButton, setShowRightButton] = useState(true);
 
-  const checkScrollButtons = () => {
+  const checkScrollButtons = useCallback(() => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setShowLeftButton(scrollLeft > 0);
       setShowRightButton(scrollLeft < scrollWidth - clientWidth - 1);
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkScrollButtons();
@@ -346,9 +342,9 @@ const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) =
       container.addEventListener('scroll', checkScrollButtons);
       return () => container.removeEventListener('scroll', checkScrollButtons);
     }
-  }, [neighborhoods]);
+  }, [neighborhoods, checkScrollButtons]);
 
-  const scroll = (direction) => {
+  const scroll = useCallback((direction) => {
     if (scrollContainerRef.current) {
       const scrollAmount = 200;
       scrollContainerRef.current.scrollBy({
@@ -356,13 +352,13 @@ const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) =
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
 
   if (neighborhoods.length === 0) return null;
 
   return (
     <section className="mb-8">
-      <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
+      <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
         
         <div className="relative">
@@ -411,10 +407,10 @@ const NeighborhoodScroller = ({ neighborhoods, filters, onNeighborhoodClick }) =
       </div>
     </section>
   );
-};
+});
 
-const Pagination = ({ currentPage, totalPages, onPageChange, itemsPerPage, totalItems }) => {
-  const getVisiblePages = () => {
+const Pagination = React.memo(({ currentPage, totalPages, onPageChange, itemsPerPage, totalItems }) => {
+  const getVisiblePages = useMemo(() => {
     const pages = [];
     const showPages = 5;
     
@@ -436,7 +432,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, itemsPerPage, total
     }
     
     return pages;
-  };
+  }, [currentPage, totalPages]);
 
   if (totalPages <= 1) return null;
 
@@ -458,7 +454,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, itemsPerPage, total
           <ChevronLeft className="h-4 w-4" />
         </button>
         
-        {getVisiblePages().map((page) => (
+        {getVisiblePages.map((page) => (
           <button
             key={page}
             onClick={() => onPageChange(page)}
@@ -486,7 +482,166 @@ const Pagination = ({ currentPage, totalPages, onPageChange, itemsPerPage, total
       </div>
     </div>
   );
-};
+});
+
+const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLike, onPropertyClick, hoveredProperty, onMouseEnter, onMouseLeave }) => {
+  const propertyTypes = useMemo(() => [
+    { value: "Apartment", label: "Apartment", icon: <Building size={16} /> },
+    { value: "Villa", label: "Villa", icon: <Home size={16} /> },
+    { value: "Studio", label: "Studio", icon: <Building2 size={16} /> },
+    { value: "Penthouse", label: "Penthouse", icon: <Crown size={16} /> },
+    { value: "Townhouse", label: "Townhouse", icon: <Hotel size={16} /> },
+    { value: "Office", label: "Office", icon: <Briefcase size={16} /> }
+  ], []);
+
+  const handleToggleLike = useCallback((e) => {
+    e.stopPropagation();
+    onToggleLike(property._id);
+  }, [property._id, onToggleLike]);
+
+  const handleClick = useCallback(() => {
+    onPropertyClick(property._id, index);
+  }, [property._id, index, onPropertyClick]);
+
+  const handleViewClick = useCallback((e) => {
+    e.stopPropagation();
+    onPropertyClick(property._id, index);
+  }, [property._id, index, onPropertyClick]);
+
+  return (
+    <article
+      onMouseEnter={() => onMouseEnter(property._id)}
+      onMouseLeave={() => onMouseLeave(null)}
+      className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
+      onClick={handleClick}
+    >
+      <div className="relative h-64 overflow-hidden">
+        {property.images && property.images.length > 0 ? (
+          <img
+            src={hoveredProperty === property._id && property.images[1] 
+              ? property.images[1].url 
+              : property.images[0].url}
+            alt={property.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No Image</span>
+          </div>
+        )}
+
+        <div className="absolute top-4 left-4">
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium">
+            {propertyTypes.find(t => t.value === property.type)?.icon}
+            <span>{property.type}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleToggleLike}
+          className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
+            likedProperties.includes(property._id)
+              ? "bg-red-500 text-white scale-110"
+              : "bg-white/95 hover:bg-white text-gray-700"
+          }`}
+        >
+          <Heart 
+            size={18} 
+            fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
+          />
+        </button>
+
+        {property.images && property.images.length > 1 && (
+          <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
+            1/{property.images.length}
+          </div>
+        )}
+
+        {property.propertyHighlights && property.propertyHighlights.length > 0 && (
+          <div className="absolute bottom-4 left-4">
+            <div className="bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
+              {property.propertyHighlights[0].name}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-6">
+        <div className="mb-4">
+          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors">
+            {property.title || "Untitled Property"}
+          </h3>
+          <div className="flex items-center text-gray-500 text-sm gap-1 mb-1">
+            <MapPin size={14} />
+            <span className="line-clamp-1">
+              {property.neighborhood?.name || property.location || "Location not specified"}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
+          {property.bedrooms && (
+            <div className="flex items-center gap-2">
+              <Bed size={16} className="text-gray-400" />
+              <span>{property.bedrooms} Bed{property.bedrooms !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+          {property.bathrooms && (
+            <div className="flex items-center gap-2">
+              <Bath size={16} className="text-gray-400" />
+              <span>{property.bathrooms} Bath{property.bathrooms !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+          {property.guests && (
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-gray-400" />
+              <span>{property.guests} Guest{property.guests !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+          {property.area && (
+            <div className="flex items-center gap-2">
+              <Square size={16} className="text-gray-400" />
+              <span>{property.area} m²</span>
+            </div>
+          )}
+        </div>
+
+        {property.amenities && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-1">
+              {property.amenities.general?.slice(0, 3).map((amenity, idx) => (
+                <span key={idx} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
+                  {amenity.name}
+                </span>
+              ))}
+              {property.amenities.general?.length > 3 && (
+                <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
+                  +{property.amenities.general.length - 3} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+          <div>
+            <span className="text-2xl font-bold text-gray-900">
+              AED {property.price?.toLocaleString() || "N/A"}
+            </span>
+            <span className="text-gray-500 text-sm ml-1">/night</span>
+          </div>
+          <button
+            onClick={handleViewClick}
+            className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
+          >
+            View
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+});
 
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -519,16 +674,16 @@ const Properties = () => {
     neighborhood: ""
   });
 
-  const propertyTypes = [
+  const propertyTypes = useMemo(() => [
     { value: "Apartment", label: "Apartment", icon: <Building size={16} /> },
     { value: "Villa", label: "Villa", icon: <Home size={16} /> },
     { value: "Studio", label: "Studio", icon: <Building2 size={16} /> },
     { value: "Penthouse", label: "Penthouse", icon: <Crown size={16} /> },
     { value: "Townhouse", label: "Townhouse", icon: <Hotel size={16} /> },
     { value: "Office", label: "Office", icon: <Briefcase size={16} /> }
-  ];
+  ], []);
 
-  const getUrlParams = () => {
+  const getUrlParams = useCallback(() => {
     const searchParams = new URLSearchParams(location.search);
     const params = {};
     
@@ -563,9 +718,9 @@ const Properties = () => {
     }
   
     return params;
-  };
+  }, [location.search]);
 
-  const buildQueryString = (includePage = false) => {
+  const buildQueryString = useCallback((includePage = false) => {
     const params = new URLSearchParams();
     
     if (checkIn) params.set('checkin', checkIn);
@@ -576,9 +731,9 @@ const Properties = () => {
     if (includePage && currentPage > 1) params.set('page', currentPage.toString());
     
     return params.toString();
-  };
+  }, [checkIn, checkOut, guests, currentPage]);
 
-  const updateUrlWithPage = (page) => {
+  const updateUrlWithPage = useCallback((page) => {
     const searchParams = new URLSearchParams(location.search);
     if (page > 1) {
       searchParams.set('page', page.toString());
@@ -588,13 +743,22 @@ const Properties = () => {
     const queryString = searchParams.toString();
     const newUrl = queryString ? `${location.pathname}?${queryString}` : location.pathname;
     window.history.replaceState(null, '', newUrl);
-  };
+  }, [location.search, location.pathname]);
 
-  const fetchProperties = async () => {
+  const axiosInstance = useMemo(() => {
+    return axios.create({
+      baseURL: baseurl,
+      timeout: 10000,
+    });
+  }, []);
+
+  const fetchProperties = useCallback(async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
       const urlParams = getUrlParams();
-      let endpoint = `${baseurl}user/properties`;
+      let endpoint = 'user/properties';
 
       const queryParams = { ...urlParams };
       delete queryParams.page;
@@ -604,10 +768,10 @@ const Properties = () => {
         endpoint += `?${queryString}`;
       }
 
-      const response = await axios.get(endpoint);
+      const response = await axiosInstance.get(endpoint);
 
       if (response.data.success) {
-        setProperties(response.data.data);
+        setProperties(response.data.data || []);
       } else {
         setError("Failed to load properties");
       }
@@ -617,22 +781,21 @@ const Properties = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getUrlParams, axiosInstance]);
 
-  const fetchNeighborhoods = async () => {
+  const fetchNeighborhoods = useCallback(async () => {
     try {
-      const response = await axios.get(`${baseurl}user/location`);
+      const response = await axiosInstance.get('user/location');
       if (response.data && response.data.location) {
         setNeighborhoods(response.data.location);
       }
     } catch (error) {
       console.error("Error fetching neighborhoods:", error);
     }
-  };
+  }, [axiosInstance]);
 
   useEffect(() => {
-    fetchProperties();
-    fetchNeighborhoods();
+    Promise.all([fetchProperties(), fetchNeighborhoods()]);
   }, [location.search]);
 
   useEffect(() => {
@@ -645,20 +808,20 @@ const Properties = () => {
     }
   }, [filters, searchTerm, sortBy, location.search]);
 
-  const toggleLike = (id) => {
+  const toggleLike = useCallback((id) => {
     setLikedProperties((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
-  };
+  }, []);
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
     }));
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters({
       priceRange: [0, 200000],
       propertyType: "",
@@ -668,9 +831,9 @@ const Properties = () => {
       minArea: "",
       neighborhood: ""
     });
-  };
+  }, []);
 
-  const handlePropertyClick = (propertyId, index) => {
+  const handlePropertyClick = useCallback((propertyId, index) => {
     const queryString = buildQueryString(true);
     const url = queryString ? `/property/${propertyId}?${queryString}` : `/property/${propertyId}`;
     
@@ -681,13 +844,13 @@ const Properties = () => {
     } else {
       window.open(url, '_blank');
     }
-  };
+  }, [buildQueryString, navigate]);
 
-  const handleNeighborhoodClick = (neighborhood) => {
+  const handleNeighborhoodClick = useCallback((neighborhood) => {
     handleFilterChange('neighborhood', filters.neighborhood === neighborhood ? "" : neighborhood);
-  };
+  }, [filters.neighborhood, handleFilterChange]);
 
-  const handleNewSearch = () => {
+  const handleNewSearch = useCallback(() => {
     const searchParams = new URLSearchParams();
     
     if (checkIn) searchParams.set('checkin', checkIn);
@@ -697,9 +860,9 @@ const Properties = () => {
     if (guests.infants > 0) searchParams.set('infants', guests.infants.toString());
     
     navigate(`/property?${searchParams.toString()}`);
-  };
+  }, [checkIn, checkOut, guests, navigate]);
 
-  const filteredAndSortedProperties = () => {
+  const filteredAndSortedProperties = useMemo(() => {
     if (!properties || properties.length === 0) return [];
 
     let filtered = properties.filter((property) => {
@@ -747,16 +910,15 @@ const Properties = () => {
       default:
         return filtered;
     }
-  };
+  }, [properties, searchTerm, filters, sortBy]);
 
-  const paginatedProperties = () => {
-    const filtered = filteredAndSortedProperties();
+  const paginatedProperties = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return filtered.slice(startIndex, endIndex);
-  };
+    return filteredAndSortedProperties.slice(startIndex, endIndex);
+  }, [filteredAndSortedProperties, currentPage, itemsPerPage]);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     updateUrlWithPage(page);
     
@@ -772,9 +934,9 @@ const Properties = () => {
         });
       }
     }, 50);
-  };
+  }, [updateUrlWithPage]);
 
-  const PropertySkeleton = () => (
+  const PropertySkeleton = React.memo(() => (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
       <div className="h-64 bg-gradient-to-r from-gray-100 to-gray-200"></div>
       <div className="p-6 space-y-4">
@@ -791,12 +953,11 @@ const Properties = () => {
         </div>
       </div>
     </div>
-  );
+  ));
 
-  const totalGuests = guests.adults + guests.children + guests.infants;
-  const guestDisplayText = totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`;
-  
-  const totalPages = Math.ceil(filteredAndSortedProperties().length / itemsPerPage);
+  const totalGuests = useMemo(() => guests.adults + guests.children + guests.infants, [guests]);
+  const guestDisplayText = useMemo(() => totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`, [totalGuests]);
+  const totalPages = useMemo(() => Math.ceil(filteredAndSortedProperties.length / itemsPerPage), [filteredAndSortedProperties.length, itemsPerPage]);
 
   if (error) {
     return (
@@ -833,7 +994,7 @@ const Properties = () => {
             </section>
 
             <section className="mb-8">
-              <div className=" rounded-2xl shadow-lg border border-gray-200 p-6" style={{backgroundColor: 'rgb(247, 219, 190)'  }}>
+              <div className=" rounded-2xl shadow-lg border border-gray-200 p-6" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Check In</label>
@@ -1081,7 +1242,7 @@ const Properties = () => {
 
             <div className="mb-6">
               <p className="text-gray-600">
-                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedProperties().length)}-{Math.min(currentPage * itemsPerPage, filteredAndSortedProperties().length)} of {filteredAndSortedProperties().length} properties
+                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedProperties.length)}-{Math.min(currentPage * itemsPerPage, filteredAndSortedProperties.length)} of {filteredAndSortedProperties.length} properties
               </p>
             </div>
 
@@ -1091,7 +1252,7 @@ const Properties = () => {
                   <PropertySkeleton key={i} />
                 ))}
               </div>
-            ) : filteredAndSortedProperties().length === 0 ? (
+            ) : filteredAndSortedProperties.length === 0 ? (
               <div className="text-center py-16">
                 <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md mx-auto">
                   <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -1111,144 +1272,18 @@ const Properties = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {paginatedProperties().map((property, index) => (
-                    <article
+                  {paginatedProperties.map((property, index) => (
+                    <PropertyCard
                       key={property._id || index}
-                      onMouseEnter={() => setHoveredProperty(property._id)}
-                      onMouseLeave={() => setHoveredProperty(null)}
-                      className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
-                      onClick={() => handlePropertyClick(property._id, index)}
-                   >
-                      <div className="relative h-64 overflow-hidden">
-                        {property.images && property.images.length > 0 ? (
-                          <img
-                            src={hoveredProperty === property._id && property.images[1] 
-                              ? property.images[1].url 
-                              : property.images[0].url}
-                            alt={property.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                            <span className="text-gray-400">No Image</span>
-                          </div>
-                        )}
-
-                        <div className="absolute top-4 left-4">
-                          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium">
-                            {propertyTypes.find(t => t.value === property.type)?.icon}
-                            <span>{property.type}</span>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLike(property._id);
-                          }}
-                          className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
-                            likedProperties.includes(property._id)
-                              ? "bg-red-500 text-white scale-110"
-                              : "bg-white/95 hover:bg-white text-gray-700"
-                          }`}
-                        >
-                          <Heart 
-                            size={18} 
-                            fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
-                          />
-                        </button>
-
-                        {property.images && property.images.length > 1 && (
-                          <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
-                            1/{property.images.length}
-                          </div>
-                        )}
-
-                        {property.propertyHighlights && property.propertyHighlights.length > 0 && (
-                          <div className="absolute bottom-4 left-4">
-                            <div className="bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
-                              {property.propertyHighlights[0].name}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors">
-                            {property.title || "Untitled Property"}
-                          </h3>
-                          <div className="flex items-center text-gray-500 text-sm gap-1 mb-1">
-                            <MapPin size={14} />
-                            <span className="line-clamp-1">
-                              {property.neighborhood?.name || property.location || "Location not specified"}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-4">
-                          {property.bedrooms && (
-                            <div className="flex items-center gap-2">
-                              <Bed size={16} className="text-gray-400" />
-                              <span>{property.bedrooms} Bed{property.bedrooms !== 1 ? 's' : ''}</span>
-                            </div>
-                          )}
-                          {property.bathrooms && (
-                            <div className="flex items-center gap-2">
-                              <Bath size={16} className="text-gray-400" />
-                              <span>{property.bathrooms} Bath{property.bathrooms !== 1 ? 's' : ''}</span>
-                            </div>
-                          )}
-                          {property.guests && (
-                            <div className="flex items-center gap-2">
-                              <Users size={16} className="text-gray-400" />
-                              <span>{property.guests} Guest{property.guests !== 1 ? 's' : ''}</span>
-                            </div>
-                          )}
-                          {property.area && (
-                            <div className="flex items-center gap-2">
-                              <Square size={16} className="text-gray-400" />
-                              <span>{property.area} m²</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {property.amenities && (
-                          <div className="mb-4">
-                            <div className="flex flex-wrap gap-1">
-                              {property.amenities.general?.slice(0, 3).map((amenity, idx) => (
-                                <span key={idx} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
-                                  {amenity.name}
-                                </span>
-                              ))}
-                              {property.amenities.general?.length > 3 && (
-                                <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
-                                  +{property.amenities.general.length - 3} more
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                          <div>
-                            <span className="text-2xl font-bold text-gray-900">
-                              AED {property.price?.toLocaleString() || "N/A"}
-                            </span>
-                            <span className="text-gray-500 text-sm ml-1">/night</span>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePropertyClick(property._id, index);
-                            }}
-                            className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
-                          >
-                            View
-                          </button>
-                        </div>
-                      </div>
-                    </article>
+                      property={property}
+                      index={index}
+                      likedProperties={likedProperties}
+                      onToggleLike={toggleLike}
+                      onPropertyClick={handlePropertyClick}
+                      hoveredProperty={hoveredProperty}
+                      onMouseEnter={setHoveredProperty}
+                      onMouseLeave={setHoveredProperty}
+                    />
                   ))}
                 </div>
                 
@@ -1257,7 +1292,7 @@ const Properties = () => {
                   totalPages={totalPages}
                   onPageChange={handlePageChange}
                   itemsPerPage={itemsPerPage}
-                  totalItems={filteredAndSortedProperties().length}
+                  totalItems={filteredAndSortedProperties.length}
                 />
               </>
             )}
