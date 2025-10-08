@@ -8,6 +8,7 @@ import ProfilePage from "../Components/User/Profile";
 import ContactPage from "../Components/User/Contatct";
 import HotelCheckout from "../Components/User/HotelBooking";
 import AuthModal from "../Components/ReusableComponent/AuthModal";
+import ResetPassword from "../Components/ReusableComponent/Resetpass";
 import PrivacyPolicy from "../Components/Policy/Privacy";
 import TermsConditions from "../Components/Policy/Terms";
 import CancellationsRefunds from "../Components/Policy/Refund";
@@ -52,6 +53,7 @@ function UserRoutes() {
         <Route path="/terms-and-conditions" element={<TermsConditions />} />
         <Route path="/refund-policy" element={<CancellationsRefunds />} />
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route
           path="/checkout"
           element={isLogged ? <HotelCheckout /> : <Homepage />}
