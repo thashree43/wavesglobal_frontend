@@ -73,7 +73,11 @@ const AuthModal = ({ show, onClose, onRegisterSuccess, onLoginSuccess }) => {
       
       resetForm();
       onClose();
-      onRegisterSuccess(regEmail);
+      // onRegisterSuccess(regEmail);
+      if (res.data.user) {
+        onLoginSuccess(res.data.user);
+      }
+      toast.success("Registration successful!");
     } catch (error) {
       console.error("Registration Error:", error.response?.data?.message || error.message);
       toast.error(error.response?.data?.message || "Registration failed");
