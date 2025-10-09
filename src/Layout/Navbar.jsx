@@ -24,16 +24,34 @@ const Navbar = () => {
   };
 
   const handleLoginSuccess = async () => {
-    await checkAuthStatus();
-    setShowAuthModal(false);
+    try {
+      await checkAuthStatus();
+      setTimeout(() => {
+        setShowAuthModal(false);
+      }, 100);
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      setShowAuthModal(false);
+    }
   };
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${baseurl}User/logout`, {}, { withCredentials: true });
+      await axios.post(
+        `${baseurl}User/logout`, 
+        {}, 
+        { 
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       logout(); 
       setShowProfileDropdown(false);
-    } catch {}
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const handleLogoClick = () => {
