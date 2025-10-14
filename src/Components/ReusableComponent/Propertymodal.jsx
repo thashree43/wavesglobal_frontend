@@ -121,7 +121,7 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         ...editingProperty,
         price: editingProperty.price ? editingProperty.price.replace('AED ', '') : '',
         area: editingProperty.area ? editingProperty.area.replace(' sqft', '') : '',
-        status: editingProperty.status === 'Available',
+        status: editingProperty.status === 'Available' || editingProperty.status === true,
         neighborhood: neighborhoodValue,
         propertyHighlights: editingProperty.propertyHighlights || [],
         amenities: editingProperty.amenities || {
@@ -758,8 +758,7 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                   <input
                     type="time"
                     name="rules.checkIn"
-                    value={formData.houseRules.checkIn}
-                    onChange={handleInputChange}
+                    value={formData.houseRules.checkIn}onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
