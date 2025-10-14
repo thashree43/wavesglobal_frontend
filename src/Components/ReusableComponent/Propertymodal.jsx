@@ -105,11 +105,24 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         id: image.id || `existing-${index}-${Date.now()}`
       })) : [];
 
+      let neighborhoodValue = '';
+      if (editingProperty.neighborhood) {
+        if (typeof editingProperty.neighborhood === 'object' && editingProperty.neighborhood._id) {
+          neighborhoodValue = editingProperty.neighborhood._id;
+        } else if (typeof editingProperty.neighborhood === 'string') {
+          const matchedNeighborhood = neighborhoods.find(
+            n => n._id === editingProperty.neighborhood || n.name === editingProperty.neighborhood
+          );
+          neighborhoodValue = matchedNeighborhood ? matchedNeighborhood._id : '';
+        }
+      }
+
       setFormData({
         ...editingProperty,
         price: editingProperty.price ? editingProperty.price.replace('AED ', '') : '',
         area: editingProperty.area ? editingProperty.area.replace(' sqft', '') : '',
         status: editingProperty.status === 'Available',
+        neighborhood: neighborhoodValue,
         propertyHighlights: editingProperty.propertyHighlights || [],
         amenities: editingProperty.amenities || {
           general: [],
@@ -183,7 +196,7 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         mapLocation: { lat: '', lng: '' }
       });
     }
-  }, [editingProperty]);
+  }, [editingProperty, neighborhoods]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -741,8 +754,7 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Check-in Time
-                  </label>
+                    Check-in Time</label>
                   <input
                     type="time"
                     name="rules.checkIn"

@@ -1,22 +1,45 @@
 import React from 'react';
-import { Home, X, BarChart3, DollarSign,Calendar, Settings, Users, FileText, Bell, MapPin } from 'lucide-react';
+import axios from 'axios';
+import { Home, X, BarChart3, Calendar, Settings, Users, MapPin, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { baseurl } from '../../Base/Base';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick }) => {
+  const navigate = useNavigate();
+
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/admin/dashboard' },
     { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
     { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
-    // { id: 'revenue', name: 'Revenue', icon: DollarSign, route: '/revenue' },
     { id: 'users', name: 'Users', icon: Users, route: '/admin/users' },
-    // { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
-    // { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
     { id: 'bookings', name: 'Bookings', icon: Calendar, route: '/admin/bookings' },
     { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
-
   ];
 
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${baseurl}admin/logout`,
+        {},
+        { withCredentials: true }
+      );
+
+      localStorage.removeItem('admin');
+      localStorage.removeItem('adminToken');
+
+      navigate('/admin/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col h-screen`}>
+    <div
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col h-screen`}
+    >
+      {/* Header */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Home className="h-8 w-8 text-blue-600" />
@@ -30,6 +53,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick })
         </button>
       </div>
 
+      {/* Navigation */}
       <div className="flex-1 overflow-y-auto">
         <nav className="mt-6 px-3 pb-6">
           {sidebarItems.map((item) => {
@@ -52,7 +76,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick })
         </nav>
       </div>
 
-      <div className="p-6 flex-shrink-0">
+      <div className="p-6 border-t border-gray-200 flex flex-col gap-4">
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition-colors"
+        >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
+
         <div className="bg-blue-50 rounded-lg p-4">
           <h3 className="text-sm font-medium text-blue-900">Need Help?</h3>
           <p className="text-xs text-blue-700 mt-1">Contact support for assistance</p>
