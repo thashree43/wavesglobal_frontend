@@ -105,24 +105,43 @@ const FloatingCard = ({ children, delay = 0 }) => {
   );
 };
 
+const LocationSkeleton = () => (
+  <div className="relative overflow-hidden rounded-2xl shadow-xl animate-pulse">
+    <div className="h-48 bg-gray-300"></div>
+    <div className="absolute bottom-0 left-0 right-0 p-4">
+      <div className="h-5 bg-gray-400 rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-400 rounded w-1/2"></div>
+    </div>
+  </div>
+);
+
 const ContentSections = () => {
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [locations, setLocations] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
   const navigate = useNavigate();
 
   const getlocation = async () => {
     try {
-      const response = await axios.get(`${baseurl}user/location`)
-      const location = response.data.location
-      setLocations(location)
+      sessionStorage.removeItem('homeLocations');
+      
+      const response = await axios.get(`${baseurl}user/location`);
+      const locationData = response.data.location;
+      
+      console.log('Fetched locations:', locationData);
+      
+      setLocations(locationData);
+      sessionStorage.setItem('homeLocations', JSON.stringify(locationData));
     } catch (error) {
-      console.error(error)
+      console.error('Error fetching locations:', error);
+    } finally {
+      setLocationsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getlocation()
-  }, [])
+    getlocation();
+  }, []);
 
   const partners = [
     { name: "Airbnb", logo: Airbnb },
@@ -187,13 +206,14 @@ const ContentSections = () => {
               <FloatingCard key={index} delay={index * 100}>
                 <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group" 
                      style={{ border: '1px solid rgb(247, 219, 190)' }}
-                     onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
-                     onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
+                     onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgb(231, 121, 0)'}
+                     onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(247, 219, 190)'}>
                   <div className="h-16 flex items-center justify-center">
                     <img
                       src={partner.logo}
                       alt={partner.name}
                       className="max-h-12 max-w-full object-contain transition-all duration-300"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -260,8 +280,8 @@ const ContentSections = () => {
                 <FloatingCard key={index} delay={index * 200}>
                   <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 text-center group transform hover:-translate-y-2" 
                        style={{ border: '1px solid rgb(247, 219, 190)' }}
-                       onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
-                       onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
+                       onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgb(231, 121, 0)'}
+                       onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(247, 219, 190)'}>
                     <div className="relative mb-6">
                       <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white font-bold text-2xl transition-all duration-300 group-hover:scale-110" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
                         {step.step}
@@ -293,27 +313,43 @@ const ContentSections = () => {
             </div>
           </AnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            {locations.slice(0, 8).map((location, index) => (
-              <FloatingCard key={index} delay={index * 100}>
-                <div
-                  onClick={() => navigate(`/property?locationId=${location._id}`)}
-                  className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105"
-                >
+            {locationsLoading ? (
+              [...Array(8)].map((_, index) => (
+                <LocationSkeleton key={index} />
+              ))
+            ) : (
+              locations.slice(0, 8).map((location, index) => (
+                <FloatingCard key={location._id} delay={index * 100}>
                   <div
-                    className="h-48 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                    style={{ backgroundImage: `url(${location.image})` }}
-                  />
-                  <div className="absolute inset-0 group-hover:from-black/60 transition-all duration-300" style={{ background: 'linear-gradient(to top, rgba(0, 31, 60, 0.7), rgba(0, 31, 60, 0.2), transparent)' }}></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-lg font-bold mb-1">{location.name}</h3>
-                    <p className="text-sm" style={{ color: 'rgb(247, 219, 190)' }}>{location.properties} Properties</p>
+                    onClick={() => navigate(`/property?locationId=${location._id}`)}
+                    className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:scale-105"
+                  >
+                    {location.image ? (
+                      <img
+                        src={location.image}
+                        alt={location.name}
+                        className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <span className="text-gray-400 text-sm">No Image</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 group-hover:from-black/60 transition-all duration-300" style={{ background: 'linear-gradient(to top, rgba(0, 31, 60, 0.7), rgba(0, 31, 60, 0.2), transparent)' }}></div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      <h3 className="text-lg font-bold mb-1">{location.name}</h3>
+                      <p className="text-sm" style={{ color: 'rgb(247, 219, 190)' }}>
+                        {location.properties || 0} {location.properties === 1 ? 'Property' : 'Properties'}
+                      </p>
+                    </div>
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white transform scale-90 group-hover:scale-100 transition-transform duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
+                      Popular
+                    </div>
                   </div>
-                  <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white transform scale-90 group-hover:scale-100 transition-transform duration-300" style={{ backgroundColor: 'rgb(231, 121, 0)' }}>
-                    Popular
-                  </div>
-                </div>
-              </FloatingCard>
-            ))}
+                </FloatingCard>
+              ))
+            )}
           </div>
           <AnimatedSection delay={600}>
             <div className="text-center">
@@ -321,8 +357,8 @@ const ContentSections = () => {
                 onClick={handleViewAllProperties}
                 className="px-8 py-3 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
                 style={{ backgroundColor: 'rgb(0, 31, 60)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(4, 80, 115)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(0, 31, 60)'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(4, 80, 115)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(0, 31, 60)'}
               >
                 View All Properties
                 <ArrowRight className="h-5 w-5" />
@@ -344,8 +380,8 @@ const ContentSections = () => {
               <FloatingCard key={index} delay={index * 150}>
                 <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 group" 
                      style={{ border: '1px solid rgb(247, 219, 190)' }}
-                     onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
-                     onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
+                     onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgb(231, 121, 0)'}
+                     onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(247, 219, 190)'}>
                   <div className="text-4xl mb-6 transform group-hover:scale-110 transition-transform duration-300">{service.icon}</div>
                   <h3 className="text-xl font-bold mb-4" style={{ color: 'rgb(0, 31, 60)' }}>
                     {service.title}
@@ -408,8 +444,8 @@ const ContentSections = () => {
               <FloatingCard key={index} delay={index * 200}>
                 <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 group transform hover:-translate-y-2" 
                      style={{ border: '1px solid rgb(247, 219, 190)' }}
-                     onMouseEnter={(e) => e.target.style.borderColor = 'rgb(231, 121, 0)'}
-                     onMouseLeave={(e) => e.target.style.borderColor = 'rgb(247, 219, 190)'}>
+                     onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgb(231, 121, 0)'}
+                     onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgb(247, 219, 190)'}>
                   <div className="flex items-center mb-4">
                     {[...Array(review.rating)].map((_, i) => (
                       <Star key={i} className="h-5 w-5 fill-current" style={{ color: 'rgb(231, 121, 0)' }} />
