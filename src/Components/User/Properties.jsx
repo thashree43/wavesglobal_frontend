@@ -485,6 +485,8 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange, itemsPer
 });
 
 const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLike, onPropertyClick, hoveredProperty, onMouseEnter, onMouseLeave }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
   const propertyTypes = useMemo(() => [
     { value: "Apartment", label: "Apartment", icon: <Building size={16} /> },
     { value: "Villa", label: "Villa", icon: <Home size={16} /> },
@@ -515,16 +517,26 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
       className="group bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-4px]"
       onClick={handleClick}
     >
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-64 overflow-hidden bg-gray-200">
         {property.images && property.images.length > 0 ? (
-          <img
-            src={hoveredProperty === property._id && property.images[1] 
-              ? property.images[1].url 
-              : property.images[0].url}
-            alt={property.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+              </div>
+            )}
+            <img
+              src={hoveredProperty === property._id && property.images[1] 
+                ? property.images[1].url 
+                : property.images[0].url}
+              alt={property.title}
+              className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+            />
+          </>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
             <span className="text-gray-400">No Image</span>
@@ -645,8 +657,8 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
 
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
   const [likedProperties, setLikedProperties] = useState([]);
   const [hoveredProperty, setHoveredProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -660,6 +672,8 @@ const Properties = () => {
   const [guestsOpen, setGuestsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const mainContentRef = useRef(null);
@@ -682,6 +696,13 @@ const Properties = () => {
     { value: "Townhouse", label: "Townhouse", icon: <Hotel size={16} /> },
     { value: "Office", label: "Office", icon: <Briefcase size={16} /> }
   ], []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const getUrlParams = useCallback(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -752,26 +773,29 @@ const Properties = () => {
     });
   }, []);
 
-  const fetchProperties = useCallback(async () => {
+  const fetchProperties = useCallback(async (page = 1) => {
     try {
       setIsLoading(true);
       setError(null);
       
       const urlParams = getUrlParams();
-      let endpoint = 'user/properties';
+      const queryParams = new URLSearchParams();
 
-      const queryParams = { ...urlParams };
-      delete queryParams.page;
+      Object.keys(urlParams).forEach(key => {
+        if (key !== 'page') {
+          queryParams.set(key, urlParams[key]);
+        }
+      });
 
-      if (Object.keys(queryParams).length > 0) {
-        const queryString = new URLSearchParams(queryParams).toString();
-        endpoint += `?${queryString}`;
-      }
+      queryParams.set('page', page.toString());
+      queryParams.set('limit', itemsPerPage.toString());
 
-      const response = await axiosInstance.get(endpoint);
+      const response = await axiosInstance.get(`user/properties?${queryParams.toString()}`);
 
       if (response.data.success) {
         setProperties(response.data.data || []);
+        setTotalCount(response.data.totalCount || 0);
+        setTotalPages(response.data.totalPages || 0);
       } else {
         setError("Failed to load properties");
       }
@@ -781,13 +805,20 @@ const Properties = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [getUrlParams, axiosInstance]);
+  }, [getUrlParams, axiosInstance, itemsPerPage]);
 
   const fetchNeighborhoods = useCallback(async () => {
     try {
+      const cachedNeighborhoods = sessionStorage.getItem('neighborhoods');
+      if (cachedNeighborhoods) {
+        setNeighborhoods(JSON.parse(cachedNeighborhoods));
+        return;
+      }
+
       const response = await axiosInstance.get('user/location');
       if (response.data && response.data.location) {
         setNeighborhoods(response.data.location);
+        sessionStorage.setItem('neighborhoods', JSON.stringify(response.data.location));
       }
     } catch (error) {
       console.error("Error fetching neighborhoods:", error);
@@ -795,18 +826,15 @@ const Properties = () => {
   }, [axiosInstance]);
 
   useEffect(() => {
-    Promise.all([fetchProperties(), fetchNeighborhoods()]);
-  }, [location.search]);
+    fetchNeighborhoods();
+  }, []);
 
   useEffect(() => {
-    if (location.search.includes('page=')) {
-      const searchParams = new URLSearchParams(location.search);
-      const page = parseInt(searchParams.get('page') || '1');
-      setCurrentPage(page);
-    } else {
-      setCurrentPage(1);
-    }
-  }, [filters, searchTerm, sortBy, location.search]);
+    const searchParams = new URLSearchParams(location.search);
+    const page = parseInt(searchParams.get('page') || '1');
+    setCurrentPage(page);
+    fetchProperties(page);
+  }, [location.search, fetchProperties]);
 
   const toggleLike = useCallback((id) => {
     setLikedProperties((prev) =>
@@ -819,6 +847,7 @@ const Properties = () => {
       ...prev,
       [key]: value
     }));
+    setCurrentPage(1);
   }, []);
 
   const resetFilters = useCallback(() => {
@@ -831,6 +860,8 @@ const Properties = () => {
       minArea: "",
       neighborhood: ""
     });
+    setSearchTerm("");
+    setCurrentPage(1);
   }, []);
 
   const handlePropertyClick = useCallback((propertyId, index) => {
@@ -862,16 +893,16 @@ const Properties = () => {
     navigate(`/property?${searchParams.toString()}`);
   }, [checkIn, checkOut, guests, navigate]);
 
-  const filteredAndSortedProperties = useMemo(() => {
+  const filteredProperties = useMemo(() => {
     if (!properties || properties.length === 0) return [];
 
     let filtered = properties.filter((property) => {
       if (!property || !property.status) return false;
 
-      const matchesSearch = !searchTerm || 
-        (property.title && property.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (property.location && property.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (property.neighborhood?.name && property.neighborhood.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSearch = !debouncedSearchTerm || 
+        (property.title && property.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+        (property.location && property.location.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+        (property.neighborhood?.name && property.neighborhood.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
       const matchesPrice = !filters.priceRange || 
         (property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1]);
@@ -910,17 +941,12 @@ const Properties = () => {
       default:
         return filtered;
     }
-  }, [properties, searchTerm, filters, sortBy]);
-
-  const paginatedProperties = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredAndSortedProperties.slice(startIndex, endIndex);
-  }, [filteredAndSortedProperties, currentPage, itemsPerPage]);
+  }, [properties, debouncedSearchTerm, filters, sortBy]);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     updateUrlWithPage(page);
+    fetchProperties(page);
     
     setTimeout(() => {
       if (mainContentRef.current) {
@@ -934,7 +960,7 @@ const Properties = () => {
         });
       }
     }, 50);
-  }, [updateUrlWithPage]);
+  }, [updateUrlWithPage, fetchProperties]);
 
   const PropertySkeleton = React.memo(() => (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
@@ -957,7 +983,6 @@ const Properties = () => {
 
   const totalGuests = useMemo(() => guests.adults + guests.children + guests.infants, [guests]);
   const guestDisplayText = useMemo(() => totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`, [totalGuests]);
-  const totalPages = useMemo(() => Math.ceil(filteredAndSortedProperties.length / itemsPerPage), [filteredAndSortedProperties.length, itemsPerPage]);
 
   if (error) {
     return (
@@ -1242,7 +1267,7 @@ const Properties = () => {
 
             <div className="mb-6">
               <p className="text-gray-600">
-                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedProperties.length)}-{Math.min(currentPage * itemsPerPage, filteredAndSortedProperties.length)} of {filteredAndSortedProperties.length} properties
+                {isLoading ? 'Loading...' : `Showing ${filteredProperties.length} of ${totalCount} properties`}
               </p>
             </div>
 
@@ -1252,7 +1277,7 @@ const Properties = () => {
                   <PropertySkeleton key={i} />
                 ))}
               </div>
-            ) : filteredAndSortedProperties.length === 0 ? (
+            ) : filteredProperties.length === 0 ? (
               <div className="text-center py-16">
                 <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md mx-auto">
                   <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -1272,7 +1297,7 @@ const Properties = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {paginatedProperties.map((property, index) => (
+                  {filteredProperties.map((property, index) => (
                     <PropertyCard
                       key={property._id || index}
                       property={property}
@@ -1292,7 +1317,7 @@ const Properties = () => {
                   totalPages={totalPages}
                   onPageChange={handlePageChange}
                   itemsPerPage={itemsPerPage}
-                  totalItems={filteredAndSortedProperties.length}
+                  totalItems={totalCount}
                 />
               </>
             )}
