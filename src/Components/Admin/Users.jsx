@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { baseurl } from '../../Base/Base';
-import { User, Shield, ShieldOff, Users, BarChart3, FileText, Bell, DollarSign, Settings, Menu, X, Search, MapPin, Home } from 'lucide-react';
+import { User, Shield, ShieldOff, Users, BarChart3, FileText, Bell, DollarSign, Settings, Menu, Search, MapPin, Home } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,9 +12,9 @@ const UsersList = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState({});
   const navigate = useNavigate();
   const token = localStorage.getItem("adminToken");
-
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
@@ -27,50 +27,52 @@ const UsersList = () => {
     { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
   ];
 
-  const getUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${baseurl}admin/users`,{
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      
-      console.log(response,"may here")
-      if (response.data) {
-        setUsers(response.data);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const getUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${baseurl}admin/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.data) {
+          setUsers(response.data);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     getUsers();
-  }, []);
+  }, [token]);
 
   const handleBlockUnblock = async (userId) => {
     try {
-      setLoading(true);
-      const user = users.find(u => u.id === userId);
-      const newStatus = user.isBlocked ? 'active' : 'inactive';
+      setActionLoading(prev => ({ ...prev, [userId]: true }));
+      const user = users.find(u => u._id === userId);
+      const newIsBlocked = !user.isBlocked;
       
-      await axios.put(`${baseurl}admin/users/${userId}/status`, {
-        status: newStatus,
-        isBlocked: !user.isBlocked
+      await axios.put(`${baseurl}admin/users/${userId}/block`, {
+        isBlocked: newIsBlocked
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       setUsers(users.map(user =>
-        user.id === userId
-          ? { ...user, isBlocked: !user.isBlocked, status: newStatus }
+        user._id === userId
+          ? { ...user, isBlocked: newIsBlocked }
           : user
       ));
     } catch (error) {
       console.error('Error updating user status:', error);
     } finally {
-      setLoading(false);
+      setActionLoading(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -83,7 +85,10 @@ const UsersList = () => {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'All' || user.status === filterStatus.toLowerCase();
+    const matchesStatus = filterStatus === 'All' || 
+      (filterStatus === 'Active' && !user.isBlocked) ||
+      (filterStatus === 'Blocked' && user.isBlocked) ||
+      (filterStatus === 'Unverified' && !user.isVerified);
     return matchesSearch && matchesStatus;
   });
 
@@ -131,17 +136,23 @@ const UsersList = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center bg-green-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                     <span className="text-sm text-green-700">
-                      Active: {users.filter(u => u.status === 'active').length}
+                      Active: {users.filter(u => !u.isBlocked && u.isVerified).length}
                     </span>
                   </div>
                   <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
                     <span className="text-sm text-red-700">
-                      Inactive: {users.filter(u => u.status === 'inactive').length}
+                      Blocked: {users.filter(u => u.isBlocked).length}
+                    </span>
+                  </div>
+                  <div className="flex items-center bg-yellow-50 px-3 py-2 rounded-lg">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+                    <span className="text-sm text-yellow-700">
+                      Unverified: {users.filter(u => !u.isVerified).length}
                     </span>
                   </div>
                 </div>
@@ -170,7 +181,8 @@ const UsersList = () => {
                       >
                         <option value="All">All Status</option>
                         <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="Blocked">Blocked</option>
+                        <option value="Unverified">Unverified</option>
                       </select>
                     </div>
                   </div>
@@ -178,7 +190,7 @@ const UsersList = () => {
               </div>
 
               <div className="flex-1 overflow-hidden px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
-                <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col relative">
                   {loading && (
                     <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -203,7 +215,7 @@ const UsersList = () => {
                     <table className="hidden sm:table w-full">
                       <tbody className="divide-y divide-gray-200">
                         {filteredUsers.map((user) => (
-                          <tr key={user.id} className="hover:bg-gray-50">
+                          <tr key={user._id} className="hover:bg-gray-50">
                             <td className="py-4 px-3 sm:px-6">
                               <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -216,28 +228,37 @@ const UsersList = () => {
                               <span className="text-gray-600">{user.email}</span>
                             </td>
                             <td className="py-4 px-3 sm:px-6">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                                user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {user.status}
-                              </span>
+                              <div className="flex flex-col gap-1">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                                  !user.isBlocked && user.isVerified ? 'bg-green-100 text-green-800' : 
+                                  user.isBlocked ? 'bg-red-100 text-red-800' : 
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {!user.isBlocked && user.isVerified ? 'Active' : 
+                                   user.isBlocked ? 'Blocked' : 'Unverified'}
+                                </span>
+                              </div>
                             </td>
                             <td className="py-4 px-3 sm:px-6">
                               <span className="text-gray-600">
-                                {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : 'N/A'}
+                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                               </span>
                             </td>
                             <td className="py-4 px-3 sm:px-6">
                               <button
-                                onClick={() => handleBlockUnblock(user.id)}
-                                disabled={loading}
+                                onClick={() => handleBlockUnblock(user._id)}
+                                disabled={actionLoading[user._id] || !user.isVerified}
                                 className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs sm:text-sm transition-colors ${
                                   user.isBlocked 
                                     ? 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100' 
                                     : 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                               >
-                                {user.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />}
+                                {actionLoading[user._id] ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                                ) : (
+                                  user.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />
+                                )}
                                 {user.isBlocked ? 'Unblock' : 'Block'}
                               </button>
                             </td>
@@ -248,7 +269,7 @@ const UsersList = () => {
 
                     <div className="sm:hidden space-y-4 p-4">
                       {filteredUsers.map(user => (
-                        <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div key={user._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -258,27 +279,34 @@ const UsersList = () => {
                                 <h3 className="font-medium text-gray-900 truncate">{user.name}</h3>
                                 <p className="text-xs text-gray-600 truncate">{user.email}</p>
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                                  user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  !user.isBlocked && user.isVerified ? 'bg-green-100 text-green-800' : 
+                                  user.isBlocked ? 'bg-red-100 text-red-800' : 
+                                  'bg-yellow-100 text-yellow-800'
                                 }`}>
-                                  {user.status}
+                                  {!user.isBlocked && user.isVerified ? 'Active' : 
+                                   user.isBlocked ? 'Blocked' : 'Unverified'}
                                 </span>
                               </div>
                             </div>
                             <button
-                              onClick={() => handleBlockUnblock(user.id)}
-                              disabled={loading}
+                              onClick={() => handleBlockUnblock(user._id)}
+                              disabled={actionLoading[user._id] || !user.isVerified}
                               className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors ${
                                 user.isBlocked 
                                   ? 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100' 
                                   : 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100'
                               } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                              {user.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />}
+                              {actionLoading[user._id] ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                              ) : (
+                                user.isBlocked ? <Shield size={12} /> : <ShieldOff size={12} />
+                              )}
                             </button>
                           </div>
 
                           <div className="text-xs text-gray-500">
-                            <span>Joined: {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : 'N/A'}</span>
+                            <span>Joined: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</span>
                           </div>
                         </div>
                       ))}

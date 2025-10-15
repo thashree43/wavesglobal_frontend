@@ -12,6 +12,7 @@ const AuthModal = ({ show, onClose }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,10 +35,13 @@ const AuthModal = ({ show, onClose }) => {
     setRegPassword("");
     setConfirmPassword("");
     setOtp("");
+    setErrorMessage("");
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    
     try {
       const res = await axios.post(
         `${baseurl}User/login`,
@@ -58,20 +62,35 @@ const AuthModal = ({ show, onClose }) => {
         onClose();
         toast.success("Login successful!");
       } else {
-        toast.error("Login failed. Please try again.");
+        const message = res.data.message || "Login failed. Please try again.";
+        setErrorMessage(message);
+        toast.error(message);
       }
     } catch (error) {
       console.error("Login Error:", error.response?.data?.message || error.message);
-      toast.error(error.response?.data?.message || "Login failed");
+      const errorMsg = error.response?.data?.message || "Login failed";
+      
+      let displayMessage = errorMsg;
+      if (errorMsg.toLowerCase().includes("invalid credentials")) {
+        displayMessage = "Invalid credentials. Please check your email and password.";
+      }
+      
+      setErrorMessage(displayMessage);
+      toast.error(displayMessage);
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    
     if (regPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      const message = "Passwords do not match";
+      setErrorMessage(message);
+      toast.error(message);
       return;
     }
+    
     try {
       const res = await axios.post(
         `${baseurl}User/register`,
@@ -96,16 +115,22 @@ const AuthModal = ({ show, onClose }) => {
         setShowOtpVerification(true);
         toast.success("OTP sent to your email!");
       } else {
-        toast.error("Registration failed. Please try again.");
+        const message = res.data.message || "Registration failed. Please try again.";
+        setErrorMessage(message);
+        toast.error(message);
       }
     } catch (error) {
       console.error("Registration Error:", error.response?.data?.message || error.message);
-      toast.error(error.response?.data?.message || "Registration failed");
+      const message = error.response?.data?.message || "Registration failed";
+      setErrorMessage(message);
+      toast.error(message);
     }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    
     try {
       const res = await axios.post(
         `${baseurl}User/verify-otp`,
@@ -131,15 +156,21 @@ const AuthModal = ({ show, onClose }) => {
         onClose();
         toast.success("Account verified successfully!");
       } else {
-        toast.error("Verification failed. Please try again.");
+        const message = res.data.message || "Verification failed. Please try again.";
+        setErrorMessage(message);
+        toast.error(message);
       }
     } catch (error) {
       console.error("OTP Verification Error:", error.response?.data?.message || error.message);
-      toast.error(error.response?.data?.message || "Invalid OTP");
+      const message = error.response?.data?.message || "Invalid OTP";
+      setErrorMessage(message);
+      toast.error(message);
     }
   };
 
   const handleResendOtp = async () => {
+    setErrorMessage("");
+    
     try {
       const res = await axios.post(
         `${baseurl}User/resend-otp`,
@@ -155,15 +186,21 @@ const AuthModal = ({ show, onClose }) => {
       if (res.data.success) {
         toast.success("New OTP sent to your email!");
       } else {
-        toast.error("Failed to resend OTP");
+        const message = res.data.message || "Failed to resend OTP";
+        setErrorMessage(message);
+        toast.error(message);
       }
     } catch (error) {
       console.error("Resend OTP Error:", error.response?.data?.message || error.message);
-      toast.error(error.response?.data?.message || "Failed to resend OTP");
+      const message = error.response?.data?.message || "Failed to resend OTP";
+      setErrorMessage(message);
+      toast.error(message);
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    setErrorMessage("");
+    
     try {
       const res = await axios.post(
         `${baseurl}User/google-auth`,
@@ -186,17 +223,23 @@ const AuthModal = ({ show, onClose }) => {
         onClose();
         toast.success("Login successful!");
       } else {
-        toast.error("Authentication failed. Please try again.");
+        const message = res.data.message || "Authentication failed. Please try again.";
+        setErrorMessage(message);
+        toast.error(message);
       }
     } catch (error) {
       console.error("Google Auth Error:", error.response?.data?.message || error.message);
-      toast.error(error.response?.data?.message || "Google authentication failed");
+      const message = error.response?.data?.message || "Google authentication failed";
+      setErrorMessage(message);
+      toast.error(message);
     }
   };
 
   const handleGoogleError = () => {
     console.error("Google Auth Error");
-    toast.error("Google authentication failed");
+    const message = "Google authentication failed";
+    setErrorMessage(message);
+    toast.error(message);
   };
 
   const handleModalClose = () => {
@@ -219,6 +262,7 @@ const AuthModal = ({ show, onClose }) => {
     setShowOtpVerification(false);
     setPendingEmail("");
     setOtp("");
+    setErrorMessage("");
   };
 
   return (
@@ -249,7 +293,10 @@ const AuthModal = ({ show, onClose }) => {
             {!showOtpVerification && (
               <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-100">
                 <button
-                  onClick={() => setIsLogin(true)}
+                  onClick={() => {
+                    setIsLogin(true);
+                    setErrorMessage("");
+                  }}
                   className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all duration-200 ${
                     isLogin 
                       ? 'bg-orange-500 text-white shadow-sm' 
@@ -259,7 +306,10 @@ const AuthModal = ({ show, onClose }) => {
                   Sign In
                 </button>
                 <button
-                  onClick={() => setIsLogin(false)}
+                  onClick={() => {
+                    setIsLogin(false);
+                    setErrorMessage("");
+                  }}
                   className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all duration-200 ${
                     !isLogin 
                       ? 'bg-orange-500 text-white shadow-sm' 
@@ -274,6 +324,12 @@ const AuthModal = ({ show, onClose }) => {
           </div>
           
           <div className="px-6 py-4">
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs text-red-600 font-medium">{errorMessage}</p>
+              </div>
+            )}
+
             {showOtpVerification ? (
               <div className="space-y-4">
                 <div>

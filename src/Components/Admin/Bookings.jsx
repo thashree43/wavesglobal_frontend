@@ -17,7 +17,6 @@ const BookingsList = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("adminToken");
 
-
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
     { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
@@ -30,34 +29,29 @@ const BookingsList = () => {
     { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
   ];
 
-  const getBookings = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${baseurl}admin/bookings`,{
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      console.log(response.data)
-      if (response.data) {
-        setBookings(response.data);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-
   useEffect(() => {
+    const getBookings = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${baseurl}admin/bookings`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.data) {
+          setBookings(response.data);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     getBookings();
-  }, []);
+  }, [token]);
 
-
-  console.log(bookings,"mayyy")
   const handleSidebarClick = (itemId, route) => {
     setActiveTab(itemId);
     setSidebarOpen(false);
@@ -111,7 +105,7 @@ const BookingsList = () => {
       booking.bookingId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'All' || booking.status?.toLowerCase() === filterStatus.toLowerCase();
+    const matchesStatus = filterStatus === 'All' || booking.bookingStatus?.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -163,25 +157,25 @@ const BookingsList = () => {
                   <div className="flex items-center bg-green-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                     <span className="text-sm text-green-700">
-                      Confirmed: {bookings.filter(b => b.status?.toLowerCase() === 'confirmed').length}
+                      Confirmed: {bookings.filter(b => b.bookingStatus?.toLowerCase() === 'confirmed').length}
                     </span>
                   </div>
                   <div className="flex items-center bg-yellow-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
                     <span className="text-sm text-yellow-700">
-                      Pending: {bookings.filter(b => b.status?.toLowerCase() === 'pending').length}
+                      Pending: {bookings.filter(b => b.bookingStatus?.toLowerCase() === 'pending').length}
                     </span>
                   </div>
                   <div className="flex items-center bg-blue-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
                     <span className="text-sm text-blue-700">
-                      Completed: {bookings.filter(b => b.status?.toLowerCase() === 'completed').length}
+                      Completed: {bookings.filter(b => b.bookingStatus?.toLowerCase() === 'completed').length}
                     </span>
                   </div>
                   <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
                     <span className="text-sm text-red-700">
-                      Cancelled: {bookings.filter(b => b.status?.toLowerCase() === 'cancelled').length}
+                      Cancelled: {bookings.filter(b => b.bookingStatus?.toLowerCase() === 'cancelled').length}
                     </span>
                   </div>
                 </div>
@@ -231,13 +225,6 @@ const BookingsList = () => {
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Booking ID</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Guest</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Property</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Check-in</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Check-out</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Amount</th>
-                          <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Status</th>
                           <th className="text-left py-4 px-3 sm:px-6 font-semibold text-gray-900 text-sm">Actions</th>
                         </tr>
                       </thead>
@@ -248,11 +235,10 @@ const BookingsList = () => {
                     <table className="hidden sm:table w-full">
                       <tbody className="divide-y divide-gray-200">
                         {filteredBookings.map((booking) => (
-                          <tr key={booking.id} className="hover:bg-gray-50">
+                          <tr key={booking._id} className="hover:bg-gray-50">
                             <td className="py-4 px-3 sm:px-6">
                               <span className="font-mono text-sm text-gray-900">
-                              #{booking._id?.slice(-5).toUpperCase()}
-
+                                #{booking._id?.slice(-5).toUpperCase()}
                               </span>
                             </td>
                             <td className="py-4 px-3 sm:px-6">
@@ -287,13 +273,13 @@ const BookingsList = () => {
                             </td>
                             <td className="py-4 px-3 sm:px-6">
                               <span className="font-semibold text-gray-900">
-                                ${booking.totalAmount || booking.amount || '0'}
+                                ${booking.totalPrice || '0'}
                               </span>
                             </td>
                             <td className="py-4 px-3 sm:px-6">
-                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                {getStatusIcon(booking.status)}
-                                {booking.status || 'Pending'}
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.bookingStatus)}`}>
+                                {getStatusIcon(booking.bookingStatus)}
+                                {booking.bookingStatus || 'Pending'}
                               </span>
                             </td>
                             <td className="py-4 px-3 sm:px-6">
@@ -312,16 +298,16 @@ const BookingsList = () => {
 
                     <div className="sm:hidden space-y-4 p-4">
                       {filteredBookings.map(booking => (
-                        <div key={booking.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div key={booking._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="font-mono text-xs text-gray-600">
-                                  {booking.bookingId || `#${booking.id}`}
+                                  #{booking._id?.slice(-5).toUpperCase()}
                                 </span>
-                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                  {getStatusIcon(booking.status)}
-                                  {booking.status || 'Pending'}
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.bookingStatus)}`}>
+                                  {getStatusIcon(booking.bookingStatus)}
+                                  {booking.bookingStatus || 'Pending'}
                                 </span>
                               </div>
                               
@@ -350,7 +336,7 @@ const BookingsList = () => {
 
                               <div className="flex items-center justify-between">
                                 <span className="font-semibold text-gray-900">
-                                  ${booking.totalAmount || booking.amount || '0'}
+                                  ${booking.totalPrice || '0'}
                                 </span>
                                 <button
                                   onClick={() => openModal(booking)}
@@ -424,13 +410,13 @@ const BookingsList = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Booking ID:</span>
-                        <span className="font-mono text-sm">{selectedBooking.bookingId || `#${selectedBooking.id}`}</span>
+                        <span className="font-mono text-sm">#{selectedBooking._id?.slice(-5).toUpperCase()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status:</span>
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedBooking.status)}`}>
-                          {getStatusIcon(selectedBooking.status)}
-                          {selectedBooking.status || 'Pending'}
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedBooking.bookingStatus)}`}>
+                          {getStatusIcon(selectedBooking.bookingStatus)}
+                          {selectedBooking.bookingStatus || 'Pending'}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -515,7 +501,7 @@ const BookingsList = () => {
                   </div>
                   <div className="flex justify-between font-semibold text-lg border-t border-gray-200 pt-2">
                     <span>Total Amount:</span>
-                    <span>${selectedBooking.totalAmount || selectedBooking.amount || '0'}</span>
+                    <span>${selectedBooking.totalPrice || '0'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Payment Status:</span>
@@ -555,7 +541,6 @@ const BookingsList = () => {
               >
                 Close
               </button>
-              
             </div>
           </div>
         </div>

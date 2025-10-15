@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios'
 import {baseurl} from '../../Base/Base.js'
 import {User, Shield, ShieldOff, Home, Users, Settings, BarChart3,  FileText,  Bell,  DollarSign, Menu, X, Search, Filter, MapPin, Plus,Edit, Trash2, Camera,Save,XCircle,Upload, ImageIcon} from 'lucide-react';
@@ -20,19 +20,19 @@ const LocationManagement = () => {
   });
   const navigate = useNavigate()
   const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("adminToken");
 
-
-  const handleSidebarClick = (itemId, route) => {
+  const handleSidebarClick = useCallback((itemId, route) => {
     setActiveTab(itemId);
     setSidebarOpen(false);
     
     if (route) {
       navigate(route);
     }
-  };
+  }, [navigate]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       name: '',
       description: '',
@@ -40,14 +40,14 @@ const LocationManagement = () => {
       status: 'active'
     });
     setEditingLocation(null);
-  };
+  }, []);
 
-  const handleAddLocation = () => {
+  const handleAddLocation = useCallback(() => {
     resetForm();
     setShowModal(true);
-  };
+  }, [resetForm]);
 
-  const handleEditLocation = (location) => {
+  const handleEditLocation = useCallback((location) => {
     console.log('Editing location:', location);
     let imageData = null;
     
@@ -71,46 +71,48 @@ const LocationManagement = () => {
     });
     setEditingLocation(location);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleDeleteLocation = (locationId) => {
-    setLocations(locations.filter(location => location.id !== locationId));
-  };
+  const handleDeleteLocation = useCallback((locationId) => {
+    setLocations(prevLocations => prevLocations.filter(location => location.id !== locationId));
+  }, []);
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    if (formData.image && formData.image.preview && formData.image.preview.startsWith('blob:')) {
-      URL.revokeObjectURL(formData.image.preview);
-    }
-    
-    const newImage = {
-      id: Date.now(),
-      file: file,
-      preview: URL.createObjectURL(file),
-      name: file.name,
-      isExisting: false
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      image: newImage
-    }));
-  };
+    setFormData(prev => {
+      if (prev.image && prev.image.preview && prev.image.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(prev.image.preview);
+      }
+      
+      return {
+        ...prev,
+        image: {
+          id: Date.now(),
+          file: file,
+          preview: URL.createObjectURL(file),
+          name: file.name,
+          isExisting: false
+        }
+      };
+    });
+  }, []);
 
-  const handleRemoveImage = () => {
-    if (formData.image && formData.image.preview && formData.image.preview.startsWith('blob:')) {
-      URL.revokeObjectURL(formData.image.preview);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      image: null
-    }));
-  };
+  const handleRemoveImage = useCallback(() => {
+    setFormData(prev => {
+      if (prev.image && prev.image.preview && prev.image.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(prev.image.preview);
+      }
+      
+      return {
+        ...prev,
+        image: null
+      };
+    });
+  }, []);
 
-  const handleSubmit = async() => {
+  const handleSubmit = useCallback(async() => {
     if (!formData.name || !formData.description) {
       return;
     }
@@ -133,44 +135,48 @@ const LocationManagement = () => {
         formDataToSend.append('id', editingLocation._id);
         response = await axios.put(`${baseurl}admin/updatelocation`, formDataToSend, {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
           }
         });
       } else {
         response = await axios.post(`${baseurl}admin/addlocation`, formDataToSend, {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
           }
         });
       }
       
-      getlocation();
+      await getlocation();
+      setShowModal(false);
+      resetForm();
     } catch (error) {
       console.error('Error submitting location:', error);
     }
-    
-    setShowModal(false);
-    resetForm();
-  };
+  }, [formData, editingLocation, token, resetForm]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
 
-  const filteredLocations = locations.filter(location => {
-    const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         location.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'All' || location.status === filterStatus.toLowerCase();
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredLocations = useMemo(() => {
+    return locations.filter(location => {
+      const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           location.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === 'All' || location.status === filterStatus.toLowerCase();
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [locations, searchTerm, filterStatus]);
 
-  const getlocation = async()=>{
+  const getlocation = useCallback(async()=>{
     try {
+      setLoading(true);
       const response = await axios.get(`${baseurl}admin/getlocation`,{
         headers: {
           Authorization: `Bearer ${token}`
@@ -182,14 +188,16 @@ const LocationManagement = () => {
       }
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [token]);
 
   useEffect(()=>{
     getlocation()
-  },[])
+  },[getlocation])
 
-  const sidebarItems = [
+  const sidebarItems = useMemo(() => [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
     { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
     { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
@@ -198,7 +206,10 @@ const LocationManagement = () => {
     { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
     { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
     { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
-  ];
+  ], []);
+
+  const activeCount = useMemo(() => locations.filter(l => l.status === 'active').length, [locations]);
+  const inactiveCount = useMemo(() => locations.filter(l => l.status === 'inactive').length, [locations]);
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -217,7 +228,6 @@ const LocationManagement = () => {
       )}
 
       <div className="flex-1 lg:ml-0 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <button
@@ -234,10 +244,8 @@ const LocationManagement = () => {
         <div className="flex-1 overflow-hidden">
           {activeTab === 'locations' ? (
             <div className="h-full flex flex-col">
-              {/* Page Header - Fixed alignment */}
               <div className="flex-shrink-0 p-4 sm:p-6 lg:p-8 bg-white border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  {/* Left side - Title */}
                   <div className="flex items-center gap-3">
                     <MapPin className="text-blue-600 flex-shrink-0" size={32} />
                     <div>
@@ -248,7 +256,6 @@ const LocationManagement = () => {
                     </div>
                   </div>
                   
-                  {/* Right side - Add Button */}
                   <button
                     onClick={handleAddLocation}
                     className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
@@ -258,24 +265,22 @@ const LocationManagement = () => {
                   </button>
                 </div>
                 
-                {/* Stats Section - Below header */}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center bg-green-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                     <span className="text-sm text-green-700">
-                      Active: {locations.filter(l => l.status === 'active').length}
+                      Active: {activeCount}
                     </span>
                   </div>
                   <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
                     <span className="text-sm text-red-700">
-                      Inactive: {locations.filter(l => l.status === 'inactive').length}
+                      Inactive: {inactiveCount}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Search and Filter Section */}
               <div className="flex-shrink-0 px-4 sm:px-6 lg:px-8 py-4">
                 <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -306,10 +311,14 @@ const LocationManagement = () => {
                 </div>
               </div>
 
-              {/* Table Section - Maintains original scrolling behavior */}
               <div className="flex-1 overflow-hidden px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
                 <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                  {/* Desktop Table Header */}
+                  {loading && (
+                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+
                   <div className="hidden sm:block flex-shrink-0 overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-50">
@@ -326,13 +335,11 @@ const LocationManagement = () => {
                     </table>
                   </div>
                   
-                  {/* Table Body - Scrollable */}
                   <div className="flex-1 overflow-y-auto">
-                    {/* Desktop Table */}
                     <table className="hidden sm:table w-full">
                       <tbody className="divide-y divide-gray-200">
                         {filteredLocations.map((location) => (
-                          <tr key={location.id} className="hover:bg-gray-50">
+                          <tr key={location._id} className="hover:bg-gray-50">
                             <td className="py-4 px-3 sm:px-6">
                               <div className="flex items-center">
                                 <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -354,6 +361,7 @@ const LocationManagement = () => {
                                       src={location.image.startsWith('http') ? location.image : `${baseurl}${location.image}`} 
                                       alt="Location" 
                                       className="h-6 w-6 sm:h-8 sm:w-8 rounded object-cover"
+                                      loading="lazy"
                                       onError={(e) => {
                                         console.error('Image load error:', location.image);
                                         e.target.style.display = 'none';
@@ -406,10 +414,9 @@ const LocationManagement = () => {
                       </tbody>
                     </table>
 
-                    {/* Mobile Cards */}
                     <div className="sm:hidden space-y-4 p-4">
                       {filteredLocations.map((location) => (
-                        <div key={location.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div key={location._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -446,6 +453,7 @@ const LocationManagement = () => {
                                       src={location.image.startsWith('http') ? location.image : `${baseurl}${location.image}`} 
                                       alt="Location" 
                                       className="h-4 w-4 rounded object-cover"
+                                      loading="lazy"
                                       onError={(e) => {
                                         console.error('Image load error:', location.image);
                                         e.target.style.display = 'none';
@@ -476,7 +484,7 @@ const LocationManagement = () => {
                       ))}
                     </div>
                     
-                    {filteredLocations.length === 0 && (
+                    {filteredLocations.length === 0 && !loading && (
                       <div className="text-center py-12">
                         <MapPin className="mx-auto h-12 w-12 text-gray-400" />
                         <h3 className="mt-2 text-sm font-medium text-gray-900">No locations found</h3>
@@ -513,7 +521,6 @@ const LocationManagement = () => {
         </div>
       </div>
 
-      {/* Modal - Fully responsive */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
