@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Eye, MapPin, Home, Search, Menu, BarChart3, DollarSign, Settings, Users, FileText, Bell, Image, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { Plus, Edit, Trash2, Eye, MapPin, Home, Search, Menu, BarChart3, DollarSign, Settings, Users, FileText, Bell, Image } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -20,12 +20,12 @@ const PropertyPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('properties');
   const [neighborhoods, setNeighborhoods] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("adminToken");
 
-  const propertyTypes = ['Apartment', 'Villa', 'Studio', 'Penthouse', 'Townhouse', 'Office'];
+  const propertyTypes = useMemo(() => ['Apartment', 'Villa', 'Studio', 'Penthouse', 'Townhouse', 'Office'], []);
 
-  const sidebarItems = [
+  const sidebarItems = useMemo(() => [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3, route: '/dashboard' },
     { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
     { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
@@ -34,9 +34,9 @@ const PropertyPage = () => {
     { id: 'reports', name: 'Reports', icon: FileText, route: '/reports' },
     { id: 'notifications', name: 'Notifications', icon: Bell, route: '/notifications' },
     { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
-  ];
+  ], []);
 
-  const getProperty = async () => {
+  const getProperty = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${baseurl}admin/getproperty`,{
@@ -52,9 +52,9 @@ const PropertyPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
-  const getArea = async () => {
+  const getArea = useCallback(async () => {
     try {
       const response = await axios.get(`${baseurl}admin/getlocation`,{
         headers: {
@@ -67,38 +67,42 @@ const PropertyPage = () => {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [token]);
 
-  const handleSidebarClick = (itemId, route) => {
+  const handleSidebarClick = useCallback((itemId, route) => {
     setActiveTab(itemId);
     setSidebarOpen(false);
     if (route) {
       navigate(route);
     }
-  };
+  }, [navigate]);
 
-  const handleAddProperty = () => {
+  const handleAddProperty = useCallback(() => {
     setEditingProperty(null);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleEditProperty = (property) => {
+  const handleEditProperty = useCallback((property) => {
     setEditingProperty(property);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleDeleteClick = (property) => {
+  const handleDeleteClick = useCallback((property) => {
     setDeletingProperty(property);
     setShowDeleteModal(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!deletingProperty) return;
     
     try {
       setLoading(true);
-      await axios.delete(`${baseurl}admin/deleteproperty/${deletingProperty.id}`);
-      setProperties(properties.filter(prop => prop.id !== deletingProperty.id));
+      await axios.delete(`${baseurl}admin/deleteproperty/${deletingProperty.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setProperties(prev => prev.filter(prop => prop.id !== deletingProperty.id));
       setShowDeleteModal(false);
       setDeletingProperty(null);
     } catch (error) {
@@ -106,9 +110,9 @@ const PropertyPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [deletingProperty, token]);
 
-  const handlePropertySubmit = async (formData, isEdit = false) => {
+  const handlePropertySubmit = useCallback(async (formData, isEdit = false) => {
     try {
       setLoading(true);
       
@@ -140,36 +144,28 @@ const PropertyPage = () => {
         response = await axios.put(
           `${baseurl}admin/updateproperty/${editingProperty.id}`,
           formDataToSend,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          { 
+            headers: { 
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`
+            } 
+          }
         );
       } else {
         response = await axios.post(
           `${baseurl}admin/addproperty`,
           formDataToSend,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          { 
+            headers: { 
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`
+            } 
+          }
         );
       }
 
       if (response.data.success) {
-        if (isEdit) {
-          setProperties(properties.map(prop => 
-            prop.id === editingProperty.id 
-              ? { ...prop, ...formData, price: `AED ${formData.price}`, area: `${formData.area} sqft` }
-              : prop
-          ));
-        } else {
-          setProperties([
-            {
-              id: Date.now(),
-              ...formData,
-              price: `AED ${formData.price}`,
-              area: `${formData.area} sqft`,
-              status: formData.status ? 'Available' : 'Not Available',
-              addedDate: new Date().toISOString().split('T')[0],
-            },
-            ...properties,
-          ]);
-        }
+        await getProperty();
       }
 
       setShowModal(false);
@@ -179,21 +175,26 @@ const PropertyPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [editingProperty, token, getProperty]);
 
-  const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'All' || property.status === filterStatus;
-    const matchesType = filterType === 'All' || property.type === filterType;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const filteredProperties = useMemo(() => {
+    return properties.filter(property => {
+      const matchesSearch = property.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           property.location?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === 'All' || property.status === filterStatus;
+      const matchesType = filterType === 'All' || property.type === filterType;
+      
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [properties, searchTerm, filterStatus, filterType]);
+
+  const availableCount = useMemo(() => properties.filter(p => p.status === 'Available').length, [properties]);
+  const notAvailableCount = useMemo(() => properties.filter(p => p.status === 'Not Available').length, [properties]);
 
   useEffect(() => {
     getArea();
     getProperty();
-  }, []);
+  }, [getArea, getProperty]);
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -254,13 +255,13 @@ const PropertyPage = () => {
                   <div className="flex items-center bg-green-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                     <span className="text-sm text-green-700">
-                      Available: {properties.filter(p => p.status === 'Available').length}
+                      Available: {availableCount}
                     </span>
                   </div>
                   <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
                     <span className="text-sm text-red-700">
-                      Not Available: {properties.filter(p => p.status === 'Not Available').length}
+                      Not Available: {notAvailableCount}
                     </span>
                   </div>
                 </div>
