@@ -1,44 +1,144 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Wavescation helps travelers find and book beachside stays, villas, and cottages with ease. Experience oceanfront relaxation and curated holiday rentals across stunning destinations." />
+  <meta name="keywords" content="beach stays, vacation rentals, villas, cottages, Wavescation, oceanfront holidays, holiday homes" />
+  <meta name="author" content="Wavescation Team" />
+  <title>Wavescation | Book Beachside Stays & Villas</title>
 
-    <title>Wavescation</title>
-    <link rel="icon" type="image/svg+xml" href="./src//assets/wave.png" />
+  <!-- 🌊 Wavescation Structured Data for Google Search -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Wavescation Holiday Homes",
+    "url": "https://www.wavescation.com",
+    "logo": "https://www.wavescation.com/logo.png",
+    "description": "Wavescation helps travelers find and book beachside stays, villas, and cottages with ease. Experience oceanfront relaxation and curated holiday rentals across stunning destinations.",
+    "founder": {
+      "@type": "Person",
+      "name": "Wavescation Team"
+    },
+    "sameAs": [
+      "https://www.instagram.com/wavescation_holidayhomes?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr",
+      "https://www.linkedin.com/company/wavescation-holiday-homes/",
+      "https://www.facebook.com/share/17PS5QDDa7/?mibextid=wwXIfr"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-9876543210",
+      "contactType": "Customer Support",
+      "areaServed": "IN",
+      "availableLanguage": ["English"]
+    }
+  }
+  </script>
 
-    <meta name="description" content="Wavescation — Your seaside getaway booking platform for unforgettable coastal stays and luxury experiences.">
-    <meta name="keywords" content="wavescation, travel, beach stays, seaside booking, vacations, luxury resorts, coastal retreats, hotel booking">
+  <!-- 🌐 Website Schema for Sitelinks & Internal Search -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Wavescation Holiday Homes",
+    "url": "https://www.wavescation.com/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://www.wavescation.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
 
-    <meta name="author" content="Wavescation Team">
-    <meta name="robots" content="index, follow">
+  <!-- 🖼️ Logo & Favicon -->
+  <link rel="icon" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
+  <link rel="apple-touch-icon" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
 
-    <meta name="theme-color" content="#00b4d8" />
+  <!-- 💅 Basic Styling for Demo -->
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #4f46e5, #3b82f6);
+      color: white;
+      text-align: center;
+    }
+    header {
+      padding: 40px 0;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 20px;
+      color: #e0e7ff;
+    }
+    a.button {
+      display: inline-block;
+      color: #fff;
+      text-decoration: none;
+      background: #2563eb;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    a.button:hover {
+      background: #1d4ed8;
+    }
+    nav {
+      margin-top: 20px;
+    }
+    nav a {
+      color: #e0e7ff;
+      text-decoration: none;
+      margin: 0 12px;
+      font-weight: 500;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      margin-top: 50px;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+    .social-icons a {
+      margin: 0 8px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
 
-    <meta property="og:title" content="Wavescation — Experience The Ocean Like Never Before">
-    <meta property="og:description" content="Book your perfect coastal escape with Wavescation. Explore beautiful seaside resorts, beach villas, and unforgettable experiences.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://wavescation.com">
-    <meta property="og:image" content="/assets/og-wavescation.png">
+<body>
+  <header>
+    <img src="https://www.wavescation.com/logo.png" alt="Wavescation Logo" width="120" />
+    <h1>Welcome to Wavescation 🌊</h1>
+    <p>Your gateway to the most beautiful beachside villas and cottages. Relax, explore, and experience the perfect getaway.</p>
+    <a href="https://www.wavescation.com/property" class="button">Explore Properties</a>
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Wavescation — Coastal Getaways, Redefined">
-    <meta name="twitter:description" content="Discover your dream seaside retreat with Wavescation. Book, relax, and experience the luxury of the waves.">
-    <meta name="twitter:image" content="/frontend/src/assets/logo.png">
+    <nav>
+      <a href="https://www.wavescation.com/about">About</a>
+      <a href="https://www.wavescation.com/property">Properties</a>
+      <a href="https://www.wavescation.com/contact">Contact</a>
+    </nav>
 
-    <link rel="canonical" href="https://wavescation.com" />
+    <div class="social-icons" style="margin-top: 20px;">
+      <a href="https://www.instagram.com/wavescation_holidayhomes?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr" target="_blank">Instagram</a> |
+      <a href="https://www.linkedin.com/company/wavescation-holiday-homes/" target="_blank">LinkedIn</a> |
+      <a href="https://www.facebook.com/share/17PS5QDDa7/?mibextid=wwXIfr" target="_blank">Facebook</a>
+    </div>
+  </header>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-    <link rel="preload" as="script" href="/src/main.jsx" />
-  </head>
-
-  <body>
-    <div id="root"></div>
-
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <footer>
+    &copy; 2025 Wavescation Holiday Homes. All rights reserved.
+  </footer>
+</body>
 </html>
