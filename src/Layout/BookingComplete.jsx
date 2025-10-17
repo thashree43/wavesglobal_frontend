@@ -225,10 +225,14 @@ const CheckoutComplete = ({ formData, bookingDetails }) => {
                   )}
                 </div>
 
-                <div className="flex justify-between items-center py-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl px-4 mb-6">
+                {/* <div className="flex justify-between items-center py-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl px-4 mb-6">
                   <span className="text-lg font-bold text-gray-900">Total Paid</span>
                   <span className="text-2xl font-bold text-green-600">AED {bookingDetails.total.toLocaleString()}</span>
-                </div>
+                </div> */}
+                <div className="flex justify-between items-center py-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl px-4 mb-6">
+                  <span className="text-lg font-bold text-gray-900">Total </span>
+                  <span className="text-2xl font-bold text-green-600">AED {bookingDetails.total.toLocaleString()}</span>
+                </div> 
 
                 {bookingDetails.propertyImage && (
                   <div className="mb-6 rounded-xl overflow-hidden shadow-md">
