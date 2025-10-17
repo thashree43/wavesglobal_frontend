@@ -72,7 +72,7 @@ const Footer = () => {
                 <Instagram className="h-4 w-4 text-white group-hover:animate-bounce" />
               </a>
               <a 
-                href="#"
+                href="https://www.facebook.com/share/17PS5QDDa7/?mibextid=wwXIfr"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
@@ -83,7 +83,7 @@ const Footer = () => {
                 <Facebook className="h-4 w-4 text-white group-hover:animate-bounce" />
               </a>
               <a 
-                href="#"
+                href="https://www.linkedin.com/company/wavescation-holiday-homes/"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
