@@ -38,9 +38,7 @@ import axios from 'axios';
 import { baseurl } from '../../Base/Base';
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom"
 import GoogleMapsComponent from '../../Layout/Map';
-
-
-
+import PropertyReviews from '../../Layout/Ratereview';
 
 const PropertyDetailsPage = ({ user, isLogged, onAuthRequired }) => {
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -59,6 +57,11 @@ const [bookingLoading, setBookingLoading] = useState(false);
 const [toast, setToast] = useState(null);
 const [error, setError] = useState(null);
 const [dateError, setDateError] = useState('');
+const [selectedPricingPeriod, setSelectedPricingPeriod] = useState('night');
+const [selectedQuantity, setSelectedQuantity] = useState(1);
+const [showQuantityDropdown, setShowQuantityDropdown] = useState(false);
+const [selectedMonth, setSelectedMonth] = useState('');
+const [showMonthDropdown, setShowMonthDropdown] = useState(false);
 const { id } = useParams();
 const location = useLocation();
 const navigate = useNavigate();
@@ -215,6 +218,16 @@ const getProperty = useCallback(async () => {
     
     setProperty(data);
     setAmenities(data.amenities || {});
+
+    const availablePeriods = [];
+    if (data.pricing?.night) availablePeriods.push('night');
+    if (data.pricing?.week) availablePeriods.push('week');
+    if (data.pricing?.month) availablePeriods.push('month');
+    if (data.pricing?.year) availablePeriods.push('year');
+    
+    if (availablePeriods.length > 0) {
+      setSelectedPricingPeriod(availablePeriods[0]);
+    }
     
     if (data.bookings && Array.isArray(data.bookings) && data.bookings.length > 0) {
       const dates = [];
@@ -246,8 +259,6 @@ useEffect(() => {
     getProperty();
   }
 }, [id, getProperty]);
-
-
 
 useEffect(() => {
   const urlParams = new URLSearchParams(location.search);
@@ -290,6 +301,25 @@ const prevImage = () => {
 const formatPrice = (price) => {
   if (!price || isNaN(price)) return 'AED 0';
   return `AED ${parseInt(price).toLocaleString()}`;
+};
+
+const getAvailablePricingPeriods = () => {
+  const periods = [];
+  if (property.pricing?.night) periods.push({ key: 'night', label: 'Night', value: property.pricing.night });
+  if (property.pricing?.week) periods.push({ key: 'week', label: 'Week', value: property.pricing.week });
+  if (property.pricing?.month) periods.push({ key: 'month', label: 'Month', value: property.pricing.month });
+  if (property.pricing?.year) periods.push({ key: 'year', label: 'Year', value: property.pricing.year });
+  return periods;
+};
+
+const getCurrentPrice = () => {
+  const pricingMap = {
+    'night': property.pricing?.night,
+    'week': property.pricing?.week,
+    'month': property.pricing?.month,
+    'year': property.pricing?.year
+  };
+  return pricingMap[selectedPricingPeriod] || property.pricing?.night || 0;
 };
 
 const getIconComponent = (iconName) => {
@@ -387,8 +417,6 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
       onClose();
     }
   };
-
-
   
   if (!isOpen) return null;
 
@@ -472,10 +500,140 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
   );
 };
 
+const QuantitySelector = () => {
+  const getMaxQuantity = () => {
+    if (selectedPricingPeriod === 'week') return 52;
+    if (selectedPricingPeriod === 'month') return 12;
+    if (selectedPricingPeriod === 'year') return 1;
+    return 1;
+  };
+
+  const maxQuantity = getMaxQuantity();
+  const label = selectedPricingPeriod === 'week' ? 'Weeks' : selectedPricingPeriod === 'month' ? 'Months' : 'Years';
+
+  return (
+    <div className="relative">
+      <label className="block text-sm font-semibold mb-2 text-gray-700">Number of {label}</label>
+      <div 
+        className="w-full p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-300 transition-all duration-200 bg-white"
+        onClick={() => setShowQuantityDropdown(!showQuantityDropdown)}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-900 font-medium">
+              {selectedQuantity} {selectedQuantity === 1 ? label.slice(0, -1) : label}
+            </span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showQuantityDropdown ? 'rotate-180' : ''}`} />
+        </div>
+      </div>
+      
+      {showQuantityDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-2 z-50">
+          <div className="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 max-h-60 overflow-y-auto">
+            <div className="space-y-2">
+              {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((num) => (
+                <div 
+                  key={num}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedQuantity === num 
+                      ? 'bg-orange-50 text-orange-600 border border-orange-200' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setSelectedQuantity(num);
+                    setShowQuantityDropdown(false);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {num} {num === 1 ? label.slice(0, -1) : label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MonthSelector = () => {
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+  
+  const currentYear = new Date().getFullYear();
+  const availableMonths = [];
+  
+  for (let year = currentYear; year <= currentYear + 2; year++) {
+    for (let month = 0; month < 12; month++) {
+      const date = new Date(year, month, 1);
+      if (date >= new Date()) {
+        availableMonths.push({
+          value: `${year}-${String(month + 1).padStart(2, '0')}`,
+          label: `${monthNames[month]} ${year}`
+        });
+      }
+    }
+  }
+
+  return (
+    <div className="relative">
+      <label className="block text-sm font-semibold mb-2 text-gray-700">Starting Month</label>
+      <div 
+        className="w-full p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-orange-300 transition-all duration-200 bg-white"
+        onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CalendarDays className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-900 font-medium">
+              {selectedMonth ? availableMonths.find(m => m.value === selectedMonth)?.label : 'Select Month'}
+            </span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showMonthDropdown ? 'rotate-180' : ''}`} />
+        </div>
+      </div>
+      
+      {showMonthDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-2 z-50">
+          <div className="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 max-h-60 overflow-y-auto">
+            <div className="space-y-2">
+              {availableMonths.map((month) => (
+                <div 
+                  key={month.value}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedMonth === month.value 
+                      ? 'bg-orange-50 text-orange-600 border border-orange-200' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setSelectedMonth(month.value);
+                    setShowMonthDropdown(false);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {month.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CustomDatePicker = ({ label, value, onChange, isOpen, onToggle, disabled }) => {
   const handleToggle = () => {
     if (disabled) {
-      showToast('Please select check-in date first', 'error');
+      showToast('Please complete previous selections first', 'error');
       return;
     }
     onToggle();
@@ -502,12 +660,6 @@ const CustomDatePicker = ({ label, value, onChange, isOpen, onToggle, disabled }
         onClick={handleToggle}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleToggle();
-          }
-        }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -569,12 +721,6 @@ const GuestSelector = () => {
         onClick={() => setShowGuestDropdown(!showGuestDropdown)}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setShowGuestDropdown(!showGuestDropdown);
-          }
-        }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -605,13 +751,6 @@ const GuestSelector = () => {
                   }}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedGuests(num);
-                      setShowGuestDropdown(false);
-                    }
-                  }}
                 >
                   {num} {num === 1 ? 'Guest' : 'Guests'}
                 </div>
@@ -624,28 +763,83 @@ const GuestSelector = () => {
   );
 };
 
-const calculateNights = () => {
-  if (selectedDates.checkin && selectedDates.checkout) {
-    const checkin = new Date(selectedDates.checkin);
-    const checkout = new Date(selectedDates.checkout);
-    
-    if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) return 1;
-    
-    const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
-    return nights > 0 ? nights : 1;
+const calculateTotalUnits = () => {
+  if (selectedPricingPeriod === 'night') {
+    if (selectedDates.checkin && selectedDates.checkout) {
+      const checkin = new Date(selectedDates.checkin);
+      const checkout = new Date(selectedDates.checkout);
+      
+      if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) return 1;
+      
+      const nights = Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24));
+      return nights > 0 ? nights : 1;
+    }
+    return 1;
   }
-  return 3;
+  
+  return selectedQuantity;
+};
+
+const calculateCheckoutDate = () => {
+  if (selectedPricingPeriod === 'night' && selectedDates.checkin && selectedDates.checkout) {
+    return selectedDates.checkout;
+  }
+  
+  if (!selectedDates.checkin) return '';
+  
+  const checkinDate = new Date(selectedDates.checkin);
+  if (isNaN(checkinDate.getTime())) return '';
+  
+  let checkoutDate = new Date(checkinDate);
+  
+  if (selectedPricingPeriod === 'week') {
+    checkoutDate.setDate(checkoutDate.getDate() + (selectedQuantity * 7));
+  } else if (selectedPricingPeriod === 'month') {
+    checkoutDate.setMonth(checkoutDate.getMonth() + selectedQuantity);
+  } else if (selectedPricingPeriod === 'year') {
+    checkoutDate.setFullYear(checkoutDate.getFullYear() + 1);
+  }
+  
+  const year = checkoutDate.getFullYear();
+  const month = String(checkoutDate.getMonth() + 1).padStart(2, '0');
+  const day = String(checkoutDate.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+const calculateFees = () => {
+  const basePrice = getCurrentPrice();
+  const units = calculateTotalUnits();
+  const subtotal = basePrice * units;
+  
+  const cleaningFee = property.fees?.cleaningFee || 25;
+  const serviceFee = property.fees?.serviceFee || 15;
+  const cityTax = property.fees?.cityTourismTax ? (subtotal * property.fees.cityTourismTax / 100) : 0;
+  const vat = property.fees?.vatGst ? (subtotal * property.fees.vatGst / 100) : 0;
+  
+  const total = subtotal + cleaningFee + serviceFee + cityTax + vat;
+  
+  return {
+    subtotal,
+    cleaningFee,
+    serviceFee,
+    cityTax,
+    vat,
+    total
+  };
 };
 
 const handleDateChange = (date, type) => {
   if (!date) return;
   
   if (type === 'checkin') {
-    if (selectedDates.checkout && new Date(date) >= new Date(selectedDates.checkout)) {
-      setSelectedDates({ checkin: date, checkout: '' });
-      showToast('Check-out date cleared. Please select a new check-out date.', 'info');
-    } else {
-      setSelectedDates(prev => ({ ...prev, checkin: date }));
+    setSelectedDates({ checkin: date, checkout: '' });
+    
+    if (selectedPricingPeriod !== 'night') {
+      const checkoutDate = calculateCheckoutDate();
+      setTimeout(() => {
+        setSelectedDates({ checkin: date, checkout: checkoutDate });
+      }, 100);
     }
   } else {
     if (selectedDates.checkin && new Date(date) <= new Date(selectedDates.checkin)) {
@@ -654,6 +848,13 @@ const handleDateChange = (date, type) => {
     }
     setSelectedDates(prev => ({ ...prev, checkout: date }));
   }
+};
+
+const handlePricingPeriodChange = (period) => {
+  setSelectedPricingPeriod(period);
+  setSelectedQuantity(1);
+  setSelectedMonth('');
+  setSelectedDates({ checkin: '', checkout: '' });
 };
 
 const handleBookNow = async () => {
@@ -666,48 +867,65 @@ const handleBookNow = async () => {
     return;
   }
 
-  if (!selectedDates.checkin || !selectedDates.checkout) {
-    showToast('Please select check-in and check-out dates', 'error');
+  if (selectedPricingPeriod === 'month' && !selectedMonth) {
+    showToast('Please select a starting month', 'error');
     return;
   }
 
-  const nights = calculateNights();
-  const totalPrice = property.price * nights + 40; 
+  if (!selectedDates.checkin) {
+    showToast('Please select check-in date', 'error');
+    return;
+  }
+
+  const fees = calculateFees();
+  const units = calculateTotalUnits();
+  const checkoutDate =
+    selectedPricingPeriod === 'night'
+      ? selectedDates.checkout
+      : calculateCheckoutDate();
+
+  if (!checkoutDate) {
+    showToast('Unable to calculate checkout date', 'error');
+    return;
+  }
 
   const bookingData = {
     propertyId: property._id,
-    propertyTitle: property.title,
     checkinDate: selectedDates.checkin,
-    checkoutDate: selectedDates.checkout,
+    checkoutDate,
     guests: selectedGuests,
-    nights: nights,
-    pricePerNight: property.price,
-    totalPrice: totalPrice,
-    cleaningFee: 25,
-    serviceFee: 15,
-    location: property.location,
-    hostName: "Wavescation Team",
-    propertyImage: property.images?.[0]?.url,
-    userId: user._id
+    pricingPeriod: selectedPricingPeriod,
+    units,
+    pricePerUnit: getCurrentPrice(),
+    subtotal: fees.subtotal,
+    cleaningFee: fees.cleaningFee,
+    serviceFee: fees.serviceFee,
+    cityTax: fees.cityTax,
+    vat: fees.vat,
+    totalPrice: fees.total,
+    userId: user._id,
   };
 
   try {
     setBookingLoading(true);
+
     const response = await axios.post(`${baseurl}user/add-booking`, bookingData, {
       headers: { 'Content-Type': 'application/json' },
-      withCredentials: true
+      withCredentials: true,
     });
 
     if (response.status === 200 || response.status === 201) {
+      const bookingId = response.data?.booking?._id;
+      if (!bookingId) {
+        showToast('Booking created, but booking ID missing.', 'error');
+        return;
+      }
+
       showToast('Booking successful', 'success');
 
       const queryParams = new URLSearchParams({
-        userId: user._id,
+        bookingId,
         propertyId: property._id,
-        checkin: selectedDates.checkin,
-        checkout: selectedDates.checkout,
-        guests: selectedGuests,
-        totalPrice: totalPrice
       });
 
       navigate(`/checkout?${queryParams.toString()}`);
@@ -730,11 +948,18 @@ const handleBookNow = async () => {
   }
 };
 
+
+
 useEffect(() => {
   const handleClickOutside = (event) => {
-    if (!event.target.closest('.date-picker-container') && !event.target.closest('.guest-selector-container')) {
+    if (!event.target.closest('.date-picker-container') && 
+        !event.target.closest('.guest-selector-container') &&
+        !event.target.closest('.quantity-selector-container') &&
+        !event.target.closest('.month-selector-container')) {
       setShowCalendar({ checkin: false, checkout: false });
       setShowGuestDropdown(false);
+      setShowQuantityDropdown(false);
+      setShowMonthDropdown(false);
     }
   };
 
@@ -773,7 +998,7 @@ if (loading || !property._id) {
       <div className="min-h-screen" style={{ backgroundColor: 'rgb(247, 247, 247)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-10 mt-20"> 
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-8 overflow-y-auto max-h-screen">
               <PropertySkeleton />
               <StatsSkeleton />
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse">
@@ -785,7 +1010,7 @@ if (loading || !property._id) {
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 overflow-y-auto max-h-screen">
               <SidebarSkeleton />
             </div>
           </div>
@@ -795,6 +1020,10 @@ if (loading || !property._id) {
     </>
   );
 }
+
+const availablePricingPeriods = getAvailablePricingPeriods();
+const fees = calculateFees();
+const units = calculateTotalUnits();
 
 return (
   <>
@@ -808,11 +1037,7 @@ return (
                 {property.title || 'Property Title'}
               </h1>
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-current" style={{ color: 'rgb(230, 116, 19)' }} />
-                  <span className="font-semibold">4.8</span>
-                  <span>(124 reviews)</span>
-                </div>
+          
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   <span>{property.location || 'Location'}</span>
@@ -833,7 +1058,7 @@ return (
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 overflow-y-auto max-h-screen lg:pr-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(230, 116, 19) rgb(247, 247, 247)' }}>
             
             <div className="relative">
               <div className="aspect-w-16 aspect-h-10 lg:aspect-h-8">
@@ -1141,40 +1366,82 @@ return (
                     </div>
                   ))}
                 </div>
+               
               </div>
             )}
+             <PropertyReviews propertyId={id} baseurl={baseurl} />
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 overflow-y-auto max-h-screen" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(230, 116, 19) rgb(247, 247, 247)' }}>
             <div className="sticky top-6 space-y-6">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <p className="text-2xl font-bold">{formatPrice(property.price)} <span className="text-base font-normal text-gray-600">/ night</span></p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="w-4 h-4 fill-current" style={{ color: 'rgb(230, 116, 19)' }} />
-                      <span className="text-sm">4.8 (124 reviews)</span>
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <p className="text-2xl font-bold">{formatPrice(getCurrentPrice())}</p>
+                    <span className="text-base font-normal text-gray-600">/ {selectedPricingPeriod}</span>
+                  </div>
+                  
+                  {availablePricingPeriods.length > 1 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {availablePricingPeriods.map((period) => (
+                        <button
+                          key={period.key}
+                          onClick={() => handlePricingPeriodChange(period.key)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            selectedPricingPeriod === period.key
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:border-orange-300'
+                          }`}
+                        >
+                          {formatPrice(period.value)} / {period.label}
+                        </button>
+                      ))}
                     </div>
+                  )}
+                  
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-current" style={{ color: 'rgb(230, 116, 19)' }} />
+                    <span className="text-sm">4.8 (124 reviews)</span>
                   </div>
                 </div>
                 
-                <div className="space-y-4 mb-6 date-picker-container">
-                  <CustomDatePicker
-                    label="Check-in"
-                    value={selectedDates.checkin}
-                    onChange={(date) => handleDateChange(date, 'checkin')}
-                    isOpen={showCalendar.checkin}
-                    onToggle={() => setShowCalendar({checkin: !showCalendar.checkin, checkout: false})}
-                    disabled={false}
-                  />
-                  <CustomDatePicker
-                    label="Check-out"
-                    value={selectedDates.checkout}
-                    onChange={(date) => handleDateChange(date, 'checkout')}
-                    isOpen={showCalendar.checkout}
-                    onToggle={() => setShowCalendar({checkin: false, checkout: !showCalendar.checkout})}
-                    disabled={!selectedDates.checkin}
-                  />
+                <div className="space-y-4 mb-6">
+                  {(selectedPricingPeriod === 'week' || selectedPricingPeriod === 'month' || selectedPricingPeriod === 'year') && (
+                    <div className="quantity-selector-container">
+                      <QuantitySelector />
+                    </div>
+                  )}
+                  
+                  {selectedPricingPeriod === 'month' && (
+                    <div className="month-selector-container">
+                      <MonthSelector />
+                    </div>
+                  )}
+                  
+                  <div className="date-picker-container">
+                    <CustomDatePicker
+                      label="Check-in"
+                      value={selectedDates.checkin}
+                      onChange={(date) => handleDateChange(date, 'checkin')}
+                      isOpen={showCalendar.checkin}
+                      onToggle={() => setShowCalendar({checkin: !showCalendar.checkin, checkout: false})}
+                      disabled={selectedPricingPeriod === 'month' && !selectedMonth}
+                    />
+                  </div>
+                  
+                  {selectedPricingPeriod === 'night' && (
+                    <div className="date-picker-container">
+                      <CustomDatePicker
+                        label="Check-out"
+                        value={selectedDates.checkout}
+                        onChange={(date) => handleDateChange(date, 'checkout')}
+                        isOpen={showCalendar.checkout}
+                        onToggle={() => setShowCalendar({checkin: false, checkout: !showCalendar.checkout})}
+                        disabled={!selectedDates.checkin}
+                      />
+                    </div>
+                  )}
+                  
                   <div className="guest-selector-container">
                     <GuestSelector />
                   </div>
@@ -1182,7 +1449,7 @@ return (
 
                 <button 
                   onClick={handleBookNow}
-                  disabled={!selectedDates.checkin || !selectedDates.checkout || bookingLoading}
+                  disabled={!selectedDates.checkin || bookingLoading || (selectedPricingPeriod === 'month' && !selectedMonth)}
                   className="w-full py-3 rounded-lg font-semibold text-white transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ 
                     background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
@@ -1193,21 +1460,33 @@ return (
 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span>{formatPrice(property.price)} × {calculateNights()} nights</span>
-                    <span>{formatPrice(property.price * calculateNights())}</span>
+                    <span>{formatPrice(getCurrentPrice())} × {units} {selectedPricingPeriod}{units > 1 ? 's' : ''}</span>
+                    <span>{formatPrice(fees.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Cleaning fee</span>
-                    <span>AED 25</span>
+                    <span>{formatPrice(fees.cleaningFee)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service fee</span>
-                    <span>AED 15</span>
+                    <span>{formatPrice(fees.serviceFee)}</span>
                   </div>
+                  {fees.cityTax > 0 && (
+                    <div className="flex justify-between">
+                      <span>City Tourism Tax ({property.fees?.cityTourismTax}%)</span>
+                      <span>{formatPrice(fees.cityTax)}</span>
+                    </div>
+                  )}
+                  {fees.vat > 0 && (
+                    <div className="flex justify-between">
+                      <span>VAT/GST ({property.fees?.vatGst}%)</span>
+                      <span>{formatPrice(fees.vat)}</span>
+                    </div>
+                  )}
                   <hr />
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
-                    <span>{formatPrice((property.price * calculateNights()) + 40)}</span>
+                    <span>{formatPrice(fees.total)}</span>
                   </div>
                 </div>
               </div>
@@ -1216,7 +1495,7 @@ return (
                 <div className="flex items-center gap-4 mb-4">
                   <div>
                     <h3 className="font-semibold text-lg">Wavescation Team</h3>
-                    <p className="text-gray-600 text-sm">Professional PropertyManagement</p>
+                    <p className="text-gray-600 text-sm">Professional Property Management</p>
                   </div>
                 </div>
                 <div className="space-y-2 mb-4">
@@ -1230,14 +1509,18 @@ return (
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
-                    <Phone className="w-4 h-4" />
-                    <span className="text-sm">Call</span>
-                  </button>
-                  <button className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
-                    <Mail className="w-4 h-4" />
-                    <span className="text-sm">Message</span>
-                  </button>
+                  <a href="tel:+971555175056" className="flex-1">
+                    <button className="w-full py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
+                      <Phone className="w-4 h-4" />
+                      <span className="text-sm">Call</span>
+                    </button>
+                  </a>
+                  <a href="mailto:info@wavescation.com" className="flex-1">
+                    <button className="w-full py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 bg-white">
+                      <Mail className="w-4 h-4" />
+                      <span className="text-sm">Message</span>
+                    </button>
+                  </a>
                 </div>
               </div>
 
@@ -1250,15 +1533,19 @@ return (
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Minimum Stay</span>
-                    <span className="font-medium">2 nights</span>
+                    <span className="font-medium">
+                      {selectedPricingPeriod === 'night' ? '1 nights' : 
+                       selectedPricingPeriod === 'week' ? '1 week' :
+                       selectedPricingPeriod === 'month' ? '1 month' : '1 year'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Cancellation</span>
-                    <span className="font-medium">Free until 48h</span>
+                    {/* <span className="text-gray-600">Cancellation</span>
+                    <span className="font-medium">Free until 48h</span> */}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Security Deposit</span>
-                    <span className="font-medium">AED 200</span>
+                    {/* <span className="text-gray-600">Security Deposit</span>
+                    <span className="font-medium">{formatPrice(property.fees?.damageDeposit || 200)}</span> */}
                   </div>
                 </div>
               </div>
@@ -1275,13 +1562,13 @@ return (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={handleBookNow}
-                disabled={!selectedDates.checkin || !selectedDates.checkout || bookingLoading}
+                disabled={!selectedDates.checkin || bookingLoading || (selectedPricingPeriod === 'month' && !selectedMonth)}
                 className="px-8 py-3 rounded-lg font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ 
                   background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
                 }}  
               >
-                {bookingLoading ? <LoadingSpinner /> : `Book Now - ${formatPrice(property.price)}/night`}
+                {bookingLoading ? <LoadingSpinner /> : `Book Now - ${formatPrice(getCurrentPrice())}/${selectedPricingPeriod}`}
               </button>
               <Link to="/property">
                 <button className="px-8 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors bg-white">
@@ -1309,7 +1596,7 @@ return (
     </div>
     <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
         <a
-          href="https://wa.me/971522596860"
+          href="https://wa.me/971555175056"
           target="_blank"
           rel="noopener noreferrer"
           className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
@@ -1321,7 +1608,7 @@ return (
           />
         </a>
         <a
-          href="mailto:Info@wavescation.com"
+          href="mailto:info@wavescation.com"
           className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
         >
           <img
@@ -1331,7 +1618,7 @@ return (
           />
         </a>
         <a
-          href="tel:+971522596860"
+          href="tel:+971555175056"
           className="animate-pulse bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
         >
           <svg className="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">

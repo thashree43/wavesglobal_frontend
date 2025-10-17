@@ -8,6 +8,7 @@ import BookingsList from '../Components/Admin/Bookings'
 import LoginPage from '../Components/Admin/AdminLogin'
 import PrivateRoute from './Private'
 import AdminSettings from '../Components/Admin/AdminSettings'
+import ReviewsList from '../Components/Admin/Reviews'
 
 function AdminRoutes() {
   return (
@@ -58,6 +59,14 @@ function AdminRoutes() {
         element={
           <PrivateRoute>
             <AdminSettings />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path='/reviews'
+        element={
+          <PrivateRoute>
+            <ReviewsList />
           </PrivateRoute>
         }
       />

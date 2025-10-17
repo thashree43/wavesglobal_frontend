@@ -33,7 +33,7 @@ import { baseurl } from "../../Base/Base";
 import Navbar from "../../Layout/Navbar";
 import Footer from "../../Layout/Footer";
 
-const CustomDatePicker = React.memo(({ value, onChange, placeholder }) => {
+const CustomDatePicker = React.memo(({ value, onChange, placeholder, minDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dropdownRef = useRef(null);
@@ -93,14 +93,24 @@ const CustomDatePicker = React.memo(({ value, onChange, placeholder }) => {
     return value && date.toDateString() === new Date(value).toDateString();
   }, [value]);
 
+  const isBeforeMinDate = useCallback((date) => {
+    if (!minDate) return false;
+    const min = new Date(minDate);
+    min.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    return checkDate < min;
+  }, [minDate]);
+
   const handleDateSelect = useCallback((date) => {
+    if (isBeforeMinDate(date)) return;
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     const formattedDate = `${year}-${month}-${day}`; 
     onChange(formattedDate);
     setIsOpen(false);
-  }, [onChange]);
+  }, [onChange, isBeforeMinDate]);
 
   const nextMonth = useCallback(() => {
     const newDate = new Date(selectedDate);
@@ -175,12 +185,14 @@ const CustomDatePicker = React.memo(({ value, onChange, placeholder }) => {
                   <button
                     key={index}
                     onClick={() => handleDateSelect(date)}
+                    disabled={isBeforeMinDate(date)}
                     className={`
                       h-10 w-full rounded-lg text-sm font-medium transition-all duration-200
                       ${!isSameMonth(date) ? 'text-gray-300' : 'text-gray-700'}
                       ${isSelected(date) ? 'bg-orange-500 text-white' : ''}
                       ${isToday(date) && !isSelected(date) ? 'bg-blue-500 text-white' : ''}
-                      ${!isSelected(date) && !isToday(date) ? 'hover:bg-gray-100' : ''}
+                      ${!isSelected(date) && !isToday(date) && !isBeforeMinDate(date) ? 'hover:bg-gray-100' : ''}
+                      ${isBeforeMinDate(date) ? 'opacity-30 cursor-not-allowed' : ''}
                     `}
                   >
                     {date.getDate()}
@@ -483,7 +495,40 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange, itemsPer
     </div>
   );
 });
-
+const StarRating = React.memo(({ rating, showCount = false, count = 0, size = 16 }) => {
+  if (!rating || rating === 0) return null;
+  
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={size}
+            className={`${
+              star <= fullStars
+                ? 'fill-yellow-400 text-yellow-400'
+                : star === fullStars + 1 && hasHalfStar
+                ? 'fill-yellow-400 text-yellow-400 opacity-50'
+                : 'fill-gray-300 text-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-sm font-semibold text-gray-700 ml-1">
+        {rating.toFixed(1)}
+      </span>
+      {showCount && count > 0 && (
+        <span className="text-xs text-gray-500">
+          ({count})
+        </span>
+      )}
+    </div>
+  );
+});
 const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLike, onPropertyClick, hoveredProperty, onMouseEnter, onMouseLeave }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   
@@ -509,6 +554,37 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
     e.stopPropagation();
     onPropertyClick(property._id, index);
   }, [property._id, index, onPropertyClick]);
+
+  const getDisplayPrice = useCallback(() => {
+    if (!property.pricing) {
+      return { price: null, period: '' };
+    }
+    
+    if (property.pricing.night !== undefined && property.pricing.night !== null && property.pricing.night > 0) {
+      return { price: property.pricing.night, period: '/night' };
+    }
+    
+    if (property.pricing.week !== undefined && property.pricing.week !== null && property.pricing.week > 0) {
+      return { price: property.pricing.week, period: '/week' };
+    }
+    
+    if (property.pricing.month !== undefined && property.pricing.month !== null && property.pricing.month > 0) {
+      return { price: property.pricing.month, period: '/month' };
+    }
+    
+    if (property.pricing.year !== undefined && property.pricing.year !== null && property.pricing.year > 0) {
+      return { price: property.pricing.year, period: '/year' };
+    }
+    
+    return { price: null, period: '' };
+  }, [property.pricing]);
+
+  const displayPrice = useMemo(() => getDisplayPrice(), [getDisplayPrice]);
+
+  // Get rating data
+  const hasRatings = property.ratings && property.ratings.average > 0;
+  const rating = hasRatings ? property.ratings.average : 0;
+  const reviewCount = hasRatings ? property.ratings.total : 0;
 
   return (
     <article
@@ -581,10 +657,25 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
 
       <div className="p-6">
         <div className="mb-4">
-          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors">
-            {property.title || "Untitled Property"}
-          </h3>
-          <div className="flex items-center text-gray-500 text-sm gap-1 mb-1">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="font-bold text-lg text-gray-900 line-clamp-1 group-hover:text-orange-600 transition-colors flex-1">
+              {property.title || "Untitled Property"}
+            </h3>
+          </div>
+          
+          {/* Rating Section */}
+          {hasRatings && (
+            <div className="mb-2">
+              <StarRating 
+                rating={rating} 
+                showCount={true}
+                count={reviewCount}
+                size={14}
+              />
+            </div>
+          )}
+          
+          <div className="flex items-center text-gray-500 text-sm gap-1">
             <MapPin size={14} />
             <span className="line-clamp-1">
               {property.neighborhood?.name || property.location || "Location not specified"}
@@ -619,15 +710,15 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
           )}
         </div>
 
-        {property.amenities && (
+        {property.amenities && property.amenities.general && (
           <div className="mb-4">
             <div className="flex flex-wrap gap-1">
-              {property.amenities.general?.slice(0, 3).map((amenity, idx) => (
+              {property.amenities.general.slice(0, 3).map((amenity, idx) => (
                 <span key={idx} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
                   {amenity.name}
                 </span>
               ))}
-              {property.amenities.general?.length > 3 && (
+              {property.amenities.general.length > 3 && (
                 <span className="bg-gray-50 text-gray-600 px-2 py-1 rounded-full text-xs">
                   +{property.amenities.general.length - 3} more
                 </span>
@@ -639,14 +730,15 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
         <div className="flex justify-between items-center pt-4 border-t border-gray-100">
           <div>
             <span className="text-2xl font-bold text-gray-900">
-              AED {property.price?.toLocaleString() || "N/A"}
+              AED {displayPrice.price !== null ? displayPrice.price.toLocaleString() : 'N/A'}
             </span>
-            <span className="text-gray-500 text-sm ml-1">/night</span>
+            <span className="text-gray-500 text-sm ml-1">{displayPrice.period}</span>
           </div>
           <button
             onClick={handleViewClick}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium"
+            className="px-3 py-1.5 bg-gray-100 hover:bg-orange-500 hover:text-white text-gray-700 rounded-lg transition-all duration-300 text-xs font-medium flex items-center gap-1"
           >
+            <Eye size={14} />
             View
           </button>
         </div>
@@ -703,6 +795,21 @@ const Properties = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (checkIn && checkOut) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      if (checkOutDate <= checkInDate) {
+        const newCheckOut = new Date(checkInDate);
+        newCheckOut.setDate(newCheckOut.getDate() + 1);
+        const year = newCheckOut.getFullYear();
+        const month = String(newCheckOut.getMonth() + 1).padStart(2, "0");
+        const day = String(newCheckOut.getDate()).padStart(2, "0");
+        setCheckOut(`${year}-${month}-${day}`);
+      }
+    }
+  }, [checkIn, checkOut]);
 
   const getUrlParams = useCallback(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -791,6 +898,7 @@ const Properties = () => {
       queryParams.set('limit', itemsPerPage.toString());
 
       const response = await axiosInstance.get(`user/properties?${queryParams.toString()}`);
+      console.log(response,"heee")
 
       if (response.data.success) {
         setProperties(response.data.data || []);
@@ -815,7 +923,7 @@ const Properties = () => {
         return;
       }
 
-      const response = await axiosInstance.get('user/location');
+      const response = await axios.get(`${baseurl}user/location`);
       if (response.data && response.data.location) {
         setNeighborhoods(response.data.location);
         sessionStorage.setItem('neighborhoods', JSON.stringify(response.data.location));
@@ -823,7 +931,7 @@ const Properties = () => {
     } catch (error) {
       console.error("Error fetching neighborhoods:", error);
     }
-  }, [axiosInstance]);
+  }, []);
 
   useEffect(() => {
     fetchNeighborhoods();
@@ -897,15 +1005,16 @@ const Properties = () => {
     if (!properties || properties.length === 0) return [];
 
     let filtered = properties.filter((property) => {
-      if (!property || !property.status) return false;
+      if (!property) return false;
 
       const matchesSearch = !debouncedSearchTerm || 
         (property.title && property.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
         (property.location && property.location.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
         (property.neighborhood?.name && property.neighborhood.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
+      const propertyPrice = property.pricing?.night || property.pricing?.week || property.pricing?.month || property.pricing?.year || 0;
       const matchesPrice = !filters.priceRange || 
-        (property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1]);
+        (propertyPrice >= filters.priceRange[0] && propertyPrice <= filters.priceRange[1]);
 
       const matchesType = !filters.propertyType || property.type === filters.propertyType;
 
@@ -931,9 +1040,17 @@ const Properties = () => {
 
     switch (sortBy) {
       case "priceLow":
-        return filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+        return filtered.sort((a, b) => {
+          const priceA = a.pricing?.night || a.pricing?.week || a.pricing?.month || a.pricing?.year || 0;
+          const priceB = b.pricing?.night || b.pricing?.week || b.pricing?.month || b.pricing?.year || 0;
+          return priceA - priceB;
+        });
       case "priceHigh":
-        return filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+        return filtered.sort((a, b) => {
+          const priceA = a.pricing?.night || a.pricing?.week || a.pricing?.month || a.pricing?.year || 0;
+          const priceB = b.pricing?.night || b.pricing?.week || b.pricing?.month || b.pricing?.year || 0;
+          return priceB - priceA;
+        });
       case "newest":
         return filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       case "area":
@@ -983,6 +1100,13 @@ const Properties = () => {
 
   const totalGuests = useMemo(() => guests.adults + guests.children + guests.infants, [guests]);
   const guestDisplayText = useMemo(() => totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`, [totalGuests]);
+
+  const minCheckOutDate = useMemo(() => {
+    if (!checkIn) return null;
+    const date = new Date(checkIn);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
+  }, [checkIn]);
 
   if (error) {
     return (
@@ -1036,6 +1160,7 @@ const Properties = () => {
                       value={checkOut}
                       onChange={setCheckOut}
                       placeholder="Select date"
+                      minDate={minCheckOutDate}
                     />
                   </div>
 

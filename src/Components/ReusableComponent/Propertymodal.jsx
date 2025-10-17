@@ -8,7 +8,19 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
     type: 'Apartment',
     location: '',
     neighborhood: '',
-    price: '',
+    pricing: {
+      night: '',
+      week: '',
+      month: '',
+      year: ''
+    },
+    fees: {
+      cleaningFee: '',
+      serviceFee: '',
+      cityTourismTax: '',
+      vatGst: '',
+      damageDeposit: ''
+    },
     bedrooms: '',
     bathrooms: '',
     area: '',
@@ -117,10 +129,26 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         }
       }
 
+      const cleanPricing = {
+        night: editingProperty.pricing?.night ? editingProperty.pricing.night.toString().replace('AED ', '').replace(/,/g, '') : '',
+        week: editingProperty.pricing?.week ? editingProperty.pricing.week.toString().replace('AED ', '').replace(/,/g, '') : '',
+        month: editingProperty.pricing?.month ? editingProperty.pricing.month.toString().replace('AED ', '').replace(/,/g, '') : '',
+        year: editingProperty.pricing?.year ? editingProperty.pricing.year.toString().replace('AED ', '').replace(/,/g, '') : ''
+      };
+
+      const cleanFees = {
+        cleaningFee: editingProperty.fees?.cleaningFee ? editingProperty.fees.cleaningFee.toString() : '',
+        serviceFee: editingProperty.fees?.serviceFee ? editingProperty.fees.serviceFee.toString() : '',
+        cityTourismTax: editingProperty.fees?.cityTourismTax ? editingProperty.fees.cityTourismTax.toString() : '',
+        vatGst: editingProperty.fees?.vatGst ? editingProperty.fees.vatGst.toString() : '',
+        damageDeposit: editingProperty.fees?.damageDeposit ? editingProperty.fees.damageDeposit.toString() : ''
+      };
+
       setFormData({
         ...editingProperty,
-        price: editingProperty.price ? editingProperty.price.replace('AED ', '') : '',
-        area: editingProperty.area ? editingProperty.area.replace(' sqft', '') : '',
+        pricing: cleanPricing,
+        fees: cleanFees,
+        area: editingProperty.area ? editingProperty.area.toString().replace(' sqft', '') : '',
         status: editingProperty.status === 'Available' || editingProperty.status === true,
         neighborhood: neighborhoodValue,
         propertyHighlights: editingProperty.propertyHighlights || [],
@@ -159,7 +187,19 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         type: 'Apartment',
         location: '',
         neighborhood: '',
-        price: '',
+        pricing: {
+          night: '',
+          week: '',
+          month: '',
+          year: ''
+        },
+        fees: {
+          cleaningFee: '',
+          serviceFee: '',
+          cityTourismTax: '',
+          vatGst: '',
+          damageDeposit: ''
+        },
         bedrooms: '',
         bathrooms: '',
         area: '',
@@ -206,6 +246,24 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         mapLocation: {
           ...prev.mapLocation,
           [name]: value
+        }
+      }));
+    } else if (name.startsWith('pricing.')) {
+      const pricingField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        pricing: {
+          ...prev.pricing,
+          [pricingField]: value
+        }
+      }));
+    } else if (name.startsWith('fees.')) {
+      const feeField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        fees: {
+          ...prev.fees,
+          [feeField]: value
         }
       }));
     } else if (name.startsWith('rooms.')) {
@@ -334,6 +392,11 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
     
     if (formData.images.length < 5) {
       alert('Please upload at least 5 images (minimum required)');
+      return;
+    }
+
+    if (!formData.pricing.night && !formData.pricing.week && !formData.pricing.month && !formData.pricing.year) {
+      alert('Please provide at least one pricing option (night, week, month, or year)');
       return;
     }
 
@@ -478,23 +541,144 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
             </div>
 
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Details</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing (Add at least one) *</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price (AED) *
+                    Price Per Night (AED)
                   </label>
                   <input
                     type="number"
-                    name="price"
-                    value={formData.price}
+                    name="pricing.night"
+                    value={formData.pricing.night}
                     onChange={handleInputChange}
-                    placeholder="e.g., 15000000"
+                    placeholder="e.g., 500"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price Per Week (AED)
+                  </label>
+                  <input
+                    type="number"
+                    name="pricing.week"
+                    value={formData.pricing.week}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 3000"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price Per Month (AED)
+                  </label>
+                  <input
+                    type="number"
+                    name="pricing.month"
+                    value={formData.pricing.month}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 10000"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price Per Year (AED)
+                  </label>
+                  <input
+                    type="number"
+                    name="pricing.year"
+                    value={formData.pricing.year}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 100000"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Fees & Charges</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cleaning Fee (AED)
+                  </label>
+                  <input
+                    type="number"
+                    name="fees.cleaningFee"
+                    value={formData.fees.cleaningFee}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 150"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Service Fee (AED)
+                  </label>
+                  <input
+                    type="number"
+                    name="fees.serviceFee"
+                    value={formData.fees.serviceFee}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 100"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City / Tourism Tax (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="fees.cityTourismTax"
+                    value={formData.fees.cityTourismTax}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 50"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    VAT / GST (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="fees.vatGst"
+                    value={formData.fees.vatGst}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 75"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Damage Deposit (AED)
+                  </label>
+                  <input
+                    type="number"
+                    name="fees.damageDeposit"
+                    value={formData.fees.damageDeposit}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Details</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Area (sq ft)
@@ -754,11 +938,13 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Check-in Time</label>
+                    Check-in Time
+                  </label>
                   <input
                     type="time"
                     name="rules.checkIn"
-                    value={formData.houseRules.checkIn}onChange={handleInputChange}
+                    value={formData.houseRules.checkIn}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>

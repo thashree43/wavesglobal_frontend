@@ -14,9 +14,14 @@ const HotelCheckout = () => {
     checkIn: '',
     checkOut: '',
     guests: 0,
-    nights: 0,
-    roomRate: 0,
-    taxes: 0,
+    pricingPeriod: 'night',
+    units: 0,
+    pricePerUnit: 0,
+    subtotal: 0,
+    cleaningFee: 0,
+    serviceFee: 0,
+    cityTax: 0,
+    vat: 0,
     total: 0,
     propertyId: '',
     userId: '',
@@ -44,12 +49,9 @@ const HotelCheckout = () => {
   const getUrlParams = () => {
     const urlParams = new URLSearchParams(window.location.search);
     return {
-      userId: urlParams.get('userId'),
       propertyId: urlParams.get('propertyId'),
-      checkin: urlParams.get('checkin'),
-      checkout: urlParams.get('checkout'),
-      guests: parseInt(urlParams.get('guests')) || 1,
-      totalPrice: parseFloat(urlParams.get('totalPrice')) || 0
+      bookingId: urlParams.get('bookingId'),
+      
     };
   };
 
@@ -57,57 +59,64 @@ const HotelCheckout = () => {
     try {
       setLoading(true);
       setError(null);
-      
+  
       const urlParams = getUrlParams();
-      
-      if (!urlParams.userId || !urlParams.propertyId) {
-        throw new Error('Missing required parameters: userId or propertyId');
+      const token = localStorage.getItem('authToken');
+  
+      if (!urlParams.bookingId || !urlParams.propertyId) {
+        throw new Error('Missing required parameters: bookingId or propertyId');
       }
-
+  
       const response = await axios.get(`${baseurl}user/checkout`, {
-        params: { propertyId: urlParams.propertyId },
+        params: {
+          propertyId: urlParams.propertyId,
+          bookingId: urlParams.bookingId
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
         withCredentials: true
       });
-      
-      const { propertyData, userData } = response.data;
-
-      const checkInDate = new Date(urlParams.checkin);
-      const checkOutDate = new Date(urlParams.checkout);
-      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      const roomRate = Math.round(urlParams.totalPrice / nights);
-      const taxes = urlParams.totalPrice * 0.13; 
-      const total = urlParams.totalPrice + taxes;
-
+  
+      const { propertyData, userData, bookingData } = response.data;
+  
+      // ✅ Set only the required fields
       setBookingDetails({
-        roomType: propertyData?.title || propertyData?.name || 'Deluxe Suite',
-        checkIn: urlParams.checkin,
-        checkOut: urlParams.checkout,
-        guests: urlParams.guests,
-        nights: nights,
-        roomRate: roomRate,
-        taxes: taxes,
-        total: total,
-        propertyId: urlParams.propertyId,
-        userId: urlParams.userId,
+        roomType: propertyData?.title || propertyData?.name || 'Property',
+        checkIn: bookingData?.checkIn || urlParams.checkin,
+        checkOut: bookingData?.checkOut || urlParams.checkout,
+        guests: bookingData?.guests || urlParams.guests,
+        pricingPeriod: bookingData?.pricingPeriod || urlParams.pricingPeriod,
+        units: bookingData?.units || urlParams.units,
+        pricePerUnit: bookingData?.pricePerUnit || urlParams.pricePerUnit,
+        subtotal: bookingData?.subtotal || urlParams.subtotal,
+        cleaningFee: bookingData?.cleaningFee || urlParams.cleaningFee,
+        serviceFee: bookingData?.serviceFee || urlParams.serviceFee,
+        cityTax: bookingData?.cityTax || urlParams.cityTax,
+        vat: bookingData?.vat || urlParams.vat,
+        total: bookingData?.totalPrice || urlParams.totalPrice,
+        propertyId: bookingData?.property || urlParams.propertyId,
+        userId: userData?._id,
         propertyImage: propertyData?.images?.[0]?.url || '',
         property: propertyData,
-        bookingId: null
+        bookingId: bookingData?._id || urlParams.bookingId
       });
-
+  
+      // ✅ Fill user form data if available
       if (userData) {
         setFormData(prev => ({
           ...prev,
           name: userData.name || userData.fullName || '',
           email: userData.email || '',
-          phone: userData.phone || userData.phoneNumber || ''
+          phone: userData.mobile || userData.phone || ''
         }));
       }
-
+  
       setLoading(false);
     } catch (err) {
       console.error('Error fetching booking data:', err);
       let errorMessage = 'Failed to load booking details. Please try again.';
-      
+  
       if (err.response) {
         errorMessage = `Server error: ${err.response.status}`;
       } else if (err.request) {
@@ -115,11 +124,11 @@ const HotelCheckout = () => {
       } else if (err.message.includes('Missing required parameters')) {
         errorMessage = 'Invalid booking URL. Please check the link and try again.';
       }
-      
+  
       setError(errorMessage);
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     GetBooking();
@@ -170,6 +179,26 @@ const HotelCheckout = () => {
   const handleImageClick = () => {
     const urlParams = getUrlParams();
     window.location.href = `http://localhost:5173/property/${bookingDetails.propertyId}?adults=${urlParams.guests}`;
+  };
+
+  const getPeriodLabel = () => {
+    const labels = {
+      'night': 'Night',
+      'week': 'Week',
+      'month': 'Month',
+      'year': 'Year'
+    };
+    return labels[bookingDetails.pricingPeriod] || 'Night';
+  };
+
+  const getPeriodLabelPlural = () => {
+    const labels = {
+      'night': 'Nights',
+      'week': 'Weeks',
+      'month': 'Months',
+      'year': 'Years'
+    };
+    return labels[bookingDetails.pricingPeriod] || 'Nights';
   };
 
   if (loading && currentStep < 3) {
@@ -277,8 +306,8 @@ const HotelCheckout = () => {
               
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Room Type:</span>
-                  <span className="font-semibold text-gray-900">{bookingDetails.roomType}</span>
+                  <span className="text-gray-600">Property:</span>
+                  <span className="font-semibold text-gray-900 text-right">{bookingDetails.roomType}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Check-in:</span>
@@ -290,25 +319,49 @@ const HotelCheckout = () => {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Guests:</span>
-                  <span className="font-semibold text-gray-900">{bookingDetails.guests} Adults</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.guests} {bookingDetails.guests === 1 ? 'Guest' : 'Guests'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Nights:</span>
-                  <span className="font-semibold text-gray-900">{bookingDetails.nights} Nights</span>
+                  <span className="text-gray-600">Booking Period:</span>
+                  <span className="font-semibold text-gray-900">{bookingDetails.units} {bookingDetails.units === 1 ? getPeriodLabel() : getPeriodLabelPlural()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Room Rate:</span>
-                  <span className="font-semibold text-gray-900">AED {bookingDetails.roomRate}/night</span>
+                  <span className="text-gray-600">Rate per {getPeriodLabel()}:</span>
+                  <span className="font-semibold text-gray-900">AED {bookingDetails.pricePerUnit.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Taxes & Fees:</span>
-                  <span className="font-semibold text-gray-900">AED {bookingDetails.taxes.toFixed(2)}</span>
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-semibold text-gray-900">AED {bookingDetails.subtotal.toLocaleString()}</span>
                 </div>
+                {bookingDetails.cleaningFee > 0 && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Cleaning Fee:</span>
+                    <span className="font-semibold text-gray-900">AED {bookingDetails.cleaningFee.toLocaleString()}</span>
+                  </div>
+                )}
+                {bookingDetails.serviceFee > 0 && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Service Fee:</span>
+                    <span className="font-semibold text-gray-900">AED {bookingDetails.serviceFee.toLocaleString()}</span>
+                  </div>
+                )}
+                {bookingDetails.cityTax > 0 && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-gray-600">City Tourism Tax:</span>
+                    <span className="font-semibold text-gray-900">AED {bookingDetails.cityTax.toLocaleString()}</span>
+                  </div>
+                )}
+                {bookingDetails.vat > 0 && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-gray-600">VAT/GST:</span>
+                    <span className="font-semibold text-gray-900">AED {bookingDetails.vat.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-between items-center py-4 border-t-2 border-gray-200 bg-gradient-to-r from-orange-50 to-amber-50 -mx-6 px-6 rounded-xl">
                 <span className="text-lg font-bold text-gray-900">Total:</span>
-                <span className="text-2xl font-bold text-orange-600">AED {bookingDetails.total.toFixed(2)}</span>
+                <span className="text-2xl font-bold text-orange-600">AED {bookingDetails.total.toLocaleString()}</span>
               </div>
               
               <div className="mt-6 rounded-xl overflow-hidden shadow-md">

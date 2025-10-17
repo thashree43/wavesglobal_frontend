@@ -126,7 +126,7 @@ const ContentSections = () => {
       sessionStorage.removeItem('homeLocations');
       
       const response = await axios.get(`${baseurl}user/location`);
-      const locationData = response.data.location;
+      const locationData = response.data.location || [];
       
       console.log('Fetched locations:', locationData);
       
@@ -134,6 +134,7 @@ const ContentSections = () => {
       sessionStorage.setItem('homeLocations', JSON.stringify(locationData));
     } catch (error) {
       console.error('Error fetching locations:', error);
+      setLocations([]);
     } finally {
       setLocationsLoading(false);
     }
@@ -317,7 +318,7 @@ const ContentSections = () => {
               [...Array(8)].map((_, index) => (
                 <LocationSkeleton key={index} />
               ))
-            ) : (
+            ) : locations.length > 0 ? (
               locations.slice(0, 8).map((location, index) => (
                 <FloatingCard key={location._id} delay={index * 100}>
                   <div
@@ -349,6 +350,10 @@ const ContentSections = () => {
                   </div>
                 </FloatingCard>
               ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-xl" style={{ color: 'rgb(4, 80, 115)' }}>No locations available at the moment</p>
+              </div>
             )}
           </div>
           <AnimatedSection delay={600}>
