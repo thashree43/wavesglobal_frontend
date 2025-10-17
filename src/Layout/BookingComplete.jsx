@@ -8,6 +8,7 @@ const CheckoutComplete = ({ formData, bookingDetails }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setAnimateCheck(true), 300);
     setTimeout(() => setShowConfetti(false), 3000);
   }, []);
