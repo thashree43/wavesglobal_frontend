@@ -4,6 +4,7 @@ import { baseurl } from '../../Base/Base';
 import { User, Eye, Calendar, MapPin, DollarSign, Home, Users, BarChart3, FileText, Bell, Settings, Menu, Search, X, CheckCircle, XCircle, Clock, LogOut, Trash2 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const BookingsList = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -15,7 +16,9 @@ const BookingsList = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [bookingToCheckout, setBookingToCheckout] = useState(null);
   const [bookingFilter, setBookingFilter] = useState('active');
   const navigate = useNavigate();
   const token = localStorage.getItem("adminToken");
@@ -57,31 +60,46 @@ const BookingsList = () => {
     }
   };
 
-  const handleCheckout = async (bookingId, currentStatus) => {
+  const openCheckoutModal = (booking) => {
+    setBookingToCheckout(booking);
+    setCheckoutModalOpen(true);
+  };
+
+  const closeCheckoutModal = () => {
+    setBookingToCheckout(null);
+    setCheckoutModalOpen(false);
+  };
+
+  const handleCheckout = async () => {
+    if (!bookingToCheckout) return;
+  
     try {
-      setActionLoading(bookingId);
+      setActionLoading(bookingToCheckout._id);
       const response = await axios.put(
-        `${baseurl}admin/update-checkout/${bookingId}`,
-        { checkedOut: !currentStatus },
+        `${baseurl}admin/update-checkout/${bookingToCheckout._id}`,
+        { checkedOut: true },
         {
           headers: {
             Authorization: `Bearer ${token}`
           }
         }
       );
-
+  
       if (response.data) {
         setBookings(bookings.map(b => 
-          b._id === bookingId ? { ...b, checkedOut: !currentStatus } : b
+          b._id === bookingToCheckout._id ? { ...b, checkedOut: true } : b
         ));
         
-        if (selectedBooking?._id === bookingId) {
-          setSelectedBooking({ ...selectedBooking, checkedOut: !currentStatus });
+        if (selectedBooking?._id === bookingToCheckout._id) {
+          setSelectedBooking({ ...selectedBooking, checkedOut: true });
         }
+        
+        closeCheckoutModal();
+        toast.success('Booking checked out successfully');
       }
     } catch (error) {
       console.error('Error updating checkout status:', error);
-      alert('Failed to update checkout status');
+      toast.error('Failed to update checkout status');
     } finally {
       setActionLoading(null);
     }
@@ -99,7 +117,7 @@ const BookingsList = () => {
 
   const handleCancelBooking = async () => {
     if (!bookingToCancel) return;
-
+  
     try {
       setActionLoading(bookingToCancel._id);
       const response = await axios.put(
@@ -111,7 +129,7 @@ const BookingsList = () => {
           }
         }
       );
-
+  
       if (response.data) {
         setBookings(bookings.map(b => 
           b._id === bookingToCancel._id ? { ...b, bookingStatus: 'cancelled' } : b
@@ -122,11 +140,11 @@ const BookingsList = () => {
         }
         
         closeCancelModal();
-        alert('Booking cancelled successfully');
+        toast.success('Booking cancelled successfully');
       }
     } catch (error) {
       console.error('Error cancelling booking:', error);
-      alert(error.response?.data?.message || 'Failed to cancel booking');
+      toast.error(error.response?.data?.message || 'Failed to cancel booking');
     } finally {
       setActionLoading(null);
     }
@@ -214,9 +232,11 @@ const BookingsList = () => {
 
   const getFilteredBookings = () => {
     if (bookingFilter === 'active') {
-      return bookings.filter(booking => booking.bookingStatus !== 'cancelled');
+      return bookings.filter(booking => booking.bookingStatus !== 'cancelled' && !booking.checkedOut);
     } else if (bookingFilter === 'cancelled') {
       return bookings.filter(booking => booking.bookingStatus === 'cancelled');
+    } else if (bookingFilter === 'checkedout') {
+      return bookings.filter(booking => booking.checkedOut === true);
     }
     return bookings;
   };
@@ -292,7 +312,13 @@ const BookingsList = () => {
                   <div className="flex items-center bg-blue-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
                     <span className="text-sm text-blue-700">
-                      Active: {bookings.filter(b => b.bookingStatus !== 'cancelled').length}
+                      Active: {bookings.filter(b => b.bookingStatus !== 'cancelled' && !b.checkedOut).length}
+                    </span>
+                  </div>
+                  <div className="flex items-center bg-purple-50 px-3 py-2 rounded-lg">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
+                    <span className="text-sm text-purple-700">
+                      Checked Out: {bookings.filter(b => b.checkedOut === true).length}
                     </span>
                   </div>
                   <div className="flex items-center bg-red-50 px-3 py-2 rounded-lg">
@@ -316,6 +342,16 @@ const BookingsList = () => {
                       }`}
                     >
                       Active
+                    </button>
+                    <button
+                      onClick={() => setBookingFilter('checkedout')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        bookingFilter === 'checkedout'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Checked Out
                     </button>
                     <button
                       onClick={() => setBookingFilter('cancelled')}
@@ -417,23 +453,14 @@ const BookingsList = () => {
                                     <Eye size={12} />
                                     View
                                   </button>
-                                  {booking.bookingStatus !== 'cancelled' && (
+                                  {booking.bookingStatus !== 'cancelled' && !booking.checkedOut && (
                                     <>
                                       <button
-                                        onClick={() => handleCheckout(booking._id, booking.checkedOut)}
-                                        disabled={actionLoading === booking._id}
-                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
-                                          booking.checkedOut
-                                            ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 disabled:opacity-50'
-                                            : 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 disabled:opacity-50'
-                                        }`}
+                                        onClick={() => openCheckoutModal(booking)}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
                                       >
-                                        {actionLoading === booking._id ? (
-                                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                                        ) : (
-                                          <LogOut size={12} />
-                                        )}
-                                        {booking.checkedOut ? 'Undo' : 'Checkout'}
+                                        <LogOut size={12} />
+                                        Checkout
                                       </button>
                                       <button
                                         onClick={() => openCancelModal(booking)}
@@ -489,23 +516,14 @@ const BookingsList = () => {
                               <Eye size={12} />
                               View
                             </button>
-                            {booking.bookingStatus !== 'cancelled' && (
+                            {booking.bookingStatus !== 'cancelled' && !booking.checkedOut && (
                               <>
                                 <button
-                                  onClick={() => handleCheckout(booking._id, booking.checkedOut)}
-                                  disabled={actionLoading === booking._id}
-                                  className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg transition-colors ${
-                                    booking.checkedOut
-                                      ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 disabled:opacity-50'
-                                      : 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 disabled:opacity-50'
-                                  }`}
+                                  onClick={() => openCheckoutModal(booking)}
+                                  className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-2 text-xs rounded-lg transition-colors text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
                                 >
-                                  {actionLoading === booking._id ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                                  ) : (
-                                    <LogOut size={12} />
-                                  )}
-                                  {booking.checkedOut ? 'Undo' : 'Checkout'}
+                                  <LogOut size={12} />
+                                  Checkout
                                 </button>
                                 <button
                                   onClick={() => openCancelModal(booking)}
@@ -557,6 +575,70 @@ const BookingsList = () => {
           )}
         </div>
       </div>
+
+      {checkoutModalOpen && bookingToCheckout && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <LogOut className="text-green-600" size={24} />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Confirm Checkout</h3>
+              <p className="text-gray-600 text-center mb-6">
+                Are you sure you want to mark this booking as checked out? This will remove the booking from the property.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Booking ID:</span>
+                  <span className="font-mono">#{bookingToCheckout._id?.slice(-5).toUpperCase()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Guest:</span>
+                  <span className="font-medium">{bookingToCheckout.user?.name || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Property:</span>
+                  <span className="font-medium">{bookingToCheckout.property?.title || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Check-out Date:</span>
+                  <span className="font-medium">
+                    {bookingToCheckout.checkOut ? new Date(bookingToCheckout.checkOut).toLocaleDateString() : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={closeCheckoutModal}
+                  disabled={actionLoading === bookingToCheckout._id}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCheckout}
+                  disabled={actionLoading === bookingToCheckout._id}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
+                >
+                  {actionLoading === bookingToCheckout._id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut size={16} />
+                      Confirm Checkout
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cancelModalOpen && bookingToCancel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -733,7 +815,8 @@ const BookingsList = () => {
                         <span className="font-medium text-sm">
                           {selectedBooking.checkIn ? new Date(selectedBooking.checkIn).toLocaleDateString() : 'N/A'}
                         </span>
-                      </div><div className="flex justify-between">
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-gray-600">Check-out:</span>
                         <span className="font-medium text-sm">
                           {selectedBooking.checkOut ? new Date(selectedBooking.checkOut).toLocaleDateString() : 'N/A'}
@@ -805,29 +888,20 @@ const BookingsList = () => {
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-6 flex gap-3">
-                <button
-                  onClick={() => handleCheckout(selectedBooking._id, selectedBooking.checkedOut)}
-                  disabled={actionLoading === selectedBooking._id}
-                  className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    selectedBooking.checkedOut
-                      ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 disabled:opacity-50'
-                      : 'text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 disabled:opacity-50'
-                  }`}
-                >
-                  {actionLoading === selectedBooking._id ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <LogOut size={16} />
-                      {selectedBooking.checkedOut ? 'Mark as Not Checked Out' : 'Mark as Checked Out'}
-                    </>
-                  )}
-                </button>
-              </div>
+              {selectedBooking.bookingStatus !== 'cancelled' && !selectedBooking.checkedOut && (
+                <div className="border-t border-gray-200 pt-6 flex gap-3">
+                  <button
+                    onClick={() => {
+                      closeModal();
+                      openCheckoutModal(selectedBooking);
+                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
+                  >
+                    <LogOut size={16} />
+                    Mark as Checked Out
+                  </button>
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 border-t border-gray-200 pt-6">
                 <button

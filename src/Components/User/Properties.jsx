@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   Search,
   Heart,
@@ -25,7 +27,8 @@ import {
   Calendar,
   ChevronDown,
   Plus,
-  Minus
+  Minus,
+  XCircle
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import axios from "axios";
@@ -94,16 +97,35 @@ const CustomDatePicker = React.memo(({ value, onChange, placeholder, minDate }) 
   }, [value]);
 
   const isBeforeMinDate = useCallback((date) => {
-    if (!minDate) return false;
-    const min = new Date(minDate);
-    min.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let compareDate = today;
+    
+    if (minDate) {
+      const min = new Date(minDate);
+      min.setHours(0, 0, 0, 0);
+      compareDate = min > today ? min : today;
+    }
+    
     const checkDate = new Date(date);
     checkDate.setHours(0, 0, 0, 0);
-    return checkDate < min;
+    
+    return checkDate < compareDate;
   }, [minDate]);
 
   const handleDateSelect = useCallback((date) => {
-    if (isBeforeMinDate(date)) return;
+    if (isBeforeMinDate(date)) {
+      toast.error('Cannot select past dates', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -369,6 +391,7 @@ const NeighborhoodScroller = React.memo(({ neighborhoods, filters, onNeighborhoo
   if (neighborhoods.length === 0) return null;
 
   return (
+
     <section className="mb-8">
       <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
@@ -495,6 +518,7 @@ const Pagination = React.memo(({ currentPage, totalPages, onPageChange, itemsPer
     </div>
   );
 });
+
 const StarRating = React.memo(({ rating, showCount = false, count = 0, size = 16 }) => {
   if (!rating || rating === 0) return null;
   
@@ -529,6 +553,7 @@ const StarRating = React.memo(({ rating, showCount = false, count = 0, size = 16
     </div>
   );
 });
+
 const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLike, onPropertyClick, hoveredProperty, onMouseEnter, onMouseLeave }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   
@@ -581,7 +606,6 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
 
   const displayPrice = useMemo(() => getDisplayPrice(), [getDisplayPrice]);
 
-  // Get rating data
   const hasRatings = property.ratings && property.ratings.average > 0;
   const rating = hasRatings ? property.ratings.average : 0;
   const reviewCount = hasRatings ? property.ratings.total : 0;
@@ -663,7 +687,6 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
             </h3>
           </div>
           
-          {/* Rating Section */}
           {hasRatings && (
             <div className="mb-2">
               <StarRating 
@@ -898,7 +921,6 @@ const Properties = () => {
       queryParams.set('limit', itemsPerPage.toString());
 
       const response = await axiosInstance.get(`user/properties?${queryParams.toString()}`);
-      console.log(response,"heee")
 
       if (response.data.success) {
         setProperties(response.data.data || []);
@@ -971,6 +993,13 @@ const Properties = () => {
     setSearchTerm("");
     setCurrentPage(1);
   }, []);
+
+  const clearSearch = useCallback(() => {
+    setCheckIn('');
+    setCheckOut('');
+    setGuests({ adults: 1, children: 0, infants: 0 });
+    navigate('/property');
+  }, [navigate]);
 
   const handlePropertyClick = useCallback((propertyId, index) => {
     const queryString = buildQueryString(true);
@@ -1108,6 +1137,8 @@ const Properties = () => {
     return date.toISOString().split('T')[0];
   }, [checkIn]);
 
+  const hasActiveSearch = checkIn || checkOut || guests.adults > 1 || guests.children > 0 || guests.infants > 0;
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-6">
@@ -1128,6 +1159,7 @@ const Properties = () => {
 
   return (
     <>
+        <ToastContainer />
       <div className="min-h-screen bg-slate-50">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
           <Navbar />
@@ -1178,16 +1210,26 @@ const Properties = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end gap-2">
                     <button
                       onClick={handleNewSearch}
-                      className="w-full h-11 rounded-xl font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                      className="flex-1 h-11 rounded-xl font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                       style={{ 
                         background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`,
-                      }} >
+                      }}
+                    >
                       <Search className="h-4 w-4"/>
                       Search
                     </button>
+                    {hasActiveSearch && (
+                      <button
+                        onClick={clearSearch}
+                        className="h-11 px-4 rounded-xl font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 transition-all duration-300 flex items-center justify-center gap-2"
+                        title="Clear search"
+                      >
+                        <XCircle className="h-4 w-4"/>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1412,6 +1454,7 @@ const Properties = () => {
                     onClick={() => {
                       setSearchTerm("");
                       resetFilters();
+                      clearSearch();
                     }}
                     className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition-all duration-300"
                   >
@@ -1456,7 +1499,8 @@ const Properties = () => {
         guests={guests}
         onGuestsChange={setGuests}
       />
-        <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
+      
+      <div className="fixed right-4 bottom-20 flex flex-col gap-4 z-50">
         <a
           href="https://wa.me/971522596860"
           target="_blank"
