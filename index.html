@@ -4,61 +4,65 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Wavescation</title>
-    <link rel="icon" type="image/svg+xml" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
+    <title>Wavescation — Holiday Homes & Luxury Coastal Stays in Dubai</title>
 
-    <meta name="description" content="Wavescation — Your seaside getaway booking platform for unforgettable coastal stays and luxury experiences.">
-    <meta name="keywords" content="wavescation, travel, beach stays, seaside booking, vacations, luxury resorts, coastal retreats, hotel booking">
-    <meta name="author" content="Wavescation Team">
-    <meta name="robots" content="index, follow">
+    <meta name="description" content="Discover luxury beachfront villas, ocean-view apartments, and coastal stays in Dubai with Wavescation. Book your dream seaside vacation today!">
+    <meta name="keywords" content="wavescation, dubai holiday homes, beach villas dubai, seaside stays, luxury vacation rentals, coastal holidays">
+    <meta name="author" content="Wavescation Holiday Homes" />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#00b4d8" />
 
-    <meta property="og:title" content="Wavescation — Experience The Ocean Like Never Before">
-    <meta property="og:description" content="Book your perfect coastal escape with Wavescation. Explore beautiful seaside resorts, beach villas, and unforgettable experiences.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://wavescation.com">
-    <meta property="og:image" content="/assets/og-wavescation.png">
+    <link rel="icon" type="image/png" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
+    <link rel="canonical" href="https://www.wavescation.com/" />
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Wavescation — Coastal Getaways, Redefined">
-    <meta name="twitter:description" content="Discover your dream seaside retreat with Wavescation. Book, relax, and experience the luxury of the waves.">
-    <meta name="twitter:image" content="/frontend/src/assets/logo.png">
+    <!-- Open Graph (Facebook, LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavescation — Redefining Coastal Luxury in Dubai" />
+    <meta property="og:description" content="Book premium beach villas, ocean-view apartments, and holiday homes with Wavescation — Dubai’s trusted DTCM-licensed stay provider." />
+    <meta property="og:url" content="https://www.wavescation.com/" />
+    <meta property="og:image" content="https://www.wavescation.com/assets/og-wavescation.png" />
 
-    <link rel="canonical" href="https://wavescation.com" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Wavescation — Experience The Ocean Like Never Before" />
+    <meta name="twitter:description" content="Luxury seaside homes and villas across Dubai. Stay with Wavescation and feel the ocean closer than ever." />
+    <meta name="twitter:image" content="https://www.wavescation.com/assets/og-wavescation.png" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="preload" as="script" href="/src/main.jsx" />
 
-    <!-- 🌊 Wavescation Structured Data for Google Search -->
+    <!-- ✅ Structured Data for Rich Results -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Wavescation Holiday Homes",
       "url": "https://www.wavescation.com",
-      "logo": "https://www.wavescation.com/src/assets/wave.png",
-      "description": "Wavescation helps travelers find and book beachside stays, villas, and cottages with ease. Experience oceanfront relaxation and curated holiday rentals across stunning destinations.",
+      "logo": "https://www.wavescation.com/assets/logo-DC0iQ2p5.png",
+      "description": "Wavescation helps travelers find and book premium beachfront villas and ocean-view holiday homes in Dubai.",
+      "foundingDate": "2022",
       "founder": {
         "@type": "Person",
         "name": "Wavescation Team"
       },
       "sameAs": [
-        "https://www.instagram.com/wavescation_holidayhomes?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr",
+        "https://www.instagram.com/wavescation_holidayhomes/",
         "https://www.linkedin.com/company/wavescation-holiday-homes/",
-        "https://www.facebook.com/share/17PS5QDDa7/?mibextid=wwXIfr"
+        "https://www.facebook.com/share/17PS5QDDa7/"
       ],
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+91-9876543210",
+        "telephone": "+971-50-1234567",
         "contactType": "Customer Support",
-        "areaServed": "IN",
-        "availableLanguage": ["English"]
+        "areaServed": "AE",
+        "availableLanguage": ["English", "Arabic"]
       }
     }
     </script>
 
-    <!-- 🌐 Website Schema for Sitelinks & Internal Search -->
+    <!-- ✅ Website Schema (Enables Sitelinks Search Box) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -72,6 +76,36 @@
       }
     }
     </script>
+
+    <!-- ✅ Breadcrumb Schema (helps with sub-links display) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.wavescation.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Holiday Homes",
+          "item": "https://www.wavescation.com/holiday-homes"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Contact Us",
+          "item": "https://www.wavescation.com/contact"
+        }
+      ]
+    }
+    </script>
+
+    <link rel="preload" as="script" href="/src/main.jsx" />
   </head>
 
   <body>
