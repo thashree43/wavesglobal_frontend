@@ -93,7 +93,7 @@ const CustomToast = ({ message, type = 'default', onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 1000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -346,7 +346,39 @@ const getDaysInMonth = (date) => {
 const getFirstDayOfMonth = (date) => {
   return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 };
-
+const getLastBookedDateInRange = (startDate, endDate) => {
+  if (!startDate || !endDate || bookedDates.length === 0) return null;
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  const bookedInRange = bookedDates
+    .map(date => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })
+    .filter(date => date >= start && date < end)
+    .sort((a, b) => b - a);  
+  
+  return bookedInRange.length > 0 ? bookedInRange[0] : null;
+};
+const isDateRangeBooked = (startDate, endDate) => {
+  if (!startDate || !endDate) return false;
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  return bookedDates.some(bookedDate => {
+    const bookedDateOnly = new Date(bookedDate);
+    bookedDateOnly.setHours(0, 0, 0, 0);
+    return bookedDateOnly >= start && bookedDateOnly < end;
+  });
+};
 const isDateDisabled = (date, type = 'checkin') => {
   if (!date || isNaN(date.getTime())) return true;
   
@@ -362,6 +394,24 @@ const isDateDisabled = (date, type = 'checkin') => {
     const checkinDate = new Date(selectedDates.checkin);
     checkinDate.setHours(0, 0, 0, 0);
     if (checkDate <= checkinDate) return true;
+  }
+  
+  if (type === 'checkin' && (selectedPricingPeriod === 'week' || selectedPricingPeriod === 'month' || selectedPricingPeriod === 'year')) {
+    let calculatedCheckout = new Date(checkDate);
+    
+    if (selectedPricingPeriod === 'week') {
+      calculatedCheckout.setDate(calculatedCheckout.getDate() + (selectedQuantity * 7));
+    } else if (selectedPricingPeriod === 'month') {
+      calculatedCheckout.setMonth(calculatedCheckout.getMonth() + selectedQuantity);
+    } else if (selectedPricingPeriod === 'year') {
+      calculatedCheckout.setFullYear(calculatedCheckout.getFullYear() + 1);
+    }
+    
+    const lastBookedInRange = getLastBookedDateInRange(checkDate, calculatedCheckout);
+    
+    if (lastBookedInRange) {
+      return true;
+    }
   }
   
   return bookedDates.some(bookedDate => {
@@ -833,13 +883,40 @@ const handleDateChange = (date, type) => {
   if (!date) return;
   
   if (type === 'checkin') {
-    setSelectedDates({ checkin: date, checkout: '' });
-    
     if (selectedPricingPeriod !== 'night') {
-      const checkoutDate = calculateCheckoutDate();
-      setTimeout(() => {
-        setSelectedDates({ checkin: date, checkout: checkoutDate });
-      }, 100);
+      let calculatedCheckout = new Date(date);
+      
+      if (selectedPricingPeriod === 'week') {
+        calculatedCheckout.setDate(calculatedCheckout.getDate() + (selectedQuantity * 7));
+      } else if (selectedPricingPeriod === 'month') {
+        calculatedCheckout.setMonth(calculatedCheckout.getMonth() + selectedQuantity);
+      } else if (selectedPricingPeriod === 'year') {
+        calculatedCheckout.setFullYear(calculatedCheckout.getFullYear() + 1);
+      }
+      
+      const lastBookedInRange = getLastBookedDateInRange(date, calculatedCheckout);
+      
+      if (lastBookedInRange) {
+        const nextAvailable = new Date(lastBookedInRange);
+        nextAvailable.setDate(nextAvailable.getDate() + 1);
+        const formattedDate = nextAvailable.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric',
+          year: 'numeric'
+        });
+        
+        showToast(`This period has existing bookings. Next available date: ${formattedDate}`, 'error');
+        return;
+      }
+      
+      const year = calculatedCheckout.getFullYear();
+      const month = String(calculatedCheckout.getMonth() + 1).padStart(2, '0');
+      const day = String(calculatedCheckout.getDate()).padStart(2, '0');
+      const checkoutDateString = `${year}-${month}-${day}`;
+      
+      setSelectedDates({ checkin: date, checkout: checkoutDateString });
+    } else {
+      setSelectedDates({ checkin: date, checkout: '' });
     }
   } else {
     if (selectedDates.checkin && new Date(date) <= new Date(selectedDates.checkin)) {
@@ -855,6 +932,7 @@ const handlePricingPeriodChange = (period) => {
   setSelectedQuantity(1);
   setSelectedMonth('');
   setSelectedDates({ checkin: '', checkout: '' });
+  setShowCalendar({ checkin: false, checkout: false });
 };
 
 const handleBookNow = async () => {
