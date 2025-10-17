@@ -61,7 +61,7 @@ const Footer = () => {
                 <Mail className="h-4 w-4 text-white group-hover:animate-bounce" />
               </a>
               <a 
-                href="https://www.instagram.com/_wavescation2025?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr"
+                href="https://www.instagram.com/wavescation_holidayhomes?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer group" 
