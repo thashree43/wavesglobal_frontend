@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Calendar, Users, ChevronLeft, ChevronRight, ChevronDown, Plus, Minus } from 'lucide-react';
 import { createPortal } from "react-dom";
 import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const CustomDatePicker = ({ value, onChange, placeholder }) => {
+const CustomDatePicker = ({ value, onChange, placeholder, minDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dropdownRef = useRef(null);
@@ -48,14 +50,44 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
   const isSameMonth = useCallback((date) => date.getMonth() === selectedDate.getMonth(), [selectedDate]);
   const isSelected = useCallback((date) => value && date.toDateString() === new Date(value).toDateString(), [value]);
   
+  const isBeforeMinDate = useCallback((date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let compareDate = today;
+    
+    if (minDate) {
+      const min = new Date(minDate);
+      min.setHours(0, 0, 0, 0);
+      compareDate = min > today ? min : today;
+    }
+    
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    return checkDate < compareDate;
+  }, [minDate]);
+  
   const handleDateSelect = useCallback((date) => { 
+    if (isBeforeMinDate(date)) {
+      toast.error('Cannot select past dates', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+    
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`; 
     onChange(formattedDate); 
     setIsOpen(false); 
-  }, [onChange]);
+  }, [onChange, isBeforeMinDate]);
   
   
   const nextMonth = useCallback(() => { 
@@ -124,32 +156,39 @@ const CustomDatePicker = ({ value, onChange, placeholder }) => {
               </div>
 
               <div className="grid grid-cols-7 gap-1">
-                {generateCalendar().map((date, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleDateSelect(date)}
-                    className="h-10 w-full rounded-lg text-sm font-medium transition-all duration-200"
-                    style={{
-                      color: !isSameMonth(date) ? 'rgb(247, 219, 190)' : 
-                             isSelected(date) ? 'white' :
-                             isToday(date) ? 'white' : 'rgb(0, 31, 60)',
-                      backgroundColor: isSelected(date) ? 'rgb(231, 121, 0)' :
-                                     isToday(date) ? 'rgb(4, 80, 115)' : 'transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected(date) && !isToday(date)) {
-                        e.target.style.backgroundColor = 'rgb(247, 219, 190)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected(date) && !isToday(date)) {
-                        e.target.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    {date.getDate()}
-                  </button>
-                ))}
+                {generateCalendar().map((date, index) => {
+                  const isPastDate = isBeforeMinDate(date);
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleDateSelect(date)}
+                      disabled={isPastDate}
+                      className="h-10 w-full rounded-lg text-sm font-medium transition-all duration-200"
+                      style={{
+                        color: isPastDate ? 'rgb(200, 200, 200)' :
+                               !isSameMonth(date) ? 'rgb(247, 219, 190)' : 
+                               isSelected(date) ? 'white' :
+                               isToday(date) ? 'white' : 'rgb(0, 31, 60)',
+                        backgroundColor: isSelected(date) ? 'rgb(231, 121, 0)' :
+                                       isToday(date) ? 'rgb(4, 80, 115)' : 'transparent',
+                        cursor: isPastDate ? 'not-allowed' : 'pointer',
+                        opacity: isPastDate ? 0.4 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected(date) && !isToday(date) && !isPastDate) {
+                          e.target.style.backgroundColor = 'rgb(247, 219, 190)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected(date) && !isToday(date) && !isPastDate) {
+                          e.target.style.backgroundColor = 'transparent';
+                        }
+                      }}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>,
@@ -317,9 +356,40 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, [carouselImages.length]);
 
+  useEffect(() => {
+    if (checkIn && checkOut) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      if (checkOutDate <= checkInDate) {
+        const newCheckOut = new Date(checkInDate);
+        newCheckOut.setDate(newCheckOut.getDate() + 1);
+        const year = newCheckOut.getFullYear();
+        const month = String(newCheckOut.getMonth() + 1).padStart(2, "0");
+        const day = String(newCheckOut.getDate()).padStart(2, "0");
+        setCheckOut(`${year}-${month}-${day}`);
+      }
+    }
+  }, [checkIn, checkOut]);
+
+  const minCheckOutDate = checkIn ? (() => {
+    const date = new Date(checkIn);
+    date.setDate(date.getDate() + 1);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })() : null;
+
   const handleSearch = useCallback(() => {
     if (!checkIn || !checkOut) {
-      alert('Please select both check-in and check-out dates'); 
+      toast.error('Please select both check-in and check-out dates', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       return;
     }
     const searchParams = new URLSearchParams({
@@ -345,10 +415,11 @@ const Hero = () => {
 
   return (
     <>
-        <div 
-          className="relative overflow-x-hidden pt-[90px] mb-[120px]" 
-          style={{ backgroundColor: 'rgb(247, 219, 190)' }}
-        >
+      <ToastContainer />
+      <div 
+        className="relative overflow-x-hidden pt-[90px] mb-[120px]" 
+        style={{ backgroundColor: 'rgb(247, 219, 190)' }}
+      >
         <section className="relative min-h-screen overflow-hidden">
           <div className="absolute inset-0">
             {carouselImages.map((image, index) => (
@@ -379,7 +450,7 @@ const Hero = () => {
 
             <div className="flex flex-col md:flex-row gap-4 max-w-4xl w-full mx-auto">
               <CustomDatePicker value={checkIn} onChange={setCheckIn} placeholder="Check-in"/>
-              <CustomDatePicker value={checkOut} onChange={setCheckOut} placeholder="Check-out"/>
+              <CustomDatePicker value={checkOut} onChange={setCheckOut} placeholder="Check-out" minDate={minCheckOutDate}/>
               <div className="relative w-full">
                 <button 
                   onClick={() => setGuestsOpen(true)} 
