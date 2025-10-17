@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { Home, X, BarChart3, Calendar, Settings, Users, MapPin, LogOut } from 'lucide-react';
+import { Home, X, BarChart3, Calendar, Settings, Users, MapPin, LogOut ,Star} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { baseurl } from '../../Base/Base';
 
@@ -12,6 +12,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick })
     { id: 'properties', name: 'Properties', icon: Home, route: '/admin/property' },
     { id: 'locations', name: 'Locations', icon: MapPin, route: '/admin/location' },
     { id: 'users', name: 'Users', icon: Users, route: '/admin/users' },
+    { id: 'reviews', name: 'Reviews', icon: Star, route: '/admin/reviews' },
     { id: 'bookings', name: 'Bookings', icon: Calendar, route: '/admin/bookings' },
     { id: 'settings', name: 'Settings', icon: Settings, route: '/admin/settings' },
   ];
