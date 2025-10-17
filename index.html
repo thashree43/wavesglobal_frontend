@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -6,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Wavescation</title>
-    <link rel="icon" type="image/svg+xml" href="./src//assets/wave.png" />
+    <link rel="icon" type="image/svg+xml" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
 
     <meta name="description" content="Wavescation — Your seaside getaway booking platform for unforgettable coastal stays and luxury experiences.">
     <meta name="keywords" content="wavescation, travel, beach stays, seaside booking, vacations, luxury resorts, coastal retreats, hotel booking">
-
     <meta name="author" content="Wavescation Team">
     <meta name="robots" content="index, follow">
-
     <meta name="theme-color" content="#00b4d8" />
 
     <meta property="og:title" content="Wavescation — Experience The Ocean Like Never Before">
@@ -28,17 +25,57 @@
     <meta name="twitter:image" content="/frontend/src/assets/logo.png">
 
     <link rel="canonical" href="https://wavescation.com" />
-
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
     <link rel="preload" as="script" href="/src/main.jsx" />
+
+    <!-- 🌊 Wavescation Structured Data for Google Search -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Wavescation Holiday Homes",
+      "url": "https://www.wavescation.com",
+      "logo": "https://www.wavescation.com/src/assets/wave.png",
+      "description": "Wavescation helps travelers find and book beachside stays, villas, and cottages with ease. Experience oceanfront relaxation and curated holiday rentals across stunning destinations.",
+      "founder": {
+        "@type": "Person",
+        "name": "Wavescation Team"
+      },
+      "sameAs": [
+        "https://www.instagram.com/wavescation_holidayhomes?igsh=MThxb2Z4ZmpqMmQxZA%3D%3D&utm_source=qr",
+        "https://www.linkedin.com/company/wavescation-holiday-homes/",
+        "https://www.facebook.com/share/17PS5QDDa7/?mibextid=wwXIfr"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-9876543210",
+        "contactType": "Customer Support",
+        "areaServed": "IN",
+        "availableLanguage": ["English"]
+      }
+    }
+    </script>
+
+    <!-- 🌐 Website Schema for Sitelinks & Internal Search -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Wavescation Holiday Homes",
+      "url": "https://www.wavescation.com/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.wavescation.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
 
   <body>
     <div id="root"></div>
-
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
