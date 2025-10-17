@@ -246,7 +246,7 @@ const InvoiceGenerator = ({ booking, logoUrl }) => {
         <style>
           body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
           .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid #f7dbbd; padding-bottom: 20px; }
-          .logo { height: 60px; }
+          .logo { height: 120px; }
           .header-info { text-align: right; }
           .header h1 { color: #000; margin: 0; font-size: 32px; }
           .header p { color: #666; margin: 5px 0; }
@@ -1035,7 +1035,7 @@ const ProfilePage = () => {
 
                                     {!isCancelled && (
                                       <div className="flex gap-4 mt-6 pt-4 border-t border-gray-200 flex-wrap">
-                                        <InvoiceGenerator booking={booking} logoUrl={logo} />
+                                        <InvoiceGenerator booking={booking} logoUrl='https://www.wavescation.com/assets/logo-DC0iQ2p5.png' />
 
                                         {canRateBooking(booking) && (
                                           <button
