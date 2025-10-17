@@ -6,34 +6,36 @@
 
     <title>Wavescation — Holiday Homes & Luxury Coastal Stays in Dubai</title>
 
+    <!-- ✅ SEO Essentials -->
     <meta name="description" content="Discover luxury beachfront villas, ocean-view apartments, and coastal stays in Dubai with Wavescation. Book your dream seaside vacation today!">
     <meta name="keywords" content="wavescation, dubai holiday homes, beach villas dubai, seaside stays, luxury vacation rentals, coastal holidays">
     <meta name="author" content="Wavescation Holiday Homes" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#00b4d8" />
-
-    <link rel="icon" type="image/png" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
     <link rel="canonical" href="https://www.wavescation.com/" />
 
-    <!-- Open Graph (Facebook, LinkedIn) -->
+    <!-- ✅ Favicon -->
+    <link rel="icon" type="image/png" href="https://www.wavescation.com/assets/logo-DC0iQ2p5.png" />
+
+    <!-- ✅ Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Wavescation — Redefining Coastal Luxury in Dubai" />
     <meta property="og:description" content="Book premium beach villas, ocean-view apartments, and holiday homes with Wavescation — Dubai’s trusted DTCM-licensed stay provider." />
     <meta property="og:url" content="https://www.wavescation.com/" />
     <meta property="og:image" content="https://www.wavescation.com/assets/og-wavescation.png" />
 
-    <!-- Twitter Card -->
+    <!-- ✅ Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Wavescation — Experience The Ocean Like Never Before" />
     <meta name="twitter:description" content="Luxury seaside homes and villas across Dubai. Stay with Wavescation and feel the ocean closer than ever." />
     <meta name="twitter:image" content="https://www.wavescation.com/assets/og-wavescation.png" />
 
-    <!-- Fonts -->
+    <!-- ✅ Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- ✅ Structured Data for Rich Results -->
+    <!-- ✅ Structured Data: Organization -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -52,17 +54,25 @@
         "https://www.linkedin.com/company/wavescation-holiday-homes/",
         "https://www.facebook.com/share/17PS5QDDa7/"
       ],
-      "contactPoint": {
+      "contactPoint": [{
         "@type": "ContactPoint",
         "telephone": "+971-50-1234567",
         "contactType": "Customer Support",
         "areaServed": "AE",
         "availableLanguage": ["English", "Arabic"]
+      }],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Jumeirah Beach Residence",
+        "addressLocality": "Dubai",
+        "addressRegion": "Dubai",
+        "postalCode": "00000",
+        "addressCountry": "AE"
       }
     }
     </script>
 
-    <!-- ✅ Website Schema (Enables Sitelinks Search Box) -->
+    <!-- ✅ Structured Data: WebSite (for Sitelinks + Search Box) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -77,7 +87,7 @@
     }
     </script>
 
-    <!-- ✅ Breadcrumb Schema (helps with sub-links display) -->
+    <!-- ✅ Structured Data: Breadcrumbs -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -105,6 +115,39 @@
     }
     </script>
 
+    <!-- ✅ JSON-LD for LocalBusiness (helps show right-side business panel) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LodgingBusiness",
+      "name": "Wavescation Holiday Homes",
+      "image": "https://www.wavescation.com/assets/og-wavescation.png",
+      "url": "https://www.wavescation.com/",
+      "telephone": "+971-50-1234567",
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Jumeirah Beach Residence",
+        "addressLocality": "Dubai",
+        "addressRegion": "Dubai",
+        "postalCode": "00000",
+        "addressCountry": "AE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 25.0800,
+        "longitude": 55.1300
+      },
+      "openingHours": "Mo-Su 09:00-22:00",
+      "sameAs": [
+        "https://www.instagram.com/wavescation_holidayhomes/",
+        "https://www.linkedin.com/company/wavescation-holiday-homes/",
+        "https://www.facebook.com/share/17PS5QDDa7/"
+      ]
+    }
+    </script>
+
+    <!-- ✅ Preload main script -->
     <link rel="preload" as="script" href="/src/main.jsx" />
   </head>
 
