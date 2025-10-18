@@ -66,10 +66,10 @@ const CheckoutPayment = ({
       setError('Booking ID not generated. Please refresh and try again.');
       return;
     }
-
+  
     setLoading(true);
     setError(null);
-
+  
     try {
       const token = localStorage.getItem('authToken');
       
@@ -85,8 +85,10 @@ const CheckoutPayment = ({
           }
         }
       );
-
+  
       if (response.data.success) {
+        sessionStorage.removeItem('bookingCompleted');
+        
         if (onPaymentSuccess) {
           onPaymentSuccess();
         } else {

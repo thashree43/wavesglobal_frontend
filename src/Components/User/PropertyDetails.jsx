@@ -52,6 +52,7 @@ const [selectedGuests, setSelectedGuests] = useState(1);
 const [showGuestDropdown, setShowGuestDropdown] = useState(false);
 const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
 const [bookedDates, setBookedDates] = useState([]);
+const [blockedDates, setBlockedDates] = useState([]);
 const [loading, setLoading] = useState(true);
 const [bookingLoading, setBookingLoading] = useState(false);
 const [toast, setToast] = useState(null);
@@ -62,6 +63,7 @@ const [selectedQuantity, setSelectedQuantity] = useState(1);
 const [showQuantityDropdown, setShowQuantityDropdown] = useState(false);
 const [selectedMonth, setSelectedMonth] = useState('');
 const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+const [dailyPrices, setDailyPrices] = useState({});
 const { id } = useParams();
 const location = useLocation();
 const navigate = useNavigate();
@@ -196,6 +198,33 @@ const SidebarSkeleton = () => (
   </div>
 );
 
+const getPriceForDate = useCallback((dateString) => {
+  if (!property.pricing) return property.pricing?.night || 0;
+
+  const date = new Date(dateString);
+  const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+
+  if (property.pricing.customDates && Array.isArray(property.pricing.customDates)) {
+    for (const customDate of property.pricing.customDates) {
+      const startDate = new Date(customDate.startDate);
+      const endDate = new Date(customDate.endDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      date.setHours(0, 0, 0, 0);
+      
+      if (date >= startDate && date <= endDate) {
+        return customDate.price || property.pricing?.night || 0;
+      }
+    }
+  }
+
+  if (property.pricing.weekdays && property.pricing.weekdays[dayName]) {
+    return property.pricing.weekdays[dayName];
+  }
+
+  return property.pricing?.night || 0;
+}, [property.pricing]);
+
 const getProperty = useCallback(async () => {
   try {
     setLoading(true);
@@ -210,7 +239,6 @@ const getProperty = useCallback(async () => {
     });
     
     const data = response.data?.property;  
-    console.log("Property data:", data);
     
     if (!data) {
       throw new Error('Property not found');
@@ -244,6 +272,23 @@ const getProperty = useCallback(async () => {
         }
       });
       setBookedDates(dates);
+    }
+
+    if (data.availability?.blockedDates && Array.isArray(data.availability.blockedDates)) {
+      const blocked = [];
+      data.availability.blockedDates.forEach(block => {
+        if (block?.startDate && block?.endDate) {
+          const startDate = new Date(block.startDate);
+          const endDate = new Date(block.endDate);
+          
+          if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+            for (let dt = new Date(startDate); dt <= endDate; dt.setDate(dt.getDate() + 1)) {
+              blocked.push(new Date(dt));
+            }
+          }
+        }
+      });
+      setBlockedDates(blocked);
     }
   } catch (error) {
     console.error('Error fetching property:', error);
@@ -286,6 +331,21 @@ useEffect(() => {
   }
 }, [location.search]);
 
+useEffect(() => {
+  if (selectedDates.checkin && selectedDates.checkout && property.pricing) {
+    const prices = {};
+    const checkin = new Date(selectedDates.checkin);
+    const checkout = new Date(selectedDates.checkout);
+    
+    for (let dt = new Date(checkin); dt < checkout; dt.setDate(dt.getDate() + 1)) {
+      const dateString = dt.toISOString().split('T')[0];
+      prices[dateString] = getPriceForDate(dateString);
+    }
+    
+    setDailyPrices(prices);
+  }
+}, [selectedDates, property.pricing, getPriceForDate]);
+
 const nextImage = () => {
   if (property.images?.length > 0) {
     setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
@@ -313,6 +373,10 @@ const getAvailablePricingPeriods = () => {
 };
 
 const getCurrentPrice = () => {
+  if (selectedPricingPeriod === 'night' && selectedDates.checkin) {
+    return getPriceForDate(selectedDates.checkin);
+  }
+
   const pricingMap = {
     'night': property.pricing?.night,
     'week': property.pricing?.week,
@@ -346,15 +410,18 @@ const getDaysInMonth = (date) => {
 const getFirstDayOfMonth = (date) => {
   return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 };
+
 const getLastBookedDateInRange = (startDate, endDate) => {
-  if (!startDate || !endDate || bookedDates.length === 0) return null;
+  if (!startDate || !endDate || (bookedDates.length === 0 && blockedDates.length === 0)) return null;
   
   const start = new Date(startDate);
   const end = new Date(endDate);
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
   
-  const bookedInRange = bookedDates
+  const allBlockedDates = [...bookedDates, ...blockedDates];
+  
+  const blockedInRange = allBlockedDates
     .map(date => {
       const d = new Date(date);
       d.setHours(0, 0, 0, 0);
@@ -363,8 +430,9 @@ const getLastBookedDateInRange = (startDate, endDate) => {
     .filter(date => date >= start && date < end)
     .sort((a, b) => b - a);  
   
-  return bookedInRange.length > 0 ? bookedInRange[0] : null;
+  return blockedInRange.length > 0 ? blockedInRange[0] : null;
 };
+
 const isDateRangeBooked = (startDate, endDate) => {
   if (!startDate || !endDate) return false;
   
@@ -373,12 +441,15 @@ const isDateRangeBooked = (startDate, endDate) => {
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
   
-  return bookedDates.some(bookedDate => {
-    const bookedDateOnly = new Date(bookedDate);
-    bookedDateOnly.setHours(0, 0, 0, 0);
-    return bookedDateOnly >= start && bookedDateOnly < end;
+  const allBlockedDates = [...bookedDates, ...blockedDates];
+  
+  return allBlockedDates.some(blockedDate => {
+    const blockedDateOnly = new Date(blockedDate);
+    blockedDateOnly.setHours(0, 0, 0, 0);
+    return blockedDateOnly >= start && blockedDateOnly < end;
   });
 };
+
 const isDateDisabled = (date, type = 'checkin') => {
   if (!date || isNaN(date.getTime())) return true;
   
@@ -407,17 +478,19 @@ const isDateDisabled = (date, type = 'checkin') => {
       calculatedCheckout.setFullYear(calculatedCheckout.getFullYear() + 1);
     }
     
-    const lastBookedInRange = getLastBookedDateInRange(checkDate, calculatedCheckout);
+    const lastBlockedInRange = getLastBookedDateInRange(checkDate, calculatedCheckout);
     
-    if (lastBookedInRange) {
+    if (lastBlockedInRange) {
       return true;
     }
   }
   
-  return bookedDates.some(bookedDate => {
-    const bookedDateOnly = new Date(bookedDate);
-    bookedDateOnly.setHours(0, 0, 0, 0);
-    return bookedDateOnly.getTime() === checkDate.getTime();
+  const allBlockedDates = [...bookedDates, ...blockedDates];
+  
+  return allBlockedDates.some(blockedDate => {
+    const blockedDateOnly = new Date(blockedDate);
+    blockedDateOnly.setHours(0, 0, 0, 0);
+    return blockedDateOnly.getTime() === checkDate.getTime();
   });
 };
 
@@ -436,7 +509,7 @@ const isDateSelected = (date, type) => {
 const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
   
   const daysInMonth = getDaysInMonth(currentCalendarMonth);
   const firstDay = getFirstDayOfMonth(currentCalendarMonth);
@@ -472,38 +545,41 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
 
   return (
     <div className="absolute top-full left-0 right-0 mt-2 z-50">
-      <div className="bg-white border-2 border-gray-200 rounded-xl shadow-2xl p-6 max-w-sm">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white border border-orange-200 rounded-2xl shadow-2xl p-6 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
           <button 
             onClick={prevMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-orange-50 rounded-full transition-all duration-200"
             aria-label="Previous month"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-gray-700" />
           </button>
-          <h3 className="text-lg font-semibold text-gray-800">
-            {monthNames[currentCalendarMonth.getMonth()]} {currentCalendarMonth.getFullYear()}
-          </h3>
+          <div className="text-center">
+            <h3 className="text-lg font-bold text-gray-800">
+              {monthNames[currentCalendarMonth.getMonth()]}
+            </h3>
+            <p className="text-sm text-gray-500">{currentCalendarMonth.getFullYear()}</p>
+          </div>
           <button 
             onClick={nextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-orange-50 rounded-full transition-all duration-200"
             aria-label="Next month"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-gray-700" />
           </button>
         </div>
         
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {dayNames.map(day => (
-            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+        <div className="grid grid-cols-7 gap-2 mb-3">
+          {dayNames.map((day, idx) => (
+            <div key={idx} className="text-center text-xs font-bold text-gray-600 py-2">
               {day}
             </div>
           ))}
         </div>
         
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-2">
           {Array(firstDay).fill(null).map((_, index) => (
-            <div key={`empty-${index}`} className="h-10"></div>
+            <div key={`empty-${index}`} className="h-16"></div>
           ))}
           
           {Array(daysInMonth).fill(null).map((_, index) => {
@@ -512,6 +588,8 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
             const isDisabled = isDateDisabled(date, type);
             const isSelected = isDateSelected(date, type);
             const isToday = date.toDateString() === today.toDateString();
+            const dateString = date.toISOString().split('T')[0];
+            const dayPrice = getPriceForDate(dateString);
             
             return (
               <button
@@ -519,30 +597,52 @@ const CustomCalendar = ({ type, onDateSelect, isOpen, onClose }) => {
                 onClick={() => handleDateClick(day)}
                 disabled={isDisabled}
                 className={`
-                  h-10 w-10 rounded-lg text-sm font-medium transition-all duration-200
+                  h-16 rounded-xl flex flex-col items-center justify-center transition-all duration-200 relative
                   ${isSelected 
-                    ? 'bg-orange-500 text-white shadow-md' 
+                    ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg scale-105 ring-2 ring-orange-300' 
                     : isToday 
-                      ? 'bg-orange-100 text-orange-600 border border-orange-300'
+                      ? 'bg-orange-50 text-orange-700 border-2 border-orange-400 font-bold'
                       : isDisabled 
-                        ? 'text-gray-300 cursor-not-allowed bg-red-50' 
-                        : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                        ? 'bg-gray-50 text-gray-300 cursor-not-allowed opacity-50' 
+                        : 'bg-white border border-gray-200 text-gray-800 hover:border-orange-300 hover:bg-orange-50 hover:scale-105'
                   }
                 `}
                 aria-label={`Select ${date.toDateString()}`}
               >
-                {day}
+                <span className={`text-sm font-semibold ${isSelected ? 'text-white' : ''}`}>
+                  {day}
+                </span>
+                {!isDisabled && selectedPricingPeriod === 'night' && dayPrice > 0 && (
+                  <span className={`text-[10px] mt-1 font-medium ${
+                    isSelected ? 'text-white' : 'text-orange-600'
+                  }`}>
+                    {dayPrice.toLocaleString()}
+                  </span>
+                )}
+                {isToday && !isSelected && (
+                  <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                )}
               </button>
             );
           })}
         </div>
         
-        <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex gap-4 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-orange-500 rounded"></div>
+              <span className="text-gray-600">Selected</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-gray-100 rounded"></div>
+              <span className="text-gray-600">Unavailable</span>
+            </div>
+          </div>
           <button 
             onClick={onClose}
-            className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
           >
-            Close Calendar
+            Close
           </button>
         </div>
       </div>
@@ -763,6 +863,8 @@ const CustomDatePicker = ({ label, value, onChange, isOpen, onToggle, disabled }
 };
 
 const GuestSelector = () => {
+  const maxGuests = property.guests || 4
+  
   return (
     <div className="relative">
       <label className="block text-sm font-semibold mb-2 text-gray-700">Guests</label>
@@ -787,7 +889,7 @@ const GuestSelector = () => {
         <div className="absolute top-full left-0 right-0 mt-2 z-50">
           <div className="bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4">
             <div className="space-y-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+              {Array.from({ length: maxGuests }, (_, i) => i + 1).map((num) => (
                 <div 
                   key={num}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
@@ -858,9 +960,16 @@ const calculateCheckoutDate = () => {
 };
 
 const calculateFees = () => {
-  const basePrice = getCurrentPrice();
-  const units = calculateTotalUnits();
-  const subtotal = basePrice * units;
+  let subtotal = 0;
+
+  if (selectedPricingPeriod === 'night' && selectedDates.checkin && selectedDates.checkout) {
+    const prices = Object.values(dailyPrices);
+    subtotal = prices.reduce((sum, price) => sum + price, 0);
+  } else {
+    const basePrice = getCurrentPrice();
+    const units = calculateTotalUnits();
+    subtotal = basePrice * units;
+  }
   
   const cleaningFee = property.fees?.cleaningFee || 25;
   const serviceFee = property.fees?.serviceFee || 15;
@@ -894,10 +1003,10 @@ const handleDateChange = (date, type) => {
         calculatedCheckout.setFullYear(calculatedCheckout.getFullYear() + 1);
       }
       
-      const lastBookedInRange = getLastBookedDateInRange(date, calculatedCheckout);
+      const lastBlockedInRange = getLastBookedDateInRange(date, calculatedCheckout);
       
-      if (lastBookedInRange) {
-        const nextAvailable = new Date(lastBookedInRange);
+      if (lastBlockedInRange) {
+        const nextAvailable = new Date(lastBlockedInRange);
         nextAvailable.setDate(nextAvailable.getDate() + 1);
         const formattedDate = nextAvailable.toLocaleDateString('en-US', { 
           month: 'short', 
@@ -933,6 +1042,7 @@ const handlePricingPeriodChange = (period) => {
   setSelectedMonth('');
   setSelectedDates({ checkin: '', checkout: '' });
   setShowCalendar({ checkin: false, checkout: false });
+  setDailyPrices({});
 };
 
 const handleBookNow = async () => {
@@ -1025,8 +1135,6 @@ const handleBookNow = async () => {
     setBookingLoading(false);
   }
 };
-
-
 
 useEffect(() => {
   const handleClickOutside = (event) => {
@@ -1537,6 +1645,20 @@ return (
                 </button>
 
                 <div className="space-y-3 text-sm">
+                  {selectedPricingPeriod === 'night' && Object.keys(dailyPrices).length > 0 && (
+                    <div className="mb-4 pb-4 border-b border-gray-200">
+                      <p className="font-semibold mb-2">Daily Breakdown:</p>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {Object.entries(dailyPrices).map(([date, price]) => (
+                          <div key={date} className="flex justify-between text-xs">
+                            <span>{new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                            <span>{formatPrice(price)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between">
                     <span>{formatPrice(getCurrentPrice())} × {units} {selectedPricingPeriod}{units > 1 ? 's' : ''}</span>
                     <span>{formatPrice(fees.subtotal)}</span>
@@ -1616,14 +1738,6 @@ return (
                        selectedPricingPeriod === 'week' ? '1 week' :
                        selectedPricingPeriod === 'month' ? '1 month' : '1 year'}
                     </span>
-                  </div>
-                  <div className="flex justify-between">
-                    {/* <span className="text-gray-600">Cancellation</span>
-                    <span className="font-medium">Free until 48h</span> */}
-                  </div>
-                  <div className="flex justify-between">
-                    {/* <span className="text-gray-600">Security Deposit</span>
-                    <span className="font-medium">{formatPrice(property.fees?.damageDeposit || 200)}</span> */}
                   </div>
                 </div>
               </div>

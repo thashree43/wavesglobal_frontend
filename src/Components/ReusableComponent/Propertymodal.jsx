@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Upload, Check, Wifi, Wind, Tv, Car, Coffee, Dumbbell, WavesLadder, Shield, MapPin } from 'lucide-react';
+import { X, Plus, Upload, Check, Wifi, Wind, Tv, Car, Coffee, Dumbbell, WavesLadder, Shield, MapPin, Calendar, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
 
 const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoods = [], propertyTypes = [], loading }) => {
+  const safeNeighborhoods = neighborhoods || [];
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -12,7 +13,17 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
       night: '',
       week: '',
       month: '',
-      year: ''
+      year: '',
+      weekdays: {
+        monday: '',
+        tuesday: '',
+        wednesday: '',
+        thursday: '',
+        friday: '',
+        saturday: '',
+        sunday: ''
+      },
+      customDates: []
     },
     fees: {
       cleaningFee: '',
@@ -52,9 +63,23 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
       children: false
     },
     extraServices: [],
+    availability: {
+      blockedDates: []
+    },
     status: true,
     images: [],
     mapLocation: { lat: '', lng: '' }
+  });
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
+  const [customPriceInput, setCustomPriceInput] = useState('');
+  const [customPriceLabel, setCustomPriceLabel] = useState('');
+  const [editingCustomPrice, setEditingCustomPrice] = useState(null);
+  const [newBlockedDate, setNewBlockedDate] = useState({
+    startDate: '',
+    endDate: '',
+    reason: ''
   });
 
   const propertyHighlightsOptions = [
@@ -110,15 +135,156 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
     { name: 'Grocery Delivery', description: 'Pre-arrival grocery shopping and stocking', price: '20' }
   ];
 
+  const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+  const getMonthDays = (year, month) => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  };
+
+  const formatDateString = (date) => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const isDateInRange = (date, start, end) => {
+    if (!date || !start || !end) return false;
+    const dateTime = date.getTime();
+    const startTime = start.getTime();
+    const endTime = end.getTime();
+    return dateTime >= startTime && dateTime <= endTime;
+  };
+
+  const getPriceForDate = (date) => {
+    if (!date) return null;
+    
+    const dateStr = formatDateString(date);
+    const customPrice = formData.pricing.customDates.find(custom => {
+      return isDateInRange(date, new Date(custom.startDate), new Date(custom.endDate));
+    });
+    
+    if (customPrice) {
+      return customPrice.price;
+    }
+    
+    const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+    if (formData.pricing.weekdays[dayName]) {
+      return formData.pricing.weekdays[dayName];
+    }
+    
+    return formData.pricing.night || null;
+  };
+
+  const handleDateClick = (date) => {
+    if (!date) return;
+    
+    if (!selectedRange.start || (selectedRange.start && selectedRange.end)) {
+      setSelectedRange({ start: date, end: null });
+    } else {
+      if (date < selectedRange.start) {
+        setSelectedRange({ start: date, end: selectedRange.start });
+      } else {
+        setSelectedRange({ start: selectedRange.start, end: date });
+      }
+    }
+  };
+
+  const handleSetCustomPrice = () => {
+    if (!selectedRange.start || !selectedRange.end) {
+      alert('Please select a date range first');
+      return;
+    }
+    
+    if (!customPriceInput || parseFloat(customPriceInput) <= 0) {
+      alert('Please enter a valid price');
+      return;
+    }
+
+    const newCustomDate = {
+      startDate: formatDateString(selectedRange.start),
+      endDate: formatDateString(selectedRange.end),
+      price: parseFloat(customPriceInput),
+      label: customPriceLabel || ''
+    };
+
+    if (editingCustomPrice !== null) {
+      const updatedCustomDates = [...formData.pricing.customDates];
+      updatedCustomDates[editingCustomPrice] = newCustomDate;
+      setFormData(prev => ({
+        ...prev,
+        pricing: {
+          ...prev.pricing,
+          customDates: updatedCustomDates
+        }
+      }));
+      setEditingCustomPrice(null);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        pricing: {
+          ...prev.pricing,
+          customDates: [...prev.pricing.customDates, newCustomDate]
+        }
+      }));
+    }
+
+    setSelectedRange({ start: null, end: null });
+    setCustomPriceInput('');
+    setCustomPriceLabel('');
+  };
+
+  const handleEditCustomPrice = (index) => {
+    const customDate = formData.pricing.customDates[index];
+    setSelectedRange({
+      start: new Date(customDate.startDate),
+      end: new Date(customDate.endDate)
+    });
+    setCustomPriceInput(customDate.price.toString());
+    setCustomPriceLabel(customDate.label || '');
+    setEditingCustomPrice(index);
+  };
+
+  const handleRemoveCustomPrice = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      pricing: {
+        ...prev.pricing,
+        customDates: prev.pricing.customDates.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const navigateMonth = (direction) => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + direction);
+      return newDate;
+    });
+  };
+
   useEffect(() => {
     if (editingProperty) {
       const imagesWithIds = editingProperty.images ? editingProperty.images.map((image, index) => ({
         ...image,
         id: image.id || `existing-${index}-${Date.now()}`
       })) : [];
-
+  
       let neighborhoodValue = '';
-      if (editingProperty.neighborhood) {
+      if (editingProperty.neighborhood && neighborhoods && neighborhoods.length > 0) {
         if (typeof editingProperty.neighborhood === 'object' && editingProperty.neighborhood._id) {
           neighborhoodValue = editingProperty.neighborhood._id;
         } else if (typeof editingProperty.neighborhood === 'string') {
@@ -133,7 +299,17 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         night: editingProperty.pricing?.night ? editingProperty.pricing.night.toString().replace('AED ', '').replace(/,/g, '') : '',
         week: editingProperty.pricing?.week ? editingProperty.pricing.week.toString().replace('AED ', '').replace(/,/g, '') : '',
         month: editingProperty.pricing?.month ? editingProperty.pricing.month.toString().replace('AED ', '').replace(/,/g, '') : '',
-        year: editingProperty.pricing?.year ? editingProperty.pricing.year.toString().replace('AED ', '').replace(/,/g, '') : ''
+        year: editingProperty.pricing?.year ? editingProperty.pricing.year.toString().replace('AED ', '').replace(/,/g, '') : '',
+        weekdays: {
+          monday: editingProperty.pricing?.weekdays?.monday || '',
+          tuesday: editingProperty.pricing?.weekdays?.tuesday || '',
+          wednesday: editingProperty.pricing?.weekdays?.wednesday || '',
+          thursday: editingProperty.pricing?.weekdays?.thursday || '',
+          friday: editingProperty.pricing?.weekdays?.friday || '',
+          saturday: editingProperty.pricing?.weekdays?.saturday || '',
+          sunday: editingProperty.pricing?.weekdays?.sunday || ''
+        },
+        customDates: editingProperty.pricing?.customDates || []
       };
 
       const cleanFees = {
@@ -177,6 +353,9 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
           children: false
         },
         extraServices: editingProperty.extraServices || [],
+        availability: editingProperty.availability || {
+          blockedDates: []
+        },
         images: imagesWithIds,
         mapLocation: editingProperty.mapLocation || { lat: '', lng: '' }
       });
@@ -191,7 +370,17 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
           night: '',
           week: '',
           month: '',
-          year: ''
+          year: '',
+          weekdays: {
+            monday: '',
+            tuesday: '',
+            wednesday: '',
+            thursday: '',
+            friday: '',
+            saturday: '',
+            sunday: ''
+          },
+          customDates: []
         },
         fees: {
           cleaningFee: '',
@@ -231,6 +420,9 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
           children: false
         },
         extraServices: [],
+        availability: {
+          blockedDates: []
+        },
         status: true,
         images: [],
         mapLocation: { lat: '', lng: '' }
@@ -246,6 +438,18 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         mapLocation: {
           ...prev.mapLocation,
           [name]: value
+        }
+      }));
+    } else if (name.startsWith('pricing.weekdays.')) {
+      const day = name.split('.')[2];
+      setFormData(prev => ({
+        ...prev,
+        pricing: {
+          ...prev.pricing,
+          weekdays: {
+            ...prev.pricing.weekdays,
+            [day]: value
+          }
         }
       }));
     } else if (name.startsWith('pricing.')) {
@@ -348,16 +552,50 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
     }));
   };
 
+  const handleAddBlockedDate = () => {
+    if (!newBlockedDate.startDate || !newBlockedDate.endDate) {
+      alert('Please select both start and end dates');
+      return;
+    }
+    if (new Date(newBlockedDate.startDate) > new Date(newBlockedDate.endDate)) {
+      alert('End date must be after start date');
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      availability: {
+        ...prev.availability,
+        blockedDates: [
+          ...prev.availability.blockedDates,
+          {
+            startDate: newBlockedDate.startDate,
+            endDate: newBlockedDate.endDate,
+            reason: newBlockedDate.reason || 'Blocked by admin'
+          }
+        ]
+      }
+    }));
+    setNewBlockedDate({ startDate: '', endDate: '', reason: '' });
+  };
+
+  const removeBlockedDate = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      availability: {
+        ...prev.availability,
+        blockedDates: prev.availability.blockedDates.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     const currentImageCount = formData.images.length;
     const remainingSlots = 10 - currentImageCount;
     const filesToProcess = files.slice(0, remainingSlots);
-    
     if (files.length > remainingSlots) {
       alert(`You can only upload ${remainingSlots} more images. Maximum 10 images allowed.`);
     }
-    
     const imagePromises = filesToProcess.map((file, index) => {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -371,7 +609,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
         reader.readAsDataURL(file);
       });
     });
-
     Promise.all(imagePromises).then(images => {
       setFormData(prev => ({
         ...prev,
@@ -389,26 +626,26 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (formData.images.length < 5) {
       alert('Please upload at least 5 images (minimum required)');
       return;
     }
-
     if (!formData.pricing.night && !formData.pricing.week && !formData.pricing.month && !formData.pricing.year) {
       alert('Please provide at least one pricing option (night, week, month, or year)');
       return;
     }
-
     onSubmit(formData, !!editingProperty);
   };
 
   if (!isOpen) return null;
 
+  const monthDays = getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
+  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-bold text-gray-900">
             {editingProperty ? 'Edit Property' : 'Add New Property'}
           </h2>
@@ -422,7 +659,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-8">
-            
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -440,7 +676,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     required
                   />
                 </div>
-
                 <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description
@@ -454,7 +689,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Property Type *
@@ -471,26 +705,24 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Neighborhood/Area
                   </label>
                   <select
-                    name="neighborhood"
-                    value={formData.neighborhood}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Neighborhood</option>
-                    {neighborhoods.map(area => (
-                      <option key={area._id} value={area._id}>
-                        {area.name}
-                      </option>
-                    ))}
-                  </select>
+  name="neighborhood"
+  value={formData.neighborhood}
+  onChange={handleInputChange}
+  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+>
+  <option value="">Select Neighborhood</option>
+  {neighborhoods && neighborhoods.map(area => (
+    <option key={area._id} value={area._id}>
+      {area.name}
+    </option>
+  ))}
+</select>
                 </div>
-
                 <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Address *
@@ -505,7 +737,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Latitude *
@@ -521,7 +752,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Longitude *
@@ -542,7 +772,7 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
 
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing (Add at least one) *</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price Per Night (AED)
@@ -556,7 +786,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price Per Week (AED)
@@ -570,7 +799,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price Per Month (AED)
@@ -584,7 +812,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price Per Year (AED)
@@ -598,6 +825,209 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+              </div>
+
+              <div className="border-t border-gray-300 pt-4 mb-6">
+                <h4 className="text-md font-semibold text-gray-800 mb-3">Weekday-Specific Pricing (Optional)</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {weekdays.map(day => (
+                    <div key={day}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                        {day} (AED/night)
+                      </label>
+                      <input
+                        type="number"
+                        name={`pricing.weekdays.${day}`}
+                        value={formData.pricing.weekdays[day]}
+                        onChange={handleInputChange}
+                        placeholder={`e.g., ${day === 'friday' || day === 'saturday' ? '700' : '450'}`}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  If weekday prices are set, they override the general nightly price for specific days
+                </p>
+              </div>
+
+              <div className="border-t border-gray-300 pt-4">
+                <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <Calendar size={18} />
+                  Custom Date Pricing (Optional)
+                </h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Set specific prices for date ranges (holidays, peak seasons, etc.)
+                </p>
+
+                <div className="bg-white border border-gray-300 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      type="button"
+                      onClick={() => navigateMonth(-1)}
+                      className="p-2 hover:bg-gray-100 rounded-lg"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <h5 className="font-semibold text-gray-900">{monthName}</h5>
+                    <button
+                      type="button"
+                      onClick={() => navigateMonth(1)}
+                      className="p-2 hover:bg-gray-100 rounded-lg"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <div key={day} className="text-center text-xs font-medium text-gray-600 py-2">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {monthDays.map((date, index) => {
+                      if (!date) {
+                        return <div key={`empty-${index}`} className="aspect-square"></div>;
+                      }
+
+                      const price = getPriceForDate(date);
+                      const isInSelectedRange = selectedRange.start && selectedRange.end && 
+                        isDateInRange(date, selectedRange.start, selectedRange.end);
+                      const isStartDate = selectedRange.start && date.getTime() === selectedRange.start.getTime();
+                      const isEndDate = selectedRange.end && date.getTime() === selectedRange.end.getTime();
+                      const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => !isPast && handleDateClick(date)}
+                          disabled={isPast}
+                          className={`aspect-square p-1 border rounded-lg text-sm transition-colors relative ${
+                            isPast
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : isStartDate || isEndDate
+                              ? 'bg-blue-500 text-white border-blue-600'
+                              : isInSelectedRange
+                              ? 'bg-blue-100 border-blue-300'
+                              : 'bg-white hover:bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="font-medium">{date.getDate()}</div>
+                          {price && (
+                            <div className="text-[9px] leading-tight mt-0.5">
+                              د.إ{price}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {selectedRange.start && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-medium text-blue-900 mb-3">
+                      {selectedRange.end
+                        ? `Selected: ${selectedRange.start.toLocaleDateString()} - ${selectedRange.end.toLocaleDateString()}`
+                        : `Start Date: ${selectedRange.start.toLocaleDateString()} (Click another date to complete range)`
+                      }
+                    </p>
+
+                    {selectedRange.end && (
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Price Per Night (AED) *
+                          </label>
+                          <input
+                            type="number"
+                            value={customPriceInput}
+                            onChange={(e) => setCustomPriceInput(e.target.value)}
+                            placeholder="e.g., 800"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Label (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={customPriceLabel}
+                            onChange={(e) => setCustomPriceLabel(e.target.value)}
+                            placeholder="e.g., Holiday Season"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSetCustomPrice}
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            {editingCustomPrice !== null ? 'Update Price' : 'Set Price'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRange({ start: null, end: null });
+                              setCustomPriceInput('');
+                              setCustomPriceLabel('');
+                              setEditingCustomPrice(null);
+                            }}
+                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formData.pricing.customDates.length > 0 && (
+                  <div>
+                    <h5 className="text-sm font-semibold text-gray-800 mb-3">Custom Price Ranges</h5>
+                    <div className="space-y-2">
+                      {formData.pricing.customDates.map((custom, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3"
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(custom.startDate).toLocaleDateString()} - {new Date(custom.endDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              AED {custom.price}/night
+                              {custom.label && <span className="ml-2 text-green-700">({custom.label})</span>}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditCustomPrice(index)}
+                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCustomPrice(index)}
+                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -617,7 +1047,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Service Fee (AED)
@@ -631,7 +1060,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     City / Tourism Tax (%)
@@ -645,7 +1073,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     VAT / GST (%)
@@ -659,7 +1086,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Damage Deposit (AED)
@@ -674,6 +1100,86 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar size={20} />
+                Availability Management
+              </h3>
+              <div className="mb-4">
+                <h4 className="text-md font-medium text-gray-800 mb-3">Block Dates</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={newBlockedDate.startDate}
+                      onChange={(e) => setNewBlockedDate(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={newBlockedDate.endDate}
+                      onChange={(e) => setNewBlockedDate(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Reason (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newBlockedDate.reason}
+                      onChange={(e) => setNewBlockedDate(prev => ({ ...prev, reason: e.target.value }))}
+                      placeholder="e.g., Maintenance"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddBlockedDate}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  <Plus size={16} />
+                  Block These Dates
+                </button>
+              </div>
+              {formData.availability.blockedDates.length > 0 && (
+                <div>
+                  <h4 className="text-md font-medium text-gray-800 mb-3">Blocked Dates List</h4>
+                  <div className="space-y-2">
+                    {formData.availability.blockedDates.map((blocked, index) => (
+                      <div key={index} className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg p-3">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {new Date(blocked.startDate).toLocaleDateString()} - {new Date(blocked.endDate).toLocaleDateString()}
+                          </p>
+                          {blocked.reason && (
+                            <p className="text-xs text-gray-600 mt-1">{blocked.reason}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeBlockedDate(index)}
+                          className="px-3 py-1 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-gray-50 p-6 rounded-lg">
@@ -692,7 +1198,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Guests
@@ -707,7 +1212,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Bedrooms
@@ -722,7 +1226,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Bathrooms
@@ -737,7 +1240,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Beds
@@ -767,8 +1269,8 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                       type="button"
                       onClick={() => handleHighlightToggle(highlight)}
                       className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
-                        isSelected 
-                          ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                        isSelected
+                          ? 'bg-blue-50 border-blue-300 text-blue-700'
                           : 'bg-white border-gray-300 hover:bg-gray-50'
                       }`}
                     >
@@ -796,8 +1298,8 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                           type="button"
                           onClick={() => handleAmenityToggle(category, amenity)}
                           className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
-                            isSelected 
-                              ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                            isSelected
+                              ? 'bg-blue-50 border-blue-300 text-blue-700'
                               : 'bg-white border-gray-300 hover:bg-gray-50'
                           }`}
                         >
@@ -1031,8 +1533,8 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                       key={service.name}
                       onClick={() => handleExtraServiceToggle(service)}
                       className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        isSelected 
-                          ? 'bg-blue-50 border-blue-300' 
+                        isSelected
+                          ? 'bg-blue-50 border-blue-300'
                           : 'bg-white border-gray-300 hover:bg-gray-50'
                       }`}
                     >
@@ -1069,7 +1571,6 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
                   </p>
                 </label>
               </div>
-              
               {formData.images.length > 0 && (
                 <div className="mt-4">
                   <p className="text-sm font-medium text-gray-700 mb-3">
