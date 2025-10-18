@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import Homepage from "../Components/User/Homepage";
 import PropertyDetailsPage from "../Components/User/PropertyDetails";
 import Propertypage from "../Components/User/Properties";
@@ -14,6 +14,21 @@ import TermsConditions from "../Components/Policy/Terms";
 import CancellationsRefunds from "../Components/Policy/Refund";
 import ShippingPolicy from "../Components/Policy/Shipping";
 import { useAuth } from "../Context/Auth";
+
+const ProtectedCheckout = ({ isLogged }) => {
+  const bookingCompleted = sessionStorage.getItem('bookingCompleted');
+  
+  if (bookingCompleted === 'true') {
+    sessionStorage.removeItem('bookingCompleted');
+    return <Navigate to="/" replace />;
+  }
+  
+  if (!isLogged) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <HotelCheckout />;
+};
 
 function UserRoutes() {
   const { user, isLogged, isCheckingAuth, checkAuthStatus } = useAuth();
@@ -56,7 +71,7 @@ function UserRoutes() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route
           path="/checkout"
-          element={isLogged ? <HotelCheckout /> : <Homepage />}
+          element={<ProtectedCheckout isLogged={isLogged} />}
         />
       </Routes>
 

@@ -503,19 +503,19 @@ const PropertyPage = () => {
       </div>
 
       {showModal && (
-        <PropertyModal
-          isOpen={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setEditingProperty(null);
-          }}
-          onSubmit={handlePropertySubmit}
-          editingProperty={editingProperty}
-          neighborhoods={neighborhoods}
-          propertyTypes={propertyTypes}
-          loading={loading}
-        />
-      )}
+  <PropertyModal
+    isOpen={showModal}
+    onClose={() => {
+      setShowModal(false);
+      setEditingProperty(null);
+    }}
+    onSubmit={handlePropertySubmit}
+    editingProperty={editingProperty}
+    neighborhoods={neighborhoods || []}  
+    propertyTypes={propertyTypes}
+    loading={loading}
+  />
+)}
 
       {showDeleteModal && (
         <DeleteModal

@@ -46,6 +46,9 @@ const HotelCheckout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
+
+
   const getUrlParams = () => {
     const urlParams = new URLSearchParams(window.location.search);
     return {
@@ -80,7 +83,6 @@ const HotelCheckout = () => {
   
       const { propertyData, userData, bookingData } = response.data;
   
-      // ✅ Set only the required fields
       setBookingDetails({
         roomType: propertyData?.title || propertyData?.name || 'Property',
         checkIn: bookingData?.checkIn || urlParams.checkin,
@@ -102,7 +104,6 @@ const HotelCheckout = () => {
         bookingId: bookingData?._id || urlParams.bookingId
       });
   
-      // ✅ Fill user form data if available
       if (userData) {
         setFormData(prev => ({
           ...prev,
@@ -134,6 +135,13 @@ const HotelCheckout = () => {
     GetBooking();
   }, []);
 
+useEffect(() => {
+  const bookingCompleted = sessionStorage.getItem('bookingCompleted');
+  if (bookingCompleted === 'true' && currentStep < 3) {
+    window.location.href = '/';
+  }
+}, [currentStep]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -152,10 +160,10 @@ const HotelCheckout = () => {
     return true;
   };
 
-  const handlePaymentSuccess = () => {
-    setBookingComplete(true);
-    setCurrentStep(3);
-  };
+const handlePaymentSuccess = () => {
+  setBookingComplete(true);
+  setCurrentStep(3);
+};
 
   const nextStep = async () => {
     if (validateStep(currentStep)) {
