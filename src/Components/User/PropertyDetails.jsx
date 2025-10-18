@@ -1244,7 +1244,7 @@ return (
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8 overflow-y-auto max-h-screen lg:pr-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(230, 116, 19) rgb(247, 247, 247)' }}>
+          <div className="lg:col-span-2 space-y-8 lg:overflow-y-auto lg:max-h-screen lg:pr-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(230, 116, 19) rgb(247, 247, 247)' }}>
             
             <div className="relative">
               <div className="aspect-w-16 aspect-h-10 lg:aspect-h-8">
