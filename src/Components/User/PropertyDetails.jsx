@@ -1585,10 +1585,10 @@ return (
                     </div>
                   )}
                   
-                  <div className="flex items-center gap-1">
+                  {/* <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-current" style={{ color: 'rgb(230, 116, 19)' }} />
                     <span className="text-sm">4.8 (124 reviews)</span>
-                  </div>
+                  </div> */}
                 </div>
                 
                 <div className="space-y-4 mb-6">
