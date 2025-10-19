@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 import {
   Search,
   Heart,
@@ -391,7 +392,6 @@ const NeighborhoodScroller = React.memo(({ neighborhoods, filters, onNeighborhoo
   if (neighborhoods.length === 0) return null;
 
   return (
-
     <section className="mb-8">
       <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-4" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Popular Neighborhoods</h3>
@@ -770,6 +770,73 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
   );
 });
 
+const DateAvailabilityMessage = React.memo(({ checkIn, checkOut, onClearDates }) => {
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-2xl p-6 shadow-lg max-w-2xl mx-auto my-8">
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0">
+          <div className="bg-orange-100 rounded-full p-3">
+            <AlertCircle className="h-8 w-8 text-orange-600" />
+          </div>
+        </div>
+        
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            No Properties Available for Selected Dates
+          </h3>
+          
+          <div className="bg-white rounded-lg p-4 mb-4 border border-orange-100">
+            <div className="flex items-center gap-2 text-gray-700 mb-2">
+              <Calendar className="h-5 w-5 text-orange-500" />
+              <span className="font-semibold">Your Selected Dates:</span>
+            </div>
+            <div className="text-gray-600 ml-7">
+              <span className="font-medium">{formatDate(checkIn)}</span>
+              <span className="mx-2">→</span>
+              <span className="font-medium">{formatDate(checkOut)}</span>
+            </div>
+          </div>
+          
+          <p className="text-gray-700 mb-4">
+            Unfortunately, all properties are booked or unavailable for these dates. 
+            Please try:
+          </p>
+          
+          <ul className="space-y-2 mb-4 text-gray-600">
+            <li className="flex items-start gap-2">
+              <span className="text-orange-500 font-bold">•</span>
+              <span>Selecting different dates</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-orange-500 font-bold">•</span>
+              <span>Reducing your stay duration</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-orange-500 font-bold">•</span>
+              <span>Browsing all properties without date filters</span>
+            </li>
+          </ul>
+          
+          <button
+            onClick={onClearDates}
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+          >
+            Clear Dates & View All Properties
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -789,6 +856,8 @@ const Properties = () => {
   const [itemsPerPage] = useState(12);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [hasActiveSearch, setHasActiveSearch] = useState(false);
+  const [hasPropertiesInDatabase, setHasPropertiesInDatabase] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const mainContentRef = useRef(null);
@@ -910,22 +979,34 @@ const Properties = () => {
       
       const urlParams = getUrlParams();
       const queryParams = new URLSearchParams();
-
+  
       Object.keys(urlParams).forEach(key => {
         if (key !== 'page') {
           queryParams.set(key, urlParams[key]);
         }
       });
-
+  
       queryParams.set('page', page.toString());
       queryParams.set('limit', itemsPerPage.toString());
-
+  
+      console.log('Fetching with query:', queryParams.toString());
       const response = await axiosInstance.get(`user/properties?${queryParams.toString()}`);
-
+  
+      console.log('Backend Response:', response.data);
+  
       if (response.data.success) {
         setProperties(response.data.data || []);
         setTotalCount(response.data.totalCount || 0);
         setTotalPages(response.data.totalPages || 0);
+        setHasPropertiesInDatabase(response.data.totalPropertiesInDatabase > 0);  
+              
+        console.log('State Updated:', {
+          propertiesReturned: response.data.data?.length,
+          totalPropertiesInDatabase: response.data.totalPropertiesInDatabase,
+          totalCount: response.data.totalCount,
+          hasDateFilter: response.data.hasDateFilter,
+          hasPropertiesInDatabase: response.data.totalPropertiesInDatabase > 0
+        });
       } else {
         setError("Failed to load properties");
       }
@@ -1137,7 +1218,9 @@ const Properties = () => {
     return date.toISOString().split('T')[0];
   }, [checkIn]);
 
-  const hasActiveSearch = checkIn || checkOut || guests.adults > 1 || guests.children > 0 || guests.infants > 0;
+  useEffect(() => {
+    setHasActiveSearch(checkIn || checkOut || guests.adults > 1 || guests.children > 0 || guests.infants > 0);
+  }, [checkIn, checkOut, guests]);
 
   if (error) {
     return (
@@ -1159,7 +1242,7 @@ const Properties = () => {
 
   return (
     <>
-        <ToastContainer />
+      <ToastContainer />
       <div className="min-h-screen bg-slate-50">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
           <Navbar />
@@ -1175,7 +1258,7 @@ const Properties = () => {
             </section>
 
             <section className="mb-8">
-              <div className=" rounded-2xl shadow-lg border border-gray-200 p-6" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
+              <div className="rounded-2xl shadow-lg border border-gray-200 p-6" style={{backgroundColor: 'rgb(247, 219, 190)'}}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Check In</label>
@@ -1445,22 +1528,32 @@ const Properties = () => {
                 ))}
               </div>
             ) : filteredProperties.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md mx-auto">
-                  <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No properties found</h3>
-                  <p className="text-gray-600 mb-4">Try adjusting your search or filters</p>
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      resetFilters();
-                      clearSearch();
-                    }}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition-all duration-300"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
+              <div className="py-8">
+                {(checkIn && checkOut && hasPropertiesInDatabase && totalCount === 0) ? (
+                  <DateAvailabilityMessage 
+                    checkIn={checkIn}
+                    checkOut={checkOut}
+                    onClearDates={clearSearch}
+                  />
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md mx-auto">
+                      <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-800 mb-2">No properties found</h3>
+                      <p className="text-gray-600 mb-4">Try adjusting your search or filters</p>
+                      <button
+                        onClick={() => {
+                          setSearchTerm("");
+                          resetFilters();
+                          clearSearch();
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition-all duration-300"
+                      >
+                        Clear All Filters
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <>
