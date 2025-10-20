@@ -650,7 +650,7 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
           </div>
         </div>
 
-        <button
+        {/* <button
           onClick={handleToggleLike}
           className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg transition-all duration-300 ${
             likedProperties.includes(property._id)
@@ -662,7 +662,7 @@ const PropertyCard = React.memo(({ property, index, likedProperties, onToggleLik
             size={18} 
             fill={likedProperties.includes(property._id) ? "currentColor" : "none"} 
           />
-        </button>
+        </button> */}
 
         {property.images && property.images.length > 1 && (
           <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium">
