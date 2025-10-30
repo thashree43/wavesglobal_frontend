@@ -46,16 +46,19 @@ const HotelCheckout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
-
-
   const getUrlParams = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    return {
+    const params = {
       propertyId: urlParams.get('propertyId'),
       bookingId: urlParams.get('bookingId'),
-      
+      resourcePath: urlParams.get('resourcePath'),
+      id: urlParams.get('id'),
+      checkoutId: urlParams.get('checkoutId'),
+      paymentSuccess: urlParams.get('paymentSuccess')
     };
+    
+    console.log('URL Params:', params);
+    return params;
   };
 
   const GetBooking = async () => {
@@ -66,14 +69,24 @@ const HotelCheckout = () => {
       const urlParams = getUrlParams();
       const token = localStorage.getItem('authToken');
   
-      if (!urlParams.bookingId || !urlParams.propertyId) {
+      console.log('URL Params in GetBooking:', urlParams);
+  
+      // Use URL parameters first, then fallback to sessionStorage
+      const bookingId = urlParams.bookingId || sessionStorage.getItem('currentBookingId');
+      const propertyId = urlParams.propertyId || sessionStorage.getItem('currentPropertyId');
+  
+      if (!bookingId || !propertyId) {
         throw new Error('Missing required parameters: bookingId or propertyId');
       }
   
+      // Store in sessionStorage for persistence
+      sessionStorage.setItem('currentBookingId', bookingId);
+      sessionStorage.setItem('currentPropertyId', propertyId);
+  
       const response = await axios.get(`${baseurl}user/checkout`, {
         params: {
-          propertyId: urlParams.propertyId,
-          bookingId: urlParams.bookingId
+          propertyId: propertyId,
+          bookingId: bookingId
         },
         headers: {
           Authorization: `Bearer ${token}`
@@ -82,6 +95,8 @@ const HotelCheckout = () => {
       });
   
       const { propertyData, userData, bookingData } = response.data;
+  
+      console.log('Booking data received:', bookingData);
   
       setBookingDetails({
         roomType: propertyData?.title || propertyData?.name || 'Property',
@@ -97,11 +112,11 @@ const HotelCheckout = () => {
         cityTax: bookingData?.cityTax || urlParams.cityTax,
         vat: bookingData?.vat || urlParams.vat,
         total: bookingData?.totalPrice || urlParams.totalPrice,
-        propertyId: bookingData?.property || urlParams.propertyId,
+        propertyId: bookingData?.property || propertyId,
         userId: userData?._id,
         propertyImage: propertyData?.images?.[0]?.url || '',
         property: propertyData,
-        bookingId: bookingData?._id || urlParams.bookingId
+        bookingId: bookingData?._id || bookingId
       });
   
       if (userData) {
@@ -129,18 +144,32 @@ const HotelCheckout = () => {
       setError(errorMessage);
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
+    // First, load the booking data
     GetBooking();
+    
+    // Check if payment was successful after a small delay to ensure data is loaded
+    setTimeout(() => {
+      const urlParams = getUrlParams();
+      
+      if (urlParams.paymentSuccess === 'true') {
+        console.log('✅ Payment success detected - showing completion page');
+        setBookingComplete(true);
+        setCurrentStep(3);
+        
+        // Clean the URL
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.delete('paymentSuccess');
+        window.history.replaceState({}, '', newUrl);
+        
+        // Clear session storage after showing completion
+        sessionStorage.removeItem('currentBookingId');
+        sessionStorage.removeItem('currentPropertyId');
+      }
+    }, 100);
   }, []);
-
-useEffect(() => {
-  const bookingCompleted = sessionStorage.getItem('bookingCompleted');
-  if (bookingCompleted === 'true' && currentStep < 3) {
-    window.location.href = '/';
-  }
-}, [currentStep]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -160,10 +189,33 @@ useEffect(() => {
     return true;
   };
 
-const handlePaymentSuccess = () => {
-  setBookingComplete(true);
-  setCurrentStep(3);
-};
+  const handlePaymentSuccess = (bookingData) => {
+    console.log('✅✅✅ Payment success, booking data:', bookingData);
+    
+    // Update booking details with confirmed data
+    setBookingDetails(prev => ({
+      ...prev,
+      bookingId: bookingData._id || bookingData.id || prev.bookingId,
+      paymentStatus: 'confirmed',
+      bookingStatus: 'confirmed'
+    }));
+    
+    setBookingComplete(true);
+    setCurrentStep(3);
+    
+    // Clear session storage
+    sessionStorage.removeItem('currentBookingId');
+    sessionStorage.removeItem('currentPropertyId');
+    
+    // Clean URL parameters
+    const url = new URL(window.location);
+    url.searchParams.delete('resourcePath');
+    url.searchParams.delete('id');
+    url.searchParams.delete('checkoutId');
+    url.searchParams.delete('paymentReturn');
+    url.searchParams.delete('paymentSuccess');
+    window.history.replaceState({}, '', url);
+  };
 
   const nextStep = async () => {
     if (validateStep(currentStep)) {
@@ -241,6 +293,7 @@ const handlePaymentSuccess = () => {
     );
   }
 
+  // IMPORTANT: Show completion page when booking is complete
   if (bookingComplete) {
     return (
       <CheckoutComplete
@@ -264,7 +317,10 @@ const handlePaymentSuccess = () => {
               Wavescation
             </div>
           </div>
-          <button className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium transition-colors">
+          <button 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium transition-colors"
+          >
             <ChevronLeft className="w-4 h-4" />
             Back to Hotel
           </button>
@@ -395,23 +451,6 @@ const handlePaymentSuccess = () => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { 
-            opacity: 0; 
-            transform: translateY(20px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
-        }
-      `}</style>
       <Footer/>
     </div>
   );
