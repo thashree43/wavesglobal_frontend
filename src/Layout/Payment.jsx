@@ -20,7 +20,7 @@ const CheckoutPayment = ({
   const [widgetLoaded, setWidgetLoaded] = useState(false);
   const paymentFormRef = useRef(null);
   const scriptRef = useRef(null);
-  const widgetInitialized = useRef(false); // ✅ NEW: Prevent double initialization
+  const widgetInitialized = useRef(false);
 
   // Store booking info
   useEffect(() => {
@@ -61,12 +61,12 @@ const CheckoutPayment = ({
     };
   }, [showPaymentWidget, checkoutId]);
 
-  // Handle widget expiration
+  // Handle widget expiration with auto-refresh
   useEffect(() => {
     if (widgetLoaded && checkoutId) {
       const warningTimer = setTimeout(() => {
         setError('⚠️ Payment session expires in 5 minutes! Please complete payment soon.');
-      }, 25 * 60 * 1000);
+      }, 25 * 60 * 1000); // Warning at 25 minutes
 
       const refreshTimer = setTimeout(() => {
         console.log('🔄 Checkout expired, refreshing...');
@@ -78,7 +78,7 @@ const CheckoutPayment = ({
         setTimeout(() => {
           handleOnlinePayment();
         }, 2000);
-      }, 28 * 60 * 1000);
+      }, 28 * 60 * 1000); // Refresh at 28 minutes
 
       return () => {
         clearTimeout(warningTimer);
@@ -96,7 +96,6 @@ const CheckoutPayment = ({
     setWidgetLoaded(false);
   };
 
-  // ✅ CRITICAL FIX: Properly configure the payment widget
   const loadPaymentWidget = () => {
     console.log('🚀 Loading payment widget for checkoutId:', checkoutId);
     cleanupWidget();
@@ -105,9 +104,9 @@ const CheckoutPayment = ({
       paymentFormRef.current.innerHTML = '';
     }
   
-    // ✅ Create form that AFS widget will populate
+    // Create form that AFS widget will populate
     const form = document.createElement('form');
-    form.action = `${window.location.origin}/payment-return`; // ✅ Set proper return URL
+    form.action = `${window.location.origin}/payment-return`;
     form.className = 'paymentWidgets';
     form.setAttribute('data-brands', 'VISA MASTER AMEX');
     
@@ -115,7 +114,7 @@ const CheckoutPayment = ({
       paymentFormRef.current.appendChild(form);
     }
   
-    // ✅ Configure widget options
+    // Configure widget options
     window.wpwlOptions = {
       style: "card",
       locale: "en",
@@ -136,7 +135,7 @@ const CheckoutPayment = ({
       }
     };
   
-    // ✅ CRITICAL FIX: Use TEST URL - the widget URL MUST match the checkout creation endpoint
+    // CRITICAL: Use TEST URL - must match backend
     const script = document.createElement('script');
     const afsWidgetUrl = `https://test.oppwa.com/v1/paymentWidgets.js?checkoutId=${checkoutId}`;
     
@@ -160,7 +159,7 @@ const CheckoutPayment = ({
     scriptRef.current = script;
   };
 
-  // Initialize online payment with better error handling
+  // Initialize online payment
   const handleOnlinePayment = async () => {
     if (!bookingDetails.bookingId) {
       setError('Booking ID not generated. Please refresh and try again.');
@@ -169,7 +168,7 @@ const CheckoutPayment = ({
 
     setLoading(true);
     setError(null);
-    widgetInitialized.current = false; // ✅ Reset initialization flag
+    widgetInitialized.current = false;
 
     try {
       const token = localStorage.getItem('authToken');
@@ -181,7 +180,7 @@ const CheckoutPayment = ({
         { bookingId: bookingDetails.bookingId },
         {
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 30000 // 30 second timeout
+          timeout: 30000
         }
       );
 
@@ -190,7 +189,11 @@ const CheckoutPayment = ({
       if (response.data.success && response.data.checkoutId) {
         console.log('✅ Payment initialized with checkoutId:', response.data.checkoutId);
         
-        // ✅ Small delay to ensure state is clean
+        if (response.data.reused) {
+          console.log('♻️ Reusing existing checkout session');
+        }
+        
+        // Small delay to ensure state is clean
         await new Promise(resolve => setTimeout(resolve, 500));
         
         setCheckoutId(response.data.checkoutId);
@@ -203,7 +206,6 @@ const CheckoutPayment = ({
     } catch (err) {
       console.error('❌ Payment initialization failed:', err);
       
-      // Handle specific error cases
       if (err.response?.status === 400 && err.response?.data?.expired) {
         setError('Your booking session has expired. Please create a new booking.');
         setTimeout(() => {
@@ -219,14 +221,13 @@ const CheckoutPayment = ({
     }
   };
 
-  // Handles booking confirmation (for pay-at-property)
+  // Confirm booking (for pay-at-property)
   const handleConfirmBooking = async () => {
     if (selectedPayment === 'online-payment') {
       await handleOnlinePayment();
       return;
     }
 
-    // Pay at property flow
     if (!bookingDetails.bookingId) {
       setError('Booking ID not generated. Please refresh and try again.');
       return;
@@ -273,7 +274,7 @@ const CheckoutPayment = ({
     widgetInitialized.current = false;
     cleanupWidget();
     setTimeout(() => {
-      handleOnlinePayment(); // ✅ Re-initialize from scratch
+      handleOnlinePayment();
     }, 500);
   };
 
@@ -342,7 +343,7 @@ const CheckoutPayment = ({
                   <span className="font-medium">Payment form ready</span>
                 </div>
                 <p className="text-green-600 text-sm mb-2">
-                  Enter your card details above and click "Pay Now". You'll be redirected automatically after payment.
+                  Enter your card details above and click "Pay". After payment, you'll be redirected automatically.
                 </p>
                 <p className="text-green-700 text-xs font-medium">
                   ⚠️ Do not close the window during payment processing.
