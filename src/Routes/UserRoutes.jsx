@@ -14,6 +14,7 @@ import TermsConditions from "../Components/Policy/Terms";
 import CancellationsRefunds from "../Components/Policy/Refund";
 import ShippingPolicy from "../Components/Policy/Shipping";
 import { useAuth } from "../Context/Auth";
+import PaymentReturn from "../Components/User/PaymentReturn";
 
 const ProtectedCheckout = ({ isLogged }) => {
   const bookingCompleted = sessionStorage.getItem('bookingCompleted');
@@ -69,6 +70,8 @@ function UserRoutes() {
         <Route path="/refund-policy" element={<CancellationsRefunds />} />
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/payment-return" element={<PaymentReturn />} />
+
         <Route
           path="/checkout"
           element={<ProtectedCheckout isLogged={isLogged} />}

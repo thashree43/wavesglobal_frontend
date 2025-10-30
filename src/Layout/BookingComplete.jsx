@@ -11,37 +11,67 @@ const CheckoutComplete = ({ formData, bookingDetails }) => {
 
 
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => setAnimateCheck(true), 300);
-    setTimeout(() => setShowConfetti(false), 3000);
+  // useEffect(() => {
+  //   window.scrollTo({ top: 0, behavior: "smooth" });
+  //   setTimeout(() => setAnimateCheck(true), 300);
+  //   setTimeout(() => setShowConfetti(false), 3000);
   
-    const hasVisited = sessionStorage.getItem("bookingCompleted");
+  //   const hasVisited = sessionStorage.getItem("bookingCompleted");
     
-    if (hasVisited === "true") {
-      sessionStorage.removeItem("bookingCompleted");
-      navigate("/", { replace: true });
-      return;
-    }
+  //   if (hasVisited === "true") {
+  //     sessionStorage.removeItem("bookingCompleted");
+  //     navigate("/", { replace: true });
+  //     return;
+  //   }
   
-    sessionStorage.setItem("bookingCompleted", "true");
+  //   sessionStorage.setItem("bookingCompleted", "true");
   
-    const preventBack = (e) => {
-      window.history.pushState(null, "", window.location.pathname);
-      navigate("/", { replace: true });
-    };
+  //   const preventBack = (e) => {
+  //     window.history.pushState(null, "", window.location.pathname);
+  //     navigate("/", { replace: true });
+  //   };
   
-    window.history.pushState(null, "", window.location.pathname);
-    window.addEventListener("popstate", preventBack);
+  //   window.history.pushState(null, "", window.location.pathname);
+  //   window.addEventListener("popstate", preventBack);
   
-    return () => {
-      window.removeEventListener("popstate", preventBack);
-      sessionStorage.removeItem("bookingCompleted");
-    };
-  }, [navigate]);
+  //   return () => {
+  //     window.removeEventListener("popstate", preventBack);
+  //     sessionStorage.removeItem("bookingCompleted");
+  //   };
+  // }, [navigate]);
   
-  
-  
+
+
+// Replace the useEffect in CheckoutComplete.jsx
+
+useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => setAnimateCheck(true), 300);
+  setTimeout(() => setShowConfetti(false), 3000);
+
+  // Prevent back navigation - redirect to home
+  const preventBack = (e) => {
+    e.preventDefault();
+    console.log('⚠️ Back button pressed on completion page, redirecting home');
+    navigate('/', { replace: true });
+  };
+
+  window.history.pushState(null, '', window.location.pathname);
+  window.addEventListener('popstate', preventBack);
+
+  return () => {
+    window.removeEventListener('popstate', preventBack);
+  };
+}, [navigate]);
+
+// Update button handlers
+const handleBackHome = () => {
+  navigate('/', { replace: true });
+};
+
+const handleDownload = () => {
+  navigate('/profile', { replace: true });
+};
  
   
 
@@ -67,19 +97,7 @@ const CheckoutComplete = ({ formData, bookingDetails }) => {
     return labels[bookingDetails.pricingPeriod] || 'Nights';
   };
 
-  const handleBackHome = () => {
-    sessionStorage.removeItem('hasReloaded');
-    navigate('/', { replace: true });
-  };
-  
-  const handleDownload = () => {
-    sessionStorage.removeItem('hasReloaded');
-    navigate('/profile', { replace: true });
-  };
 
-  const handleShare = () => {
-    alert('Sharing booking details...');
-  };
 
 
   return (
