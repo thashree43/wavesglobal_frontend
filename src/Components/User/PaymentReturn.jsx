@@ -23,12 +23,6 @@ const PaymentReturn = () => {
       
       console.log('🔍 Payment return params:', { resourcePath, id });
 
-      // ✅ CRITICAL: Check for AFS error in URL
-      const resultIndicator = searchParams.get('resultIndicator');
-      if (resultIndicator) {
-        console.log('⚠️ Result indicator found:', resultIndicator);
-      }
-
       // Get booking context
       const bookingId = sessionStorage.getItem('currentBookingId');
       const propertyId = sessionStorage.getItem('currentPropertyId');
@@ -42,7 +36,7 @@ const PaymentReturn = () => {
         return;
       }
 
-      // ✅ If no id or resourcePath, user likely cancelled or error occurred
+      // If no id or resourcePath, user likely cancelled
       if (!id && !resourcePath) {
         console.log('❌ No payment ID - payment may have been cancelled');
         setError('Payment was not completed. Redirecting back to checkout...');
@@ -53,7 +47,7 @@ const PaymentReturn = () => {
         return;
       }
 
-      // ✅ Start polling immediately - don't verify first
+      // Start polling immediately
       console.log('🔄 Starting payment status polling...');
       setStatus('polling');
       startPolling(bookingId, propertyId);
@@ -72,7 +66,7 @@ const PaymentReturn = () => {
     console.log('🔄 Starting payment status polling...');
     
     let pollAttempts = 0;
-    const maxPolls = 30; // Increased from 20 to 30 (90 seconds total)
+    const maxPolls = 40; // 120 seconds total (40 polls × 3 seconds)
 
     pollingInterval.current = setInterval(async () => {
       pollAttempts++;
@@ -97,6 +91,11 @@ const PaymentReturn = () => {
           clearInterval(pollingInterval.current);
           setStatus('success');
           
+          // Clear session storage
+          sessionStorage.removeItem('currentBookingId');
+          sessionStorage.removeItem('currentPropertyId');
+          sessionStorage.removeItem('checkoutCreatedAt');
+          
           setTimeout(() => {
             navigate(
               `/checkout?bookingId=${bookingId}&propertyId=${propertyId}&paymentSuccess=true`, 
@@ -117,7 +116,7 @@ const PaymentReturn = () => {
         } else if (pollAttempts >= maxPolls) {
           console.log('⏰ Polling timeout');
           clearInterval(pollingInterval.current);
-          setError('Payment confirmation is taking longer than expected. Please check your email or contact support.');
+          setError('Payment confirmation is taking longer than expected. Please check your email or bookings page.');
           setStatus('timeout');
           
           setTimeout(() => {
@@ -189,6 +188,7 @@ const PaymentReturn = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-blue-800">
                 <strong>Don't worry!</strong> If your payment was successful, you'll receive a confirmation email shortly.
+                You can also check your bookings page.
               </p>
             </div>
           )}
@@ -223,23 +223,24 @@ const PaymentReturn = () => {
               </div>
             </div>
             <p className="text-sm text-gray-500 mb-2">
-              Checking status... ({pollCount}/30)
+              Checking status... ({pollCount}/40)
             </p>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className="bg-orange-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${(pollCount / 30) * 100}%` }}
+                style={{ width: `${(pollCount / 40) * 100}%` }}
               />
             </div>
             <p className="text-xs text-gray-400 mt-4">
-              This usually takes 10-30 seconds
+              This can take up to 2 minutes
             </p>
           </div>
         )}
         
         <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-xs text-yellow-800">
-            <strong>Important:</strong> Do not close this window or press the back button. We're waiting for confirmation from the payment gateway.
+            <strong>Important:</strong> Do not close this window or press the back button. 
+            We're waiting for confirmation from the payment gateway.
           </p>
         </div>
       </div>
