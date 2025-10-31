@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import axios from 'axios';
-import { baseurl } from '../../Base/Base';
+
+const baseurl = 'https://wavesgobal-backend.onrender.com/api/';
 
 const PaymentReturn = () => {
   const [searchParams] = useSearchParams();
@@ -10,6 +11,7 @@ const PaymentReturn = () => {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('Processing your payment...');
+  const [pollAttempts, setPollAttempts] = useState(0);
   const hasVerified = useRef(false);
 
   useEffect(() => {
@@ -45,82 +47,65 @@ const PaymentReturn = () => {
           return;
         }
 
-        // Verify payment with backend
-        console.log('🔍 Verifying payment...');
+        // Start verification and polling simultaneously
+        console.log('🔍 Starting payment verification...');
         setMessage('Verifying payment with gateway...');
         
+        // Start polling immediately
+        startPolling(bookingId, propertyId);
+
+        // Also try API verification
         const token = localStorage.getItem('authToken');
-        const response = await axios.get(
-          `${baseurl}user/verify-payment`,
-          {
-            params: { resourcePath, id, bookingId },
-            headers: { Authorization: `Bearer ${token}` }
+        try {
+          const response = await axios.get(
+            `${baseurl}user/verify-payment`,
+            {
+              params: { resourcePath, id, bookingId },
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 15000
+            }
+          );
+
+          console.log('📥 Verify response:', response.data);
+
+          if (response.data.success && response.data.confirmed) {
+            handleSuccess(bookingId, propertyId);
+          } else if (response.data.failed) {
+            handleFailure(response.data.message, bookingId, propertyId);
           }
-        );
-
-        console.log('📥 Verify response:', response.data);
-
-        if (response.data.success && response.data.confirmed) {
-          console.log('✅ Payment CONFIRMED!');
-          setStatus('success');
-          setMessage('Payment successful! Redirecting...');
-          
-          // Clear session
-          sessionStorage.removeItem('currentBookingId');
-          sessionStorage.removeItem('currentPropertyId');
-          sessionStorage.removeItem('checkoutCreatedAt');
-          
-          // Redirect to success
-          setTimeout(() => {
-            navigate(
-              `/checkout?bookingId=${bookingId}&propertyId=${propertyId}&paymentSuccess=true`,
-              { replace: true }
-            );
-          }, 2000);
-          
-        } else if (response.data.pending) {
-          console.log('⏳ Payment pending');
-          setStatus('pending');
-          setMessage('Payment is being processed. Please wait...');
-          
-          // Poll for status
-          setTimeout(() => pollPaymentStatus(bookingId, propertyId), 3000);
-          
-        } else if (response.data.failed) {
-          console.log('❌ Payment FAILED');
-          setError(response.data.message || 'Payment failed');
-          setStatus('error');
-          
-          setTimeout(() => {
-            navigate(`/checkout?bookingId=${bookingId}&propertyId=${propertyId}`, { replace: true });
-          }, 4000);
+          // If pending, polling will continue
+        } catch (verifyError) {
+          console.error('❌ Verification API error:', verifyError.message);
+          // Don't stop - polling will continue
         }
         
       } catch (err) {
         console.error('❌ Verification error:', err);
-        setError(err.response?.data?.message || 'Failed to verify payment');
-        setStatus('error');
-        
-        setTimeout(() => {
-          const bookingId = sessionStorage.getItem('currentBookingId');
-          const propertyId = sessionStorage.getItem('currentPropertyId');
-          if (bookingId && propertyId) {
-            navigate(`/checkout?bookingId=${bookingId}&propertyId=${propertyId}`, { replace: true });
-          } else {
-            navigate('/properties', { replace: true });
-          }
-        }, 4000);
+        // Don't fail immediately - let polling continue
+        if (err.message.includes('Session expired')) {
+          setError(err.message);
+          setStatus('error');
+          setTimeout(() => navigate('/properties', { replace: true }), 3000);
+        }
       }
     };
 
     verifyPayment();
   }, []);
 
-  const pollPaymentStatus = async (bookingId, propertyId, attempts = 0) => {
-    const maxAttempts = 30; // 90 seconds total
+  const startPolling = (bookingId, propertyId) => {
+    console.log('🔄 Starting payment status polling...');
+    setStatus('pending');
+    setMessage('Payment is being processed. Please wait...');
+    pollPaymentStatus(bookingId, propertyId, 0);
+  };
+
+  const pollPaymentStatus = async (bookingId, propertyId, attempts) => {
+    const maxAttempts = 40; // 2 minutes total (40 * 3 seconds)
     
     if (attempts >= maxAttempts) {
-      setError('Payment verification timeout. Please check your bookings or contact support.');
+      console.log('⏰ Polling timeout after', attempts, 'attempts');
+      setError('Payment verification is taking longer than expected. Please check your bookings or contact support.');
       setStatus('error');
       setTimeout(() => navigate('/my-bookings', { replace: true }), 5000);
       return;
@@ -130,43 +115,58 @@ const PaymentReturn = () => {
       const token = localStorage.getItem('authToken');
       const response = await axios.get(
         `${baseurl}user/payment-status/${bookingId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        }
       );
 
       console.log(`🔍 Poll ${attempts + 1}/${maxAttempts}:`, response.data.paymentStatus);
+      setPollAttempts(attempts + 1);
 
       if (response.data.confirmed) {
         console.log('✅ Payment confirmed via polling!');
-        setStatus('success');
-        setMessage('Payment confirmed! Redirecting...');
-        
-        sessionStorage.removeItem('currentBookingId');
-        sessionStorage.removeItem('currentPropertyId');
-        sessionStorage.removeItem('checkoutCreatedAt');
-        
-        setTimeout(() => {
-          navigate(
-            `/checkout?bookingId=${bookingId}&propertyId=${propertyId}&paymentSuccess=true`,
-            { replace: true }
-          );
-        }, 2000);
-        
-      } else if (response.data.paymentStatus === 'failed') {
-        setError('Payment failed');
-        setStatus('error');
-        setTimeout(() => {
-          navigate(`/checkout?bookingId=${bookingId}&propertyId=${propertyId}`, { replace: true });
-        }, 3000);
-        
+        handleSuccess(bookingId, propertyId);
+      } else if (response.data.failed) {
+        console.log('❌ Payment failed via polling');
+        handleFailure(response.data.details?.resultDescription, bookingId, propertyId);
       } else {
         // Continue polling
         setTimeout(() => pollPaymentStatus(bookingId, propertyId, attempts + 1), 3000);
       }
       
     } catch (err) {
-      console.error('Polling error:', err);
+      console.error('Polling error:', err.message);
+      // Continue polling even on error
       setTimeout(() => pollPaymentStatus(bookingId, propertyId, attempts + 1), 3000);
     }
+  };
+
+  const handleSuccess = (bookingId, propertyId) => {
+    setStatus('success');
+    setMessage('Payment confirmed! Redirecting...');
+    
+    // Clear session
+    sessionStorage.removeItem('currentBookingId');
+    sessionStorage.removeItem('currentPropertyId');
+    sessionStorage.removeItem('checkoutCreatedAt');
+    
+    // Redirect to success
+    setTimeout(() => {
+      navigate(
+        `/checkout?bookingId=${bookingId}&propertyId=${propertyId}&paymentSuccess=true`,
+        { replace: true }
+      );
+    }, 2000);
+  };
+
+  const handleFailure = (errorMessage, bookingId, propertyId) => {
+    setError(errorMessage || 'Payment failed');
+    setStatus('error');
+    
+    setTimeout(() => {
+      navigate(`/checkout?bookingId=${bookingId}&propertyId=${propertyId}`, { replace: true });
+    }, 4000);
   };
 
   if (status === 'success') {
@@ -230,9 +230,24 @@ const PaymentReturn = () => {
           <Loader2 className="w-16 h-16 text-blue-500 animate-spin mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Processing Payment</h2>
           <p className="text-gray-600 mb-4">{message}</p>
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          
+          {/* Progress indicator */}
+          <div className="mb-6">
+            <div className="flex justify-between text-xs text-gray-500 mb-2">
+              <span>Verifying...</span>
+              <span>{pollAttempts}/40 checks</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(pollAttempts / 40) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-xs text-yellow-800">
-              This can take up to 2 minutes. Please don't close this window.
+              <strong>Please wait:</strong> This can take up to 2 minutes. Don't close this window.
             </p>
           </div>
         </div>
