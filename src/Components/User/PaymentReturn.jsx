@@ -68,12 +68,19 @@ const PaymentReturn = () => {
 
           console.log('📥 Verify response:', response.data);
 
-          if (response.data.success && response.data.confirmed) {
-            handleSuccess(bookingId, propertyId);
-          } else if (response.data.failed) {
-            handleFailure(response.data.message, bookingId, propertyId);
+          if (response.data.success) {
+            if (response.data.confirmed) {
+              handleSuccess(bookingId, propertyId);
+            } else if (response.data.failed) {
+              handleFailure(response.data.message, bookingId, propertyId);
+            } else if (response.data.pending) {
+              // Continue polling
+              console.log('⏳ Payment pending, continuing polling...');
+            }
+          } else {
+            // API call failed but not payment - continue polling
+            console.log('⚠️ Verification API failed, continuing polling...');
           }
-          // If pending, polling will continue
         } catch (verifyError) {
           console.error('❌ Verification API error:', verifyError.message);
           // Don't stop - polling will continue
