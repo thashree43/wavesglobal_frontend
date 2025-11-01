@@ -108,34 +108,32 @@ const PaymentReturn = () => {
   };
 
   const pollPaymentStatus = async (bookingId, propertyId, attempts) => {
-    const maxAttempts = 40; // 2 minutes total (40 * 3 seconds)
+    const maxAttempts = 40;
     
     if (attempts >= maxAttempts) {
-      console.log('⏰ Polling timeout after', attempts, 'attempts');
-      setError('Payment verification is taking longer than expected. Please check your bookings or contact support.');
+      console.log('⏰ Taking too long - webhook might be delayed');
+      setError('Payment verification is taking longer than expected. Please check "My Bookings" in a moment.');
       setStatus('error');
-      setTimeout(() => navigate('/my-bookings', { replace: true }), 5000);
+      setTimeout(() => navigate('/my-bookings', { replace: true }), 4000);
       return;
     }
-
+  
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.get(
         `${baseurl}user/payment-status/${bookingId}`,
         { 
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 10000
+          timeout: 5000
         }
       );
-
+  
       console.log(`🔍 Poll ${attempts + 1}/${maxAttempts}:`, response.data.paymentStatus);
       setPollAttempts(attempts + 1);
-
+  
       if (response.data.confirmed) {
-        console.log('✅ Payment confirmed via polling!');
         handleSuccess(bookingId, propertyId);
       } else if (response.data.failed) {
-        console.log('❌ Payment failed via polling');
         handleFailure(response.data.details?.resultDescription, bookingId, propertyId);
       } else {
         // Continue polling
@@ -143,8 +141,7 @@ const PaymentReturn = () => {
       }
       
     } catch (err) {
-      console.error('Polling error:', err.message);
-      // Continue polling even on error
+      console.error('Poll error:', err.message);
       setTimeout(() => pollPaymentStatus(bookingId, propertyId, attempts + 1), 3000);
     }
   };
