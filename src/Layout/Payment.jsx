@@ -137,7 +137,7 @@ const CheckoutPayment = ({
   
     // CRITICAL: Use TEST URL - must match backend
     const script = document.createElement('script');
-    const afsWidgetUrl = `https://test.oppwa.com/v1/paymentWidgets.js?checkoutId=${checkoutId}`;
+    const afsWidgetUrl = `https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId=${checkoutId}`;
     
     console.log('📦 Loading widget from:', afsWidgetUrl);
     
