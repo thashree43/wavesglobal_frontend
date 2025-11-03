@@ -971,8 +971,8 @@ const calculateFees = () => {
     subtotal = basePrice * units;
   }
   
-  const cleaningFee = property.fees?.cleaningFee || 25;
-  const serviceFee = property.fees?.serviceFee || 15;
+  const cleaningFee = property.fees?.cleaningFee ||0;
+  const serviceFee = property.fees?.serviceFee || 0;
   const cityTax = property.fees?.cityTourismTax ? (subtotal * property.fees.cityTourismTax / 100) : 0;
   const vat = property.fees?.vatGst ? (subtotal * property.fees.vatGst / 100) : 0;
   
