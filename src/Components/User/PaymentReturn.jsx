@@ -102,7 +102,7 @@ const PaymentReturn = () => {
           console.error('⚠️ Unknown response status:', response.data);
           setError('Unable to verify payment status. Please check "My Bookings".');
           setStatus('error');
-          setTimeout(() => navigate('/my-bookings', { replace: true }), 4000);
+          setTimeout(() => navigate('/profile', { replace: true }), 4000);
 
         } catch (verifyError) {
           console.error('❌ Verification API error:', verifyError.message);
@@ -114,7 +114,7 @@ const PaymentReturn = () => {
           } else {
             setError('Unable to verify payment. Please check "My Bookings".');
             setStatus('error');
-            setTimeout(() => navigate('/my-bookings', { replace: true }), 4000);
+            setTimeout(() => navigate('/profile', { replace: true }), 4000);
           }
         }
         
@@ -122,7 +122,7 @@ const PaymentReturn = () => {
         console.error('❌ Verification error:', err);
         setError('Payment verification failed. Please check "My Bookings".');
         setStatus('error');
-        setTimeout(() => navigate('/my-bookings', { replace: true }), 4000);
+        setTimeout(() => navigate('/profile', { replace: true }), 4000);
       }
     };
 
@@ -138,13 +138,13 @@ const PaymentReturn = () => {
   };
 
   const pollPaymentStatus = async (bookingId, propertyId, attempts) => {
-    const maxAttempts = 20; // Reduced from 40 since Status API should have worked
+    const maxAttempts = 10; // Reduced from 40 since Status API should have worked
     
     if (attempts >= maxAttempts) {
       console.log('⏰ Polling timeout');
       setError('Payment verification is taking too long. Please check "My Bookings" in a moment.');
       setStatus('error');
-      setTimeout(() => navigate('/my-bookings', { replace: true }), 3000);
+      setTimeout(() => navigate('/profile', { replace: true }), 3000);
       return;
     }
   
