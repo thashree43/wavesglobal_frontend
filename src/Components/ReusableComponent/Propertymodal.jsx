@@ -626,14 +626,40 @@ const PropertyModal = ({ isOpen, onClose, onSubmit, editingProperty, neighborhoo
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
     if (formData.images.length < 5) {
       alert('Please upload at least 5 images (minimum required)');
       return;
     }
+    
     if (!formData.pricing.night && !formData.pricing.week && !formData.pricing.month && !formData.pricing.year) {
       alert('Please provide at least one pricing option (night, week, month, or year)');
       return;
     }
+    
+    const validationErrors = [];
+    
+    if (!formData.bedrooms || formData.bedrooms === '') {
+      validationErrors.push('Number of Bedrooms');
+    }
+    
+    if (!formData.bathrooms || formData.bathrooms === '') {
+      validationErrors.push('Number of Bathrooms');
+    }
+    
+    if (!formData.guests || formData.guests === '') {
+      validationErrors.push('Maximum Guests');
+    }
+    
+    if (!formData.houseRules.maxGuests || formData.houseRules.maxGuests === '') {
+      validationErrors.push('Maximum Guests in House Rules');
+    }
+    
+    if (validationErrors.length > 0) {
+      alert(`Please fill in the following required fields:\n\n• ${validationErrors.join('\n• ')}`);
+      return;
+    }
+    
     onSubmit(formData, !!editingProperty);
   };
 
