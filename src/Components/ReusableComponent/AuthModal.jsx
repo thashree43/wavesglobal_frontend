@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { baseurl } from "../../Base/Base";
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { GoogleLogin } from '@react-oauth/google';
 import ForgotPasswordModal from './Forgotmodal';
 import { useAuth } from "../../Context/Auth";
@@ -13,6 +13,7 @@ const AuthModal = ({ show, onClose }) => {
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,11 +37,21 @@ const AuthModal = ({ show, onClose }) => {
     setConfirmPassword("");
     setOtp("");
     setErrorMessage("");
+    setIsLoading(false);
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage("");
+    
+    if (!email || !password) {
+      setErrorMessage("Please fill in all fields");
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setIsLoading(true);
+    const loadingToast = toast.loading("Signing in...");
     
     try {
       const res = await axios.post(
@@ -60,11 +71,11 @@ const AuthModal = ({ show, onClose }) => {
         login(res.data.user, res.data.token);
         resetForm();
         onClose();
-        toast.success("Login successful!");
+        toast.success("Welcome back! 🎉", { id: loadingToast });
       } else {
         const message = res.data.message || "Login failed. Please try again.";
         setErrorMessage(message);
-        toast.error(message);
+        toast.error(message, { id: loadingToast });
       }
     } catch (error) {
       console.error("Login Error:", error.response?.data?.message || error.message);
@@ -76,7 +87,9 @@ const AuthModal = ({ show, onClose }) => {
       }
       
       setErrorMessage(displayMessage);
-      toast.error(displayMessage);
+      toast.error(displayMessage, { id: loadingToast });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,12 +97,21 @@ const AuthModal = ({ show, onClose }) => {
     e.preventDefault();
     setErrorMessage("");
     
+    if (!username || !regEmail || !phone || !regPassword || !confirmPassword) {
+      setErrorMessage("Please fill in all fields");
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
     if (regPassword !== confirmPassword) {
       const message = "Passwords do not match";
       setErrorMessage(message);
       toast.error(message);
       return;
     }
+
+    setIsLoading(true);
+    const loadingToast = toast.loading("Creating your account...");
     
     try {
       const res = await axios.post(
@@ -113,23 +135,34 @@ const AuthModal = ({ show, onClose }) => {
       if (res.data.success) {
         setPendingEmail(regEmail);
         setShowOtpVerification(true);
-        toast.success("OTP sent to your email!");
+        toast.success("OTP sent to your email! 📧", { id: loadingToast });
       } else {
         const message = res.data.message || "Registration failed. Please try again.";
         setErrorMessage(message);
-        toast.error(message);
+        toast.error(message, { id: loadingToast });
       }
     } catch (error) {
       console.error("Registration Error:", error.response?.data?.message || error.message);
       const message = error.response?.data?.message || "Registration failed";
       setErrorMessage(message);
-      toast.error(message);
+      toast.error(message, { id: loadingToast });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setErrorMessage("");
+    
+    if (!otp || otp.length !== 6) {
+      setErrorMessage("Please enter a valid 6-digit OTP");
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setIsLoading(true);
+    const loadingToast = toast.loading("Verifying OTP...");
     
     try {
       const res = await axios.post(
@@ -154,22 +187,26 @@ const AuthModal = ({ show, onClose }) => {
         setShowOtpVerification(false);
         setPendingEmail("");
         onClose();
-        toast.success("Account verified successfully!");
+        toast.success("Account verified successfully! ✨", { id: loadingToast });
       } else {
         const message = res.data.message || "Verification failed. Please try again.";
         setErrorMessage(message);
-        toast.error(message);
+        toast.error(message, { id: loadingToast });
       }
     } catch (error) {
       console.error("OTP Verification Error:", error.response?.data?.message || error.message);
       const message = error.response?.data?.message || "Invalid OTP";
       setErrorMessage(message);
-      toast.error(message);
+      toast.error(message, { id: loadingToast });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleResendOtp = async () => {
     setErrorMessage("");
+    
+    const loadingToast = toast.loading("Resending OTP...");
     
     try {
       const res = await axios.post(
@@ -184,22 +221,24 @@ const AuthModal = ({ show, onClose }) => {
       );
       
       if (res.data.success) {
-        toast.success("New OTP sent to your email!");
+        toast.success("New OTP sent to your email! 📧", { id: loadingToast });
       } else {
         const message = res.data.message || "Failed to resend OTP";
         setErrorMessage(message);
-        toast.error(message);
+        toast.error(message, { id: loadingToast });
       }
     } catch (error) {
       console.error("Resend OTP Error:", error.response?.data?.message || error.message);
       const message = error.response?.data?.message || "Failed to resend OTP";
       setErrorMessage(message);
-      toast.error(message);
+      toast.error(message, { id: loadingToast });
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setErrorMessage("");
+    
+    const loadingToast = toast.loading("Authenticating with Google...");
     
     try {
       const res = await axios.post(
@@ -221,17 +260,17 @@ const AuthModal = ({ show, onClose }) => {
         login(res.data.user, res.data.token);
         resetForm();
         onClose();
-        toast.success("Login successful!");
+        toast.success("Welcome! 🎉", { id: loadingToast });
       } else {
         const message = res.data.message || "Authentication failed. Please try again.";
         setErrorMessage(message);
-        toast.error(message);
+        toast.error(message, { id: loadingToast });
       }
     } catch (error) {
       console.error("Google Auth Error:", error.response?.data?.message || error.message);
       const message = error.response?.data?.message || "Google authentication failed";
       setErrorMessage(message);
-      toast.error(message);
+      toast.error(message, { id: loadingToast });
     }
   };
 
@@ -337,7 +376,7 @@ const AuthModal = ({ show, onClose }) => {
                   <input
                     type="text"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                     maxLength={6}
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-sm text-center tracking-widest"
                     style={{ backgroundColor: 'rgb(247, 247, 247)' }}
@@ -349,17 +388,19 @@ const AuthModal = ({ show, onClose }) => {
                 <button
                   type="button"
                   onClick={handleVerifyOtp}
-                  className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm"
+                  disabled={isLoading}
+                  className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`}}
                 >
-                  Verify OTP
+                  {isLoading ? 'Verifying...' : 'Verify OTP'}
                 </button>
 
                 <div className="text-center space-y-2">
                   <button 
                     type="button" 
                     onClick={handleResendOtp}
-                    className="text-xs font-medium transition-colors duration-200 hover:underline"
+                    disabled={isLoading}
+                    className="text-xs font-medium transition-colors duration-200 hover:underline disabled:opacity-50"
                     style={{ color: 'rgb(230, 116, 19)' }}
                   >
                     Resend OTP
@@ -418,10 +459,11 @@ const AuthModal = ({ show, onClose }) => {
                 <button
                   type="button"
                   onClick={handleLogin}
-                  className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm"
+                  disabled={isLoading}
+                  className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`}}
                 >
-                  Sign In to Your Account
+                  {isLoading ? 'Signing in...' : 'Sign In to Your Account'}
                 </button>
                 
                 <div className="relative my-4">
@@ -519,10 +561,11 @@ const AuthModal = ({ show, onClose }) => {
                 <button
                   type="button"
                   onClick={handleRegister}
-                  className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm"
+                  disabled={isLoading}
+                  className="w-full py-3 text-white rounded-full font-medium transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{background: `linear-gradient(to right, rgb(231, 121, 0), rgb(250, 153, 56))`}}
                 >
-                  Create Your Account
+                  {isLoading ? 'Creating Account...' : 'Create Your Account'}
                 </button>
 
                 <div className="relative my-4">
