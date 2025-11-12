@@ -3,12 +3,10 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppRoute from "./Routes/AppRoutes";
 import { ClientId } from "./Base/Base";
 import { AuthProvider } from "./Context/Auth";
-import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <>
-    <Toaster position="top-right" />
     <GoogleOAuthProvider clientId={ClientId}>
       <AuthProvider>
         <AppRoute />
