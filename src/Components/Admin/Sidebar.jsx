@@ -42,10 +42,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activeTab, handleSidebarClick })
     >
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Home className="h-8 w-8 text-blue-600" />
-          <span className="text-xl font-bold text-gray-900">Wavescation</span>
-        </div>
+      <div className="flex items-center gap-3">
+        <img
+          src="https://www.wavescation.com/assets/logo-DC0iQ2p5.png"
+          alt="Wavescation Logo"
+          className="w-14 h-14 object-contain"
+        />
+        <span className="text-lg font-semibold text-gray-900 tracking-tight">Wavescation</span>
+      </div>
+
         <button
           onClick={() => setSidebarOpen(false)}
           className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
