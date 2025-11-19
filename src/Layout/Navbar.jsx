@@ -8,6 +8,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ClientId } from "../Base/Base.js";
 import { useAuth } from "../Context/Auth";
+import { useLocation } from "react-router-dom";
+
 
 const Navbar = () => {
   const { user, isLogged, checkAuthStatus, logout } = useAuth();
@@ -17,6 +19,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleRegisterSuccess = (email) => {
     setRegisteredEmail(email);
@@ -30,7 +33,6 @@ const Navbar = () => {
         setShowAuthModal(false);
       }, 100);
     } catch (error) {
-      console.error("Error checking auth status:", error);
       setShowAuthModal(false);
     }
   };
@@ -38,20 +40,18 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        `${baseurl}User/logout`, 
-        {}, 
-        { 
+        `${baseurl}User/logout`,
+        {},
+        {
           withCredentials: true,
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
-      logout(); 
+      logout();
       setShowProfileDropdown(false);
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    } catch (error) {}
   };
 
   const handleLogoClick = () => {
@@ -90,39 +90,51 @@ const Navbar = () => {
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="relative group py-2">
-                <span
-                  className="font-medium transition-colors duration-300"
-                  style={{ color: "rgb(0, 31, 60)" }}
-                >
-                  Home
-                </span>
-              </Link>
-              <Link to="/property" className="relative group py-2">
-                <span
-                  className="font-medium transition-colors duration-300"
-                  style={{ color: "rgb(0, 31, 60)" }}
-                >
-                  Properties
-                </span>
-              </Link>
-              <Link to="/about" className="relative group py-2">
-                <span
-                  className="font-medium transition-colors duration-300"
-                  style={{ color: "rgb(0, 31, 60)" }}
-                >
-                  About
-                </span>
-              </Link>
-              <Link to="/contact" className="relative group py-2">
-                <span
-                  className="font-medium transition-colors duration-300"
-                  style={{ color: "rgb(0, 31, 60)" }}
-                >
-                  Contact
-                </span>
-              </Link>
-            </nav>
+  <Link
+    to="/"
+    className={`relative group py-2 ${
+      location.pathname === "/"
+        ? "after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0 after:w-4 after:h-[2px] after:bg-[rgb(0,31,60)]"
+        : ""
+    }`}
+  >
+    <span className="font-medium" style={{ color: "rgb(0,31,60)" }}>Home</span>
+  </Link>
+
+  <Link
+    to="/property"
+    className={`relative group py-2 ${
+      location.pathname === "/property"
+        ? "after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0 after:w-4 after:h-[2px] after:bg-[rgb(0,31,60)]"
+        : ""
+    }`}
+  >
+    <span className="font-medium" style={{ color: "rgb(0,31,60)" }}>Properties</span>
+  </Link>
+
+  <Link
+    to="/about"
+    className={`relative group py-2 ${
+      location.pathname === "/about"
+        ? "after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0 after:w-4 after:h-[2px] after:bg-[rgb(0,31,60)]"
+        : ""
+    }`}
+  >
+    <span className="font-medium" style={{ color: "rgb(0,31,60)" }}>About</span>
+  </Link>
+
+  <Link
+    to="/contact"
+    className={`relative group py-2 ${
+      location.pathname === "/contact"
+        ? "after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0 after:w-4 after:h-[2px] after:bg-[rgb(0,31,60)]"
+        : ""
+    }`}
+  >
+    <span className="font-medium" style={{ color: "rgb(0,31,60)" }}>Contact</span>
+  </Link>
+</nav>
+
 
             <div className="flex items-center space-x-4">
               <div className="hidden md:block">
@@ -139,7 +151,9 @@ const Navbar = () => {
                 ) : (
                   <div className="relative">
                     <button
-                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      onClick={() =>
+                        setShowProfileDropdown(!showProfileDropdown)
+                      }
                       className="inline-flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-full font-semibold text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm md:text-base"
                       style={{ backgroundColor: "rgb(4, 80, 115)" }}
                     >
@@ -174,6 +188,7 @@ const Navbar = () => {
                             {user?.email}
                           </p>
                         </div>
+
                         <Link
                           to="/profile"
                           className="flex items-center px-4 py-2 text-sm transition-colors"
@@ -182,6 +197,7 @@ const Navbar = () => {
                         >
                           Profile
                         </Link>
+
                         <button
                           onClick={handleLogout}
                           className="flex items-center w-full px-4 py-2 text-sm transition-colors"
@@ -198,7 +214,9 @@ const Navbar = () => {
               {isLogged && (
                 <div className="md:hidden relative">
                   <button
-                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    onClick={() =>
+                      setShowProfileDropdown(!showProfileDropdown)
+                    }
                     className="inline-flex items-center justify-center p-2 rounded-full font-semibold text-white transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     style={{ backgroundColor: "rgb(4, 80, 115)" }}
                   >
@@ -232,6 +250,7 @@ const Navbar = () => {
                           {user?.email}
                         </p>
                       </div>
+
                       <Link
                         to="/profile"
                         className="flex items-center px-4 py-2 text-sm transition-colors"
@@ -240,6 +259,7 @@ const Navbar = () => {
                       >
                         Profile
                       </Link>
+
                       <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-2 text-sm transition-colors"
@@ -259,19 +279,19 @@ const Navbar = () => {
               >
                 <span
                   className={`block w-6 h-0.5 transition-all duration-300 ${
-                    isMenuOpen ? 'rotate-45 translate-y-2' : ''
+                    isMenuOpen ? "rotate-45 translate-y-2" : ""
                   }`}
                   style={{ backgroundColor: "rgb(0, 31, 60)" }}
                 />
                 <span
                   className={`block w-6 h-0.5 transition-all duration-300 ${
-                    isMenuOpen ? 'opacity-0' : ''
+                    isMenuOpen ? "opacity-0" : ""
                   }`}
                   style={{ backgroundColor: "rgb(0, 31, 60)" }}
                 />
                 <span
                   className={`block w-6 h-0.5 transition-all duration-300 ${
-                    isMenuOpen ? '-rotate-45 -translate-y-2' : ''
+                    isMenuOpen ? "-rotate-45 -translate-y-2" : ""
                   }`}
                   style={{ backgroundColor: "rgb(0, 31, 60)" }}
                 />
@@ -281,44 +301,50 @@ const Navbar = () => {
 
           <div
             className={`md:hidden transition-all duration-300 ease-in-out ${
-              isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
             } overflow-hidden`}
           >
             <nav className="px-4 py-4 space-y-4">
               <Link
                 to="/"
-                className="block py-2 text-lg font-medium transition-colors duration-300"
+                className="block py-2 text-lg font-medium transition-colors duration-300 active:border-b-2 active:border-[rgb(0,31,60)]"
                 style={{ color: "rgb(0, 31, 60)" }}
                 onClick={handleMenuItemClick}
               >
                 Home
               </Link>
+
               <Link
                 to="/property"
-                className="block py-2 text-lg font-medium transition-colors duration-300"
+                className="block py-2 text-lg font-medium transition-colors duration-300 active:border-b-2 active:border-[rgb(0,31,60)]"
                 style={{ color: "rgb(0, 31, 60)" }}
                 onClick={handleMenuItemClick}
               >
                 Properties
               </Link>
+
               <Link
                 to="/about"
-                className="block py-2 text-lg font-medium transition-colors duration-300"
+                className="block py-2 text-lg font-medium transition-colors duration-300 active:border-b-2 active:border-[rgb(0,31,60)]"
                 style={{ color: "rgb(0, 31, 60)" }}
                 onClick={handleMenuItemClick}
               >
                 About
               </Link>
+
               <Link
                 to="/contact"
-                className="block py-2 text-lg font-medium transition-colors duration-300"
+                className="block py-2 text-lg font-medium transition-colors duration-300 active:border-b-2 active:border-[rgb(0,31,60)]"
                 style={{ color: "rgb(0, 31, 60)" }}
                 onClick={handleMenuItemClick}
               >
                 Contact
               </Link>
 
-              <div className="pt-4 border-t" style={{ borderColor: "rgb(247, 219, 190)" }}>
+              <div
+                className="pt-4 border-t"
+                style={{ borderColor: "rgb(247, 219, 190)" }}
+              >
                 {!isLogged ? (
                   <button
                     onClick={() => {
@@ -351,20 +377,22 @@ const Navbar = () => {
                         {user?.email}
                       </p>
                     </div>
+
                     <Link
                       to="/profile"
-                      className="block py-2 text-lg font-medium transition-colors duration-300"
+                      className="block py-2 text-lg font-medium transition-colors duration-300 active:border-b-2 active:border-[rgb(0,31,60)]"
                       style={{ color: "rgb(0, 31, 60)" }}
                       onClick={handleMenuItemClick}
                     >
                       Profile
                     </Link>
+
                     <button
                       onClick={() => {
                         handleLogout();
                         handleMenuItemClick();
                       }}
-                      className="block w-full text-left py-2 text-lg font-medium transition-colors duration-300"
+                      className="block w-full text-left py-2 text-lg font-medium transition-colors duration-300 active:border-b-2 active:border-[rgb(0,31,60)]"
                       style={{ color: "rgb(0, 31, 60)" }}
                     >
                       Logout
