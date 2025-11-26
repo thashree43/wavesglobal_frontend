@@ -199,12 +199,31 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className={`pt-8 transition-all duration-1000 delay-800 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`} 
-             style={{ borderTop: '1px solid rgb(247, 219, 190)' }}>
-          <p className="text-center text-lg" style={{ color: 'rgb(4, 80, 115)' }}>
-            © 2025 Wavescation. All rights reserved.
-          </p>
-        </div>
+        <div
+  className={`pt-8 transition-all duration-1000 delay-800 ${
+    isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+  }`}
+  style={{ borderTop: "1px solid rgb(247, 219, 190)" }}
+>
+  <p
+    className="text-center text-lg flex flex-col items-center gap-1"
+    style={{ color: "rgb(4, 80, 115)" }}
+  >
+    © 2025 Wavescation. All rights reserved.
+
+    <span className="flex items-center gap-2 text-base">
+      Designed & Developed by FlyHomies Associates
+      <a
+        href="https://www.instagram.com/flyhomies_associates/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:opacity-70 transition"
+      >
+        <FaInstagram size={18} color="rgb(4, 80, 115)" />
+      </a>
+    </span>
+  </p>
+</div>
       </div>
       
       <div className="absolute bottom-0 left-0 w-full h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(231, 121, 0, 0.2), transparent)' }}></div>
