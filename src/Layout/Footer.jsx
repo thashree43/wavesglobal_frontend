@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Mail, Instagram, Facebook, Linkedin, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { FaInstagram } from "react-icons/fa";
 
 const Footer = () => {
   const [isVisible, setIsVisible] = useState(false);
