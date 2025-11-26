@@ -213,14 +213,13 @@ const Footer = () => {
     © 2025 Wavescation. All rights reserved.
 
     <span className="flex items-center gap-2 text-base">
-      Designed & Developed by FlyHomies Associates
       <a
         href="https://www.instagram.com/flyhomies_associates/"
         target="_blank"
         rel="noopener noreferrer"
         className="hover:opacity-70 transition"
       >
-        <FaInstagram size={18} color="rgb(4, 80, 115)" />
+      Designed & Developed by FlyHomies Associates
       </a>
     </span>
   </p>
