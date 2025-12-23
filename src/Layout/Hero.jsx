@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Calendar, Users, ChevronLeft, ChevronRight, ChevronDown, Plus, Minus } from 'lucide-react';
 import { createPortal } from "react-dom";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -330,9 +330,9 @@ const Hero = () => {
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState({adults:1, children:0, infants:0});
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [guestsOpen, setGuestsOpen] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const navigate = useNavigate();
 
   const carouselImages = [
@@ -343,7 +343,7 @@ const Hero = () => {
   ];
 
   useEffect(() => {
-    setIsVisible(true);
+    setShowWelcomeModal(true);
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, {passive:true});
     return () => {window.removeEventListener('scroll', handleScroll);}
@@ -410,12 +410,79 @@ const Hero = () => {
     setGuestsOpen(false);
   }, []);
 
+  const closeWelcomeModal = useCallback(() => {
+    setShowWelcomeModal(false);
+  }, []);
+
   const totalGuests = guests.adults + guests.children + guests.infants;
   const guestDisplayText = totalGuests === 1 ? '1 Guest' : `${totalGuests} Guests`;
+
+  const WelcomeModal = () => {
+    if (!showWelcomeModal) return null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+        <div 
+          className="absolute inset-0 bg-black/80"
+          onClick={closeWelcomeModal}
+        />
+        
+        <div className="relative z-10 w-full max-w-4xl bg-transparent">
+          <button
+            onClick={closeWelcomeModal}
+            className="absolute -top-12 right-0 z-20 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <div className="w-full">
+            <div className="w-full">
+              <img
+                src="/wave.webp"
+                alt="WAVESCATION Dubai"
+                className="w-full h-auto rounded-xl"
+                onError={(e) => {
+                  console.error("Image failed to load:", e.target.src);
+                  e.target.src = "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80";
+                }}
+              />
+            </div>
+            
+            <div className="mt-6 flex justify-center">
+              <Link 
+                to="/contact"
+                onClick={closeWelcomeModal}
+                className="px-10 py-4 rounded-xl font-semibold text-lg transition-all"
+                style={{
+                  backgroundColor: 'rgb(231, 121, 0)',
+                  color: 'white'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgb(250, 153, 56)';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'rgb(231, 121, 0)';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                Know More
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
 
   return (
     <>
       <ToastContainer />
+      <WelcomeModal />
+      
       <div 
         className="relative overflow-x-hidden pt-[90px] mb-[120px]" 
         style={{ backgroundColor: 'rgb(247, 219, 190)' }}
