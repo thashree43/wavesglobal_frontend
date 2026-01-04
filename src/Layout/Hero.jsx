@@ -481,7 +481,6 @@ const Hero = () => {
   return (
     <>
       <ToastContainer />
-      <WelcomeModal />
       
       <div 
         className="relative overflow-x-hidden pt-[90px] mb-[120px]" 
