@@ -330,35 +330,35 @@ const InvoiceGenerator = ({ booking, logoUrl }) => {
           <table class="pricing-table">
             <tr>
               <td class="label">Price per ${booking.pricingPeriod}</td>
-              <td class="value">AED${booking.pricePerUnit.toFixed(2)}</td>
+              <td class="value">AED ${booking.Components.toFixed(2)}</td>
             </tr>
             <tr>
               <td class="label">Subtotal (${booking.units} ${booking.pricingPeriod}${booking.units > 1 ? 's' : ''})</td>
-              <td class="value">AED${booking.subtotal.toFixed(2)}</td>
+              <td class="value">AED ${booking.subtotal.toFixed(2)}</td>
             </tr>
             ${booking.cleaningFee > 0 ? `
             <tr>
               <td class="label">Cleaning Fee</td>
-              <td class="value">AED${booking.cleaningFee.toFixed(2)}</td>
+              <td class="value">AED ${booking.cleaningFee.toFixed(2)}</td>
             </tr>` : ''}
             ${booking.serviceFee > 0 ? `
             <tr>
               <td class="label">Service Fee</td>
-              <td class="value">AED${booking.serviceFee.toFixed(2)}</td>
+              <td class="value">AED ${booking.serviceFee.toFixed(2)}</td>
             </tr>` : ''}
             ${booking.cityTax > 0 ? `
             <tr>
               <td class="label">City Tax</td>
-              <td class="value">AED${booking.cityTax.toFixed(2)}</td>
+              <td class="value">AED ${booking.cityTax.toFixed(2)}</td>
             </tr>` : ''}
             ${booking.vat > 0 ? `
             <tr>
               <td class="label">VAT</td>
-              <td class="value">AED${booking.vat.toFixed(2)}</td>
+              <td class="value">AED ${booking.vat.toFixed(2)}</td>
             </tr>` : ''}
             <tr class="total-row">
               <td>TOTAL AMOUNT</td>
-              <td style="text-align: right;">AED${booking.totalPrice.toFixed(2)}</td>
+              <td style="text-align: right;">AED ${booking.totalPrice.toFixed(2)}</td>
             </tr>
           </table>
         </div>
@@ -898,7 +898,7 @@ const ProfilePage = () => {
                                       {booking.bookingStatus.charAt(0).toUpperCase() + booking.bookingStatus.slice(1)}
                                     </span>
                                     <div className={`mt-2 text-2xl font-bold ${isCancelled ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                                      ${booking.totalPrice}
+                                      AED {booking.totalPrice}
                                     </div>
                                     {isCancelled && (
                                       <div className="text-sm text-red-600 font-semibold mt-1">Refunded</div>
@@ -963,7 +963,7 @@ const ProfilePage = () => {
                                         <div className="space-y-1 text-sm">
                                           <p><span className="font-medium">Pricing Period:</span> {booking.pricingPeriod}</p>
                                           <p><span className="font-medium">Units:</span> {booking.units}</p>
-                                          <p><span className="font-medium">Price per Unit:</span> ${booking.pricePerUnit}</p>
+                                          <p><span className="font-medium">Price per Unit:</span> AED {booking.pricePerUnit}</p>
                                         </div>
                                       </div>
                                     </div>
@@ -973,42 +973,42 @@ const ProfilePage = () => {
                                       <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                                         <div className="flex justify-between">
                                           <span>Subtotal</span>
-                                          <span className="font-semibold">AED{booking.subtotal.toFixed(2)}</span>
+                                          <span className="font-semibold">AED {booking.subtotal.toFixed(2)}</span>
                                         </div>
                                         {booking.cleaningFee > 0 && (
                                           <div className="flex justify-between">
                                             <span>Cleaning Fee</span>
-                                            <span className="font-semibold">AED{booking.cleaningFee.toFixed(2)}</span>
+                                            <span className="font-semibold">AED {booking.cleaningFee.toFixed(2)}</span>
                                           </div>
                                         )}
                                         {booking.serviceFee > 0 && (
                                           <div className="flex justify-between">
                                             <span>Service Fee</span>
-                                            <span className="font-semibold">AED{booking.serviceFee.toFixed(2)}</span>
+                                            <span className="font-semibold">AED {booking.serviceFee.toFixed(2)}</span>
                                           </div>
                                         )}
                                         {booking.cityTax > 0 && (
                                           <div className="flex justify-between">
                                             <span>City Tax</span>
-                                            <span className="font-semibold">AED{booking.cityTax.toFixed(2)}</span>
+                                            <span className="font-semibold">AED {booking.cityTax.toFixed(2)}</span>
                                           </div>
                                         )}
                                         {booking.vat > 0 && (
                                           <div className="flex justify-between">
                                             <span>VAT</span>
-                                            <span className="font-semibold">AED{booking.vat.toFixed(2)}</span>
+                                            <span className="font-semibold">AED {booking.vat.toFixed(2)}</span>
                                           </div>
                                         )}
                                         <div className="flex justify-between pt-2 border-t border-gray-200 font-bold text-base">
                                           <span>Total</span>
                                           <span className={isCancelled ? 'line-through text-gray-400' : ''}>
-                                          AED{booking.totalPrice.toFixed(2)}
+                                          AED {booking.totalPrice.toFixed(2)}
                                           </span>
                                         </div>
                                         {isCancelled && (
                                           <div className="flex justify-between pt-2 text-red-600 font-bold">
                                             <span>Amount Refunded</span>
-                                            <span>AED{booking.totalPrice.toFixed(2)}</span>
+                                            <span>AED {booking.totalPrice.toFixed(2)}</span>
                                           </div>
                                         )}
                                       </div>
