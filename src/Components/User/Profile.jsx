@@ -330,35 +330,35 @@ const InvoiceGenerator = ({ booking, logoUrl }) => {
           <table class="pricing-table">
             <tr>
               <td class="label">Price per ${booking.pricingPeriod}</td>
-              <td class="value">AED ${booking.Components.toFixed(2)}</td>
+              <td class="value">AED ${(booking.pricePerUnit || booking.Components || 0).toFixed(2)}</td>
             </tr>
             <tr>
               <td class="label">Subtotal (${booking.units} ${booking.pricingPeriod}${booking.units > 1 ? 's' : ''})</td>
-              <td class="value">AED ${booking.subtotal.toFixed(2)}</td>
+              <td class="value">AED ${(booking.subtotal || 0).toFixed(2)}</td>
             </tr>
             ${booking.cleaningFee > 0 ? `
             <tr>
               <td class="label">Cleaning Fee</td>
-              <td class="value">AED ${booking.cleaningFee.toFixed(2)}</td>
+              <td class="value">AED ${(booking.cleaningFee || 0).toFixed(2)}</td>
             </tr>` : ''}
             ${booking.serviceFee > 0 ? `
             <tr>
               <td class="label">Service Fee</td>
-              <td class="value">AED ${booking.serviceFee.toFixed(2)}</td>
+              <td class="value">AED ${(booking.serviceFee || 0).toFixed(2)}</td>
             </tr>` : ''}
             ${booking.cityTax > 0 ? `
             <tr>
               <td class="label">City Tax</td>
-              <td class="value">AED ${booking.cityTax.toFixed(2)}</td>
+              <td class="value">AED ${(booking.cityTax || 0).toFixed(2)}</td>
             </tr>` : ''}
             ${booking.vat > 0 ? `
             <tr>
               <td class="label">VAT</td>
-              <td class="value">AED ${booking.vat.toFixed(2)}</td>
+              <td class="value">AED ${(booking.vat || 0).toFixed(2)}</td>
             </tr>` : ''}
             <tr class="total-row">
               <td>TOTAL AMOUNT</td>
-              <td style="text-align: right;">AED ${booking.totalPrice.toFixed(2)}</td>
+              <td style="text-align: right;">AED ${(booking.totalPrice || 0).toFixed(2)}</td>
             </tr>
           </table>
         </div>
@@ -367,7 +367,7 @@ const InvoiceGenerator = ({ booking, logoUrl }) => {
           <div class="section-title">Payment Information</div>
           <div class="info-row">
             <span class="info-label">Payment Method:</span>
-            <span class="info-value">${booking.paymentMethod.replace(/-/g, ' ').toUpperCase()}</span>
+            <span class="info-value">${booking.paymentMethod ? booking.paymentMethod.replace(/-/g, ' ').toUpperCase() : 'N/A'}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Advance Payment:</span>
@@ -375,7 +375,7 @@ const InvoiceGenerator = ({ booking, logoUrl }) => {
           </div>
           <div class="info-row">
             <span class="info-label">Payment Status:</span>
-            <span class="info-value">${booking.paymentStatus.toUpperCase()}</span>
+            <span class="info-value">${booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'N/A'}</span>
           </div>
         </div>
 
