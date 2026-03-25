@@ -84,9 +84,9 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: 'Email Address',
-      details: ['info@wavesglobal.ae'],
+      details: ['info@wavescation.com'],
       color: 'text-gray-700',
-      href: 'mailto:info@wavesglobal.ae'
+      href: 'mailto:info@wavescation.com'
     },
     {
       icon: Clock,
